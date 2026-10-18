@@ -13,7 +13,26 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
-<style>[hidden]{display:none!important}
+<style>
+[hidden]{display:none!important}
+#c{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+details.more>summary,details.fold>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;user-select:none}
+details.more>summary::-webkit-details-marker,details.fold>summary::-webkit-details-marker{display:none}
+details.more>summary{font-size:12px;color:var(--muted);padding:2px 0}
+details.more[open]>summary{margin-bottom:6px}
+details.fold>summary::after{content:'▸';color:var(--muted);font-size:12px;margin-left:auto}
+details.fold[open]>summary::after{content:'▾'}
+details.fold[open]>summary{margin-bottom:10px}
+.compass{cursor:pointer;z-index:3;transition:transform .15s}
+.compass:active{transform:scale(.92)}
+#walkBtn{position:absolute;z-index:3;left:calc(70px + env(safe-area-inset-left,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));padding:8px 12px;font-size:13px}
+#walkBtn[aria-pressed="true"]{background:#f3efe2;color:#1b221d}
+#joy{position:absolute;z-index:3;left:calc(18px + env(safe-area-inset-left,0px));bottom:calc(78px + env(safe-area-inset-bottom,0px));width:128px;height:128px;border-radius:50%;background:rgba(20,26,22,.35);border:1.5px solid rgba(255,255,255,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);touch-action:none;user-select:none}
+#joyK{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:rgba(243,239,226,.85);box-shadow:0 2px 8px rgba(0,0,0,.35)}
+body.walk #miniWrap{display:none}
+body.vmode #walkBtn,body.vmode #joy{display:none!important}
+@media (max-width:760px){body.pOpen #walkBtn,body.pOpen #joy{display:none}}
+[hidden]{display:none!important}
 /* Visor a pantalla completa: la escena ocupa todo, el panel de ajustes flota a la derecha
    (hoja inferior en el móvil). Un solo aspecto oscuro, como un visor de cámara.
    Acento verde pistacho solo en deslizadores y valores activos. */
@@ -35,7 +54,7 @@ html,body{height:100%;background:#1a211c;color:var(--ink);font-family:var(--ui);
 .sub{margin:3px 0 0;font:400 11.5px/1.35 var(--mono);opacity:.9;font-variant-numeric:tabular-nums}
 .compass{position:absolute;left:calc(14px + env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));width:46px;height:46px;border-radius:50%;background:var(--glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line)}
 .compass svg{width:100%;height:100%}
-.hint{position:absolute;left:calc(70px + env(safe-area-inset-left,0px));bottom:calc(26px + env(safe-area-inset-bottom,0px));font-size:12px;opacity:.9;text-shadow:0 1px 5px rgba(0,0,0,.6);pointer-events:none;transition:opacity .6s}
+.hint{position:absolute;left:calc(176px + env(safe-area-inset-left,0px));bottom:calc(26px + env(safe-area-inset-bottom,0px));font-size:12px;opacity:.9;text-shadow:0 1px 5px rgba(0,0,0,.6);pointer-events:none;transition:opacity .6s}
 #labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .lab{position:absolute;left:0;top:0;display:flex;align-items:center;gap:5px;padding:3px 8px 3px 6px;border-radius:99px;background:rgba(18,22,20,.72);font:600 11.5px/1 var(--ui);white-space:nowrap;will-change:transform}
 .lab i{width:8px;height:8px;border-radius:50%;display:inline-block}
@@ -50,7 +69,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .btn:hover{border-color:rgba(255,255,255,.28)}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-#panel{position:absolute;z-index:2;right:calc(12px + env(safe-area-inset-right,0px));top:calc(52px + env(safe-area-inset-top,0px));width:282px;max-height:calc(100% - 66px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:auto;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:12px;padding:12px 14px 14px;display:flex;flex-direction:column;gap:14px;scrollbar-width:thin}
+#panel{position:absolute;z-index:2;right:calc(12px + env(safe-area-inset-right,0px));top:calc(52px + env(safe-area-inset-top,0px));width:282px;max-height:calc(100% - 52px - 30px - 28px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:auto;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:12px;padding:12px 14px 14px;display:flex;flex-direction:column;gap:14px;scrollbar-width:thin}
 .sec{display:flex;flex-direction:column;gap:8px}
 .sec+.sec{padding-top:12px;border-top:1px solid var(--line)}
 .sec h2{margin:0;font:500 10.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -139,13 +158,15 @@ body.vmode #miniWrap{display:none}
     <h1>Finca Casa de Arriba «La Vega»</h1>
     <p class="sub" id="sub">9 filas · 101 árboles · 28 sep 2026 · 11:30</p>
   </header>
-  <div class="compass" aria-hidden="true"><svg viewBox="0 0 46 46"><g id="needle" transform="rotate(0 23 23)"><path d="M23 6 L27 23 L19 23Z" fill="#e0513f"/><path d="M23 40 L27 23 L19 23Z" fill="#d9ded8"/><text x="23" y="5.2" text-anchor="middle" font-size="6.5" font-weight="700" fill="#eef2ea" font-family="system-ui,sans-serif">N</text></g></svg></div>
-  <p class="hint" id="hint">Arrastra para girar · botón derecho para desplazarte · rueda para acercar · W A S D para andar · doble clic para ir · <b>?</b> ayuda</p>
+  <div class="compass" id="compass" role="button" tabindex="0" title="Mirar al norte" aria-label="Brújula: toca para mirar al norte"><svg viewBox="0 0 46 46"><g id="needle" transform="rotate(0 23 23)"><path d="M23 6 L27 23 L19 23Z" fill="#e0513f"/><path d="M23 40 L27 23 L19 23Z" fill="#d9ded8"/><text x="23" y="5.2" text-anchor="middle" font-size="6.5" font-weight="700" fill="#eef2ea" font-family="system-ui,sans-serif">N</text></g></svg></div>
+  <p class="hint" id="hint">Brújula: mirar al norte · 🚶 Paseo para andar · Arrastra para girar · botón derecho para desplazarte · rueda para acercar · W A S D para andar · doble clic para ir · <b>?</b> ayuda</p>
   <button class="btn" id="helpBtn" type="button" aria-label="Cómo moverse" title="Cómo moverse">?</button>
+  <button class="btn" id="walkBtn" type="button" aria-pressed="false">🚶 Paseo</button>
+  <div id="joy" hidden aria-label="Joystick para andar"><div id="joyK"></div></div>
   <div id="help" hidden role="dialog" aria-label="Cómo moverse"><button class="btn" id="helpX" type="button" aria-label="Cerrar">✕</button><h2>Cómo moverse</h2>
-    <h3>Ratón</h3><ul><li><b>Arrastrar</b> con el botón izquierdo: girar alrededor del punto que miras</li><li><b>Botón derecho</b> o <b>Mayús + arrastrar</b>: desplazarse sobre el suelo</li><li><b>Rueda</b>: acercar o alejar hacia donde apunta el ratón</li><li><b>Doble clic</b>: volar a ese punto</li><li><b>Clic en un árbol</b>: su ficha</li></ul>
+    <h3>Ratón</h3><ul><li><b>Arrastrar</b> con el botón izquierdo: girar alrededor del punto que miras</li><li><b>Botón derecho</b> o <b>Mayús + arrastrar</b>: desplazarse sobre el suelo</li><li><b>Rueda</b>: acercar o alejar hacia donde apunta el ratón</li><li><b>Doble clic</b>: volar a ese punto</li><li><b>Clic en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: andar a la altura de los ojos; arrastrar para mirar</li></ul>
     <h3>Teclado</h3><ul><li><b>W A S D</b> o <b>flechas</b>: andar</li><li><b>Q / E</b>: girar a izquierda / derecha</li><li><b>R / F</b>: subir / bajar</li><li><b>Mayús</b>: más rápido</li><li><b>?</b>: esta ayuda</li></ul>
-    <h3>Móvil</h3><ul><li><b>Un dedo</b>: girar</li><li><b>Dos dedos</b>: acercar y desplazarse</li><li><b>Doble toque</b>: volar a ese punto</li><li><b>Toque en un árbol</b>: su ficha</li></ul>
+    <h3>Móvil</h3><ul><li><b>Un dedo</b>: girar alrededor del punto que miras</li><li><b>Dos dedos</b>: moverlos juntos para desplazarse; abrirlos o cerrarlos para acercar o alejar hacia ese punto</li><li><b>Doble toque</b>: volar a ese punto</li><li><b>Toque en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: el joystick para andar y un dedo para mirar</li></ul>
     <h3>Vídeo del año</h3><ul><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul></div>
   <button class="btn" id="toggle" type="button" aria-expanded="true" aria-controls="panel">Ocultar ajustes</button>
 
@@ -159,7 +180,7 @@ body.vmode #miniWrap{display:none}
       <button class="btn" id="playYear" type="button">▶ Reproducir el año en vídeo</button>
       <button class="btn" id="vSound" type="button" aria-pressed="true">Música y sonidos: sí</button>
       <button class="btn" id="vNarr" type="button" aria-pressed="true">Narración (2026): sí</button>
-      <p class="note">60 s con rótulos y música con sonidos del campo, del 1 de enero al 31 de diciembre del año elegido, y al final la finca entera desde el aire. En 2026 se para en cada labor y lleva narración con voz que explica cada fase y cada labor: dura unos 4 min (sin narración, unos 2 min 40 s). Enter pausa y reanuda; las flechas → y ← saltan 10 s; Escape sale. Ponlo a pantalla completa y grábalo con la grabación de pantalla; para que se grabe el sonido, activa el audio del sistema (en Windows, la Barra de juegos con Win + Alt + R lo graba).</p>
+      <details class="more"><summary>ⓘ Cómo funciona el vídeo</summary><p class="note">60 s con rótulos y música con sonidos del campo, del 1 de enero al 31 de diciembre del año elegido, y al final la finca entera desde el aire. En 2026 se para en cada labor y lleva narración con voz que explica cada fase y cada labor: dura unos 4 min (sin narración, unos 2 min 40 s). Enter pausa y reanuda; las flechas → y ← saltan 10 s; Escape sale. Ponlo a pantalla completa y grábalo con la grabación de pantalla; para que se grabe el sonido, activa el audio del sistema (en Windows, la Barra de juegos con Win + Alt + R lo graba).</p></details>
     </section>
 
     <section class="sec">
@@ -172,9 +193,10 @@ body.vmode #miniWrap{display:none}
     </section>
 
     <section class="sec">
-      <h2>Labores 2026</h2>
+      <details class="fold" id="labFold"><summary><h2>Labores 2026</h2></summary>
       <div class="labs" id="labList"></div>
       <p class="note" id="labNote"></p>
+      </details>
     </section>
 
     <section class="sec">
@@ -1771,16 +1793,20 @@ function showCard(t){
    '<button class="btn" id="cardIn" type="button" style="margin-top:10px;width:100%">Ver por dentro</button>';
   $('cardIn').addEventListener('click',()=>openXray(t));
 }
+let PICK=()=>{};
 function hideCard(){selTree=null;selRing.visible=false;$('card').hidden=true;}
 {let down=null;const ray=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),0),hit=new THREE.Vector3(),m=new THREE.Vector2();
   canvas.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];});
   canvas.addEventListener('pointerup',e=>{if(!down)return;const moved=Math.hypot(e.clientX-down[0],e.clientY-down[1]);down=null;if(moved>6)return;
+    if(e.pointerType==='touch'&&TC.multi)return;
+    PICK(e);});
+  PICK=e=>{
     const r=canvas.getBoundingClientRect();m.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(m,camera);
     if(XR.on){xrPick(ray);return;}
     let best=null,bd=1e9;
     const Hs=growth(lastA).sz[0];ALL.forEach(t=>{const th=t.h||Hs;for(const y of [0.3,0.9,1.4,1.9,2.6,3.4]){if(y>th+0.3)break;_p.set(t.u,y,t.v);const d=ray.ray.distanceSqToPoint(_p);const lim=Math.max(0.7,Math.min(1.6,t.ext||0.7))**2;if(d<lim&&d<bd){bd=d;best=t;}}});
     if(!best&&ray.ray.intersectPlane(plane,hit)){nearTrees(hit.x,hit.z,3,t=>{const d=(t.u-hit.x)**2+(t.v-hit.z)**2;if(d<1.4*1.4&&d<bd){bd=d;best=t;}});}
-    if(best)showCard(best);else hideCard();});
+    if(best)showCard(best);else hideCard();};
 }
 
 /* ---------- Luz y cielo según hora y fecha ---------- */
@@ -4097,7 +4123,7 @@ function navBusy(){return !!(VM||XR.on||(typeof OPEN!=='undefined'&&OPEN.on));}
 function groundAt(cx,cy){const r=canvas.getBoundingClientRect();NAV.v.set((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1);NAV.ray.setFromCamera(NAV.v,camera);
   return NAV.ray.ray.intersectPlane(NAV.plane,NAV.hit)?NAV.hit.clone():null;}
 function freeCam(){tween=null;if(S.cam==='tour')setCam('libre');}
-window.addEventListener('wheel',e=>{if(e.target!==canvas||navBusy())return;e.preventDefault();e.stopPropagation();freeCam();
+window.addEventListener('wheel',e=>{if(e.target!==canvas||navBusy()||PS.on)return;e.preventDefault();e.stopPropagation();freeCam();
   const dy=e.deltaY*(e.deltaMode===1?33:e.deltaMode===2?400:1),f=clamp(Math.exp(dy*0.0019),0.55,1.8);
   let P=groundAt(e.clientX,e.clientY);if(!P||P.distanceTo(camera.position)>9000)P=controls.target.clone();
   const nc=P.clone().add(camera.position.clone().sub(P).multiplyScalar(f)),nt=P.clone().add(controls.target.clone().sub(P).multiplyScalar(f));
@@ -4119,12 +4145,108 @@ function kbMove(dt){if(!NAV.keys.size||navBusy())return;const K=NAV.keys,cam=cam
 function flyToPoint(P){const dir=camera.position.clone().sub(controls.target);const dist=dir.length();dir.normalize();if(dir.y<0.12){dir.y=0.12;dir.normalize();}
   const nd=clamp(dist*0.5,3,80),c=P.clone().addScaledVector(dir,nd);c.y=Math.max(c.y,0.8);freeCam();flyTo([c.x,c.y,c.z],[P.x,P.y,P.z]);}
 canvas.addEventListener('pointerdown',e=>{NAV.pd=[e.clientX,e.clientY];});
-canvas.addEventListener('pointerup',e=>{if(navBusy()||!NAV.pd)return;if(Math.hypot(e.clientX-NAV.pd[0],e.clientY-NAV.pd[1])>8)return;const n=performance.now(),T=NAV.tap;
+canvas.addEventListener('pointerup',e=>{if(navBusy()||!NAV.pd||PS.on||TC.multi)return;if(Math.hypot(e.clientX-NAV.pd[0],e.clientY-NAV.pd[1])>8)return;const n=performance.now(),T=NAV.tap;
   if(T&&n-T.t<330&&Math.hypot(e.clientX-T.x,e.clientY-T.y)<30){NAV.tap=null;const P=groundAt(e.clientX,e.clientY);if(P)flyToPoint(P);return;}NAV.tap={t:n,x:e.clientX,y:e.clientY};});
 function toggleHelp(force){const h=$('help');h.hidden=force!==undefined?!force:!h.hidden;}
 $('helpBtn').addEventListener('click',()=>toggleHelp());$('helpX').addEventListener('click',()=>toggleHelp(false));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('help').hidden)toggleHelp(false);});
 setTimeout(()=>{const hn=$('hint');if(hn)hn.style.opacity='0';},20000);
+/* ---------- v27: gestos táctiles tipo mapa, paseo con joystick y brújula ---------- */
+controls.touches={ONE:THREE.TOUCH.ROTATE,TWO:-1};
+const TC={pts:new Map(),mode:null,vel:new THREE.Vector3(),lastMove:0,P:null,A:null,prev:null,multi:false,lp:null,low:false,idle:0,ang:0,rotAcc:0,rotOn:false,dec:null,acc:null,north:null};
+const PS={on:false,jx:0,jy:0,h:1.65,saved:null};
+const _ty=new THREE.Vector3(),_tq=new THREE.Vector3(),_tr=new THREE.Vector3();
+function tRay(cx,cy){const r=canvas.getBoundingClientRect();NAV.v.set((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1);NAV.ray.setFromCamera(NAV.v,camera);return NAV.ray.ray;}
+/* punto del suelo bajo el dedo, sólo si está a una distancia razonable (si no, cielo u horizonte) */
+function tGround(cx,cy){const ray=tRay(cx,cy);if(ray.direction.y>-0.015)return null;const P=new THREE.Vector3();if(!ray.intersectPlane(NAV.plane,P))return null;
+  if(P.distanceTo(camera.position)>Math.max(90,camera.position.y*14))return null;return P;}
+function yawAbout(piv,a){const cam=camera.position,tg=controls.target;_ty.copy(cam).sub(piv).applyAxisAngle(UP,a);cam.copy(piv).add(_ty);_ty.copy(tg).sub(piv).applyAxisAngle(UP,a);tg.copy(piv).add(_ty);}
+/* mirar alrededor sin moverse: el paisaje sigue al dedo */
+function lookBy(dx,dy){const cam=camera.position,tg=controls.target,k=0.0042*camera.fov/55;_ty.copy(tg).sub(cam);const d=Math.max(1,_ty.length());
+  const sp=new THREE.Spherical().setFromVector3(_ty);sp.theta+=dx*k;sp.phi=clamp(sp.phi-dy*k,PS.on?0.45:0.06,PS.on?2.5:1.62);sp.radius=d;_ty.setFromSpherical(sp);tg.copy(cam).add(_ty);}
+function moveBy(v){camera.position.add(v);controls.target.add(v);}
+function lowQ(on){if(on===TC.low)return;TC.low=on;if(on){const pr=renderer.getPixelRatio();if(pr>1.05){TC.pr=pr;renderer.setPixelRatio(Math.max(0.85,pr*0.6));}else TC.pr=0;}else if(TC.pr){setPR();TC.pr=0;}}
+function tPts(){return [...TC.pts.values()];}
+function tStart(){const p=tPts();TC.vel.set(0,0,0);tween=null;
+  if(p.length===1){TC.multi=false;TC.mode=PS.on?'look':'none';TC.prev={x:p[0].x,y:p[0].y};}
+  else if(p.length>=2){TC.multi=true;clearTimeout(TC.lp);if(PS.on){TC.mode='none';return;}
+    const a=p[0],b=p[1],mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    TC.mode='two';TC.dec=null;TC.acc={d0:Math.hypot(a.x-b.x,a.y-b.y),m0:{x:mx,y:my},a0:{x:a.x,y:a.y},b0:{x:b.x,y:b.y}};TC.rotAcc=0;TC.rotOn=false;
+    TC.A=[tGround(a.x,a.y),tGround(b.x,b.y)];TC.Pm=tGround(mx,my)||new THREE.Vector3(controls.target.x,0,controls.target.z);TC.prev={mx,my,ang:Math.atan2(b.y-a.y,b.x-a.x),d:TC.acc.d0};}
+  TC.moved=false;freeCam();$('hint').style.opacity=0;}
+function tMove(){const p=tPts(),now=performance.now();if(!p.length)return;TC.moved=true;
+  if(TC.mode==='drag'&&p.length===1){const Q=tGround(p[0].x,p[0].y);if(Q&&TC.P){_tq.set(TC.P.x-Q.x,0,TC.P.z-Q.z);moveBy(_tq);const dt=Math.max(0.008,(now-TC.lastMove)/1000);TC.vel.lerp(_tq.clone().divideScalar(dt),0.45);}TC.lastMove=now;}
+  else if(TC.mode==='look'&&p.length===1){lookBy(p[0].x-TC.prev.x,p[0].y-TC.prev.y);TC.prev={x:p[0].x,y:p[0].y};}
+  else if(TC.mode==='two'&&p.length>=2){const a=p[0],b=p[1],mx=(a.x+b.x)/2,my=(a.y+b.y)/2,d=Math.max(8,Math.hypot(a.x-b.x,a.y-b.y)),ang=Math.atan2(b.y-a.y,b.x-a.x);
+    TC.dec='xf';if(!TC.dec){const A=TC.acc,day=a.y-A.a0.y,dby=b.y-A.b0.y,mdx=mx-A.m0.x,mdy=my-A.m0.y,pin=Math.abs(d-A.d0),tot=Math.hypot(mdx,mdy)+pin;
+      if(tot>12){const flat=Math.abs(A.a0.y-A.b0.y)<Math.abs(A.a0.x-A.b0.x)*0.9+30;
+        TC.dec=(flat&&day*dby>0&&Math.abs(mdy)>2*Math.abs(mdx)&&pin<Math.abs(mdy)*0.45)?'tilt':'xf';}
+      else{TC.prev={mx,my,ang,d};return;}}
+    if(TC.dec==='tilt'){const dy=my-TC.prev.my,piv=TC.Pm,cam=camera.position,tg=controls.target;_ty.copy(cam).sub(piv);const sp=new THREE.Spherical().setFromVector3(_ty);
+      const np=clamp(sp.phi-dy*0.006,0.035,1.45);if(Math.abs(np-sp.phi)>1e-5){const o1=_ty.clone().normalize();sp.phi=np;_ty.setFromSpherical(sp);
+        if(piv.y+_ty.y>0.3){const q=new THREE.Quaternion().setFromUnitVectors(o1,_ty.clone().normalize());cam.copy(piv).add(_ty);_tq.copy(tg).sub(piv).applyQuaternion(q);tg.copy(piv).add(_tq);if(tg.y<0)tg.y=0;}}}
+    else{/* pellizco + giro + desplazamiento: el suelo se queda pegado a los dedos */
+      let s=TC.prev.d/d;let da=ang-TC.prev.ang;if(da>Math.PI)da-=2*Math.PI;if(da<-Math.PI)da+=2*Math.PI;
+      da=0;
+      const Q=tGround(mx,my),cam=camera.position,tg=controls.target;
+      const piv=Q||TC.Pm;
+      const dist=cam.distanceTo(tg);s=clamp(s,0.5,2);if(dist*s>controls.maxDistance)s=controls.maxDistance/dist;if(cam.y*s<0.35)s=0.35/Math.max(cam.y,0.35);if(cam.y*s>3200)s=3200/cam.y;
+      _ty.copy(cam).sub(piv).multiplyScalar(s).applyAxisAngle(UP,da);cam.copy(piv).add(_ty);_ty.copy(tg).sub(piv).multiplyScalar(s).applyAxisAngle(UP,da);tg.copy(piv).add(_ty);if(tg.y<0)tg.y=0;
+      if(Q&&TC.Pm){const Q2=tGround(mx,my);if(Q2){_tq.set(TC.Pm.x-Q2.x,0,TC.Pm.z-Q2.z);moveBy(_tq);}}}
+    TC.prev={mx,my,ang,d};}
+}
+function tEnd(){const p=tPts();clearTimeout(TC.lp);
+  if(!p.length){if(TC.mode==='drag'&&performance.now()-TC.lastMove>90)TC.vel.set(0,0,0);if(TC.mode!=='drag')TC.vel.set(0,0,0);TC.mode=null;TC.idle=0;}
+  else{/* queda un dedo: sigue arrastrando desde ahí */TC.mode=null;p.forEach(q=>{q.x0=q.x;q.y0=q.y;});tStart();clearTimeout(TC.lp);}}
+/* los dedos se leen siempre de e.touches (identificadores estables o, si no, por orden) */
+function tSync(e){const old=[...TC.pts.entries()],nm=new Map();let i=0;for(const t of e.touches){let q=TC.pts.get(t.identifier);if(!q&&old[i]&&old.length===e.touches.length)q=old[i][1];
+    nm.set(t.identifier,q?Object.assign(q,{x:t.clientX,y:t.clientY}):{x:t.clientX,y:t.clientY,x0:t.clientX,y0:t.clientY});i++;}const changed=nm.size!==TC.pts.size;TC.pts=nm;return changed;}
+canvas.addEventListener('touchstart',e=>{if(navBusy())return;if(e.touches.length>1||PS.on)e.preventDefault();tSync(e);if(TC.pts.size<=2){TC.mode=null;tStart();}},{passive:false});
+canvas.addEventListener('touchmove',e=>{if(!TC.pts.size)return;if(TC.pts.size>1||PS.on)e.preventDefault();if(tSync(e)){tStart();return;}
+  const q=tPts()[0];if(q&&Math.hypot(q.x-q.x0,q.y-q.y0)>9)clearTimeout(TC.lp);tMove();},{passive:false});
+const tUp=e=>{tSync(e);tEnd();};
+canvas.addEventListener('touchend',tUp);canvas.addEventListener('touchcancel',tUp);
+document.addEventListener('gesturestart',e=>e.preventDefault());
+/* paseo con el ratón: arrastrar para mirar */
+{let md=null;canvas.addEventListener('pointerdown',e=>{if(PS.on&&e.pointerType!=='touch'){md={x:e.clientX,y:e.clientY};try{canvas.setPointerCapture(e.pointerId);}catch(_){}}});
+  canvas.addEventListener('pointermove',e=>{if(md&&PS.on){lookBy(e.clientX-md.x,e.clientY-md.y);md={x:e.clientX,y:e.clientY};}});
+  addEventListener('pointerup',()=>{md=null;});}
+/* joystick */
+{const J=$('joy'),K=$('joyK');let jid=null,cx=0,cy=0;const RAD=46;
+  const set=(x,y)=>{let dx=x-cx,dy=y-cy;const l=Math.hypot(dx,dy);if(l>RAD){dx*=RAD/l;dy*=RAD/l;}K.style.transform='translate('+dx+'px,'+dy+'px)';PS.jx=dx/RAD;PS.jy=dy/RAD;};
+  J.addEventListener('pointerdown',e=>{e.preventDefault();jid=e.pointerId;try{J.setPointerCapture(jid);}catch(_){}const r=J.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;set(e.clientX,e.clientY);});
+  J.addEventListener('pointermove',e=>{if(e.pointerId===jid)set(e.clientX,e.clientY);});
+  const up=e=>{if(e.pointerId!==jid)return;jid=null;PS.jx=PS.jy=0;K.style.transform='';};J.addEventListener('pointerup',up);J.addEventListener('pointercancel',up);}
+function paseo(on){if(on===PS.on)return;const cam=camera.position,tg=controls.target;
+  if(on){if(navBusy())return;freeCam();tween=null;camera.getWorldDirection(_tr);_tr.y=0;if(_tr.lengthSq()<1e-6)_tr.set(0,0,-1);_tr.normalize();
+    const base=cam.y>4?new THREE.Vector3(tg.x,0,tg.z):new THREE.Vector3(cam.x,0,cam.z);
+    PS.saved={minP:controls.minPolarAngle,maxP:controls.maxPolarAngle};controls.minPolarAngle=0;controls.maxPolarAngle=Math.PI;controls.enabled=false;
+    const p=base.clone().setY(PS.h),t=p.clone().addScaledVector(_tr,6);t.y=PS.h-0.35;
+    PS.on=true;tween={fp:cam.clone(),ft:tg.clone(),to:{p,t},t0:performance.now(),dur:cam.y>4?2400:500};}
+  else{PS.on=false;PS.jx=PS.jy=0;controls.enabled=true;if(PS.saved){controls.minPolarAngle=PS.saved.minP;controls.maxPolarAngle=PS.saved.maxP;}
+    _ty.copy(tg).sub(cam);if(_ty.y>-0.2){_ty.y=-Math.max(0.6,_ty.length()*0.15);tg.copy(cam).add(_ty);}}
+  document.body.classList.toggle('walk',PS.on);$('joy').hidden=!PS.on;const b=$('walkBtn');b.setAttribute('aria-pressed',String(PS.on));b.textContent=PS.on?'✕ Salir del paseo':'🚶 Paseo';}
+$('walkBtn').addEventListener('click',()=>paseo(!PS.on));
+{const _fly=flyTo;flyTo=function(){if(PS.on)paseo(false);return _fly.apply(this,arguments);};}
+{const _sc=setCam;setCam=function(v){if(PS.on&&v==='tour')paseo(false);return _sc.apply(this,arguments);};}
+/* brújula: mirar al norte */
+function northUp(){if(navBusy())return;freeCam();TC.north={t0:performance.now()};}
+$('compass').addEventListener('click',northUp);$('compass').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();northUp();}});
+function touchFrame(dt,now){
+  {const nb=navBusy();if(nb!==TC.nb){TC.nb=nb;controls.touches=nb?{ONE:THREE.TOUCH.ROTATE,TWO:THREE.TOUCH.DOLLY_PAN}:{ONE:THREE.TOUCH.ROTATE,TWO:-1};if(nb){TC.pts.clear();TC.mode=null;TC.vel.set(0,0,0);}}}
+  if((VM||XR.on)&&PS.on)paseo(false);
+  if(false){moveBy(_tq.copy(TC.vel).multiplyScalar(dt));TC.vel.multiplyScalar(Math.exp(-4.2*dt));if(TC.vel.length()<0.05+camera.position.y*0.002)TC.vel.set(0,0,0);}
+  if(TC.north&&!tween){const a=TC.ang*DEG;if(Math.abs(a)<0.004||now-TC.north.t0>2500)TC.north=null;else{const st=a*Math.min(1,dt*7);
+    const piv=(PS.on||camera.position.y<4)?camera.position.clone():controls.target.clone();yawAbout(piv,-st*NSIGN);}}
+  if(PS.on&&!tween){const cam=camera.position,tg=controls.target;
+    if(PS.jx||PS.jy){camera.getWorldDirection(_tr);_tr.y=0;_tr.normalize();_ty.set(-_tr.z,0,_tr.x);const mag=Math.min(1,Math.hypot(PS.jx,PS.jy)),sp=1.2+4.3*mag*mag;
+      _tq.set(0,0,0).addScaledVector(_tr,-PS.jy).addScaledVector(_ty,PS.jx);if(_tq.lengthSq()>1e-6){_tq.normalize().multiplyScalar(sp*dt);moveBy(_tq);}}
+    const dy=PS.h-cam.y;if(Math.abs(dy)>1e-4){cam.y+=dy;tg.y+=dy;}}
+  const busy=(TC.pts.size>0&&TC.moved)||TC.vel.lengthSq()>1e-4||(PS.on&&(PS.jx||PS.jy));if(busy){TC.idle=0;lowQ(true);}else if(TC.low){TC.idle+=dt;if(TC.idle>0.35)lowQ(false);}
+}
+const NSIGN=1;
+window.__tc={cam:()=>({p:camera.position.toArray().map(v=>+v.toFixed(3)),t:controls.target.toArray().map(v=>+v.toFixed(3)),ang:+TC.ang.toFixed(2),pr:renderer.getPixelRatio()}),nr:v=>{TC.nr=v;},ground:(x,y)=>{const P=tGround(x,y);return P&&P.toArray().map(v=>+v.toFixed(2));},PS,TC};
+
 function frame(now){
   if(VM&&VM.paused){last=now;renderer.render(scene,camera);requestAnimationFrame(frame);return;}
   const dt=Math.min(0.05,(now-last)/1000);last=now;
@@ -4141,6 +4263,7 @@ function frame(now){
   else if(S.cam==='tour'&&!reduceMotion){tourT=(tourT+dt/95)%1;const p=tourCurve.getPoint(tourT),ahead=tourCurve.getPoint((tourT+0.035)%1);
     camera.position.lerp(p,Math.min(1,dt*1.5));controls.target.lerp(ahead.setY(Math.max(0.9,ahead.y*0.45)),Math.min(1,dt*1.5));}
   kbMove(dt);
+  touchFrame(dt,now);
   controls.update();
   if(camera.position.y<0.15)camera.position.y=0.15;
   sky.position.copy(camera.position);
@@ -4156,8 +4279,8 @@ function frame(now){
   drawMini();
   updateParticles(dt);
   camera.getWorldDirection(fwd);fwd.y=0;fwd.normalize();right.set(-fwd.z,0,fwd.x);
-  const ang=Math.atan2(NORTH.x*right.x+NORTH.y*right.z,NORTH.x*fwd.x+NORTH.y*fwd.z)/DEG;needle.setAttribute('transform','rotate('+ang.toFixed(1)+' 23 23)');
-  renderer.render(scene,camera);
+  const ang=Math.atan2(NORTH.x*right.x+NORTH.y*right.z,NORTH.x*fwd.x+NORTH.y*fwd.z)/DEG;TC.ang=ang;needle.setAttribute('transform','rotate('+ang.toFixed(1)+' 23 23)');
+  if(!TC.nr)renderer.render(scene,camera);
   updateLabels();
   if(!started){started=true;setTimeout(()=>$('loading').classList.add('done'),60);}
   requestAnimationFrame(frame);
