@@ -14,6 +14,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
 <style>
+.ver{margin:2px 0 0;font:500 10.5px/1.3 var(--mono);color:var(--muted);opacity:.75;text-align:right}
+#help .ver{margin-top:12px}
 [hidden]{display:none!important}
 #c{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 details.more>summary,details.fold>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;user-select:none}
@@ -167,7 +169,7 @@ body.vmode #miniWrap{display:none}
     <h3>Ratón</h3><ul><li><b>Arrastrar</b> con el botón izquierdo: girar alrededor del punto que miras</li><li><b>Botón derecho</b> o <b>Mayús + arrastrar</b>: desplazarse sobre el suelo</li><li><b>Rueda</b>: acercar o alejar hacia donde apunta el ratón</li><li><b>Doble clic</b>: volar a ese punto</li><li><b>Clic en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: andar a la altura de los ojos; arrastrar para mirar</li></ul>
     <h3>Teclado</h3><ul><li><b>W A S D</b> o <b>flechas</b>: andar</li><li><b>Q / E</b>: girar a izquierda / derecha</li><li><b>R / F</b>: subir / bajar</li><li><b>Mayús</b>: más rápido</li><li><b>?</b>: esta ayuda</li></ul>
     <h3>Móvil</h3><ul><li><b>Un dedo</b>: girar alrededor del punto que miras</li><li><b>Dos dedos</b>: moverlos juntos para desplazarse; abrirlos o cerrarlos para acercar o alejar hacia ese punto</li><li><b>Doble toque</b>: volar a ese punto</li><li><b>Toque en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: el joystick para andar y un dedo para mirar</li></ul>
-    <h3>Vídeo del año</h3><ul><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul></div>
+    <h3>Vídeo del año</h3><ul><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v27.2 · 18 oct 2026</p></div>
   <button class="btn" id="toggle" type="button" aria-expanded="true" aria-controls="panel">Ocultar ajustes</button>
 
   <aside id="panel" aria-label="Ajustes de la escena">
@@ -251,6 +253,7 @@ body.vmode #miniWrap{display:none}
       <div class="sl"><span>Campo visión</span><input type="range" id="fov" min="30" max="80" step="1" value="55" aria-label="Campo de visión"><output id="fovOut">55°</output></div>
       <p class="note">Si va a tirones en el móvil, baja la calidad.</p>
     </section>
+    <p class="ver">Versión v27.2 · 18 oct 2026</p>
   </aside>
 
   <div id="miniWrap"><canvas id="mini" aria-label="Minimapa de la finca: toca para ir a ese punto"></canvas></div>
@@ -4153,7 +4156,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('help').hidden)t
 setTimeout(()=>{const hn=$('hint');if(hn)hn.style.opacity='0';},20000);
 /* ---------- v27: gestos táctiles tipo mapa, paseo con joystick y brújula ---------- */
 controls.touches={ONE:THREE.TOUCH.ROTATE,TWO:-1};
-const TC={pts:new Map(),mode:null,vel:new THREE.Vector3(),lastMove:0,P:null,A:null,prev:null,multi:false,lp:null,low:false,idle:0,ang:0,rotAcc:0,rotOn:false,dec:null,acc:null,north:null};
+const TC={pend:new THREE.Vector3(),pts:new Map(),mode:null,vel:new THREE.Vector3(),lastMove:0,P:null,A:null,prev:null,multi:false,lp:null,low:false,idle:0,ang:0,rotAcc:0,rotOn:false,dec:null,acc:null,north:null};
 const PS={on:false,jx:0,jy:0,h:1.65,saved:null};
 const _ty=new THREE.Vector3(),_tq=new THREE.Vector3(),_tr=new THREE.Vector3();
 function tRay(cx,cy){const r=canvas.getBoundingClientRect();NAV.v.set((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1);NAV.ray.setFromCamera(NAV.v,camera);return NAV.ray.ray;}
@@ -4185,14 +4188,15 @@ function tMove(){const p=tPts(),now=performance.now();if(!p.length)return;TC.mov
     if(TC.dec==='tilt'){const dy=my-TC.prev.my,piv=TC.Pm,cam=camera.position,tg=controls.target;_ty.copy(cam).sub(piv);const sp=new THREE.Spherical().setFromVector3(_ty);
       const np=clamp(sp.phi-dy*0.006,0.035,1.45);if(Math.abs(np-sp.phi)>1e-5){const o1=_ty.clone().normalize();sp.phi=np;_ty.setFromSpherical(sp);
         if(piv.y+_ty.y>0.3){const q=new THREE.Quaternion().setFromUnitVectors(o1,_ty.clone().normalize());cam.copy(piv).add(_ty);_tq.copy(tg).sub(piv).applyQuaternion(q);tg.copy(piv).add(_tq);if(tg.y<0)tg.y=0;}}}
-    else{/* pellizco + giro + desplazamiento: el suelo se queda pegado a los dedos */
-      let s=TC.prev.d/d;let da=ang-TC.prev.ang;if(da>Math.PI)da-=2*Math.PI;if(da<-Math.PI)da+=2*Math.PI;
-      da=0;
-      const Q=tGround(mx,my),cam=camera.position,tg=controls.target;
-      const piv=Q||TC.Pm;
-      const dist=cam.distanceTo(tg);s=clamp(s,0.5,2);if(dist*s>controls.maxDistance)s=controls.maxDistance/dist;if(cam.y*s<0.35)s=0.35/Math.max(cam.y,0.35);if(cam.y*s>3200)s=3200/cam.y;
-      _ty.copy(cam).sub(piv).multiplyScalar(s).applyAxisAngle(UP,da);cam.copy(piv).add(_ty);_ty.copy(tg).sub(piv).multiplyScalar(s).applyAxisAngle(UP,da);tg.copy(piv).add(_ty);if(tg.y<0)tg.y=0;
-      if(Q&&TC.Pm){const Q2=tGround(mx,my);if(Q2){_tq.set(TC.Pm.x-Q2.x,0,TC.Pm.z-Q2.z);moveBy(_tq);}}}
+    else{/* como Ctrl + ratón: desplazar según la distancia al punto que miras, pellizco suave hacia los dedos */
+      const cam=camera.position,tg=controls.target,dx=mx-TC.prev.mx,dy=my-TC.prev.my;
+      const dist=clamp(cam.distanceTo(tg),1.2,Math.max(15,cam.y*5)),k=2*dist*Math.tan(camera.fov*DEG/2)/Math.max(200,canvas.clientHeight)*0.9;
+      camera.getWorldDirection(_tr);_tr.y=0;if(_tr.lengthSq()<1e-6)_tr.set(0,0,-1);_tr.normalize();_ty.set(-_tr.z,0,_tr.x);
+      TC.pend.addScaledVector(_ty,-dx*k).addScaledVector(_tr,dy*k);
+      let s=TC.prev.d/d;s=clamp(1+(s-1)*0.7,0.86,1.16);
+      if(Math.abs(s-1)>1e-4){const Q=tGround(mx,my),piv=(Q&&Q.distanceTo(cam)<Math.max(25,cam.y*6))?Q:tg.clone();const cd=cam.distanceTo(piv);
+        if(s<1&&cd*s<1.6)s=Math.min(1,1.6/Math.max(cd,1e-3));if(cam.distanceTo(tg)*s>controls.maxDistance)s=1;
+        if(s!==1){const y0=cam.y;_ty.copy(cam).sub(piv).multiplyScalar(s);const ny=piv.y+_ty.y;if(ny>=0.35){cam.copy(piv).add(_ty);_ty.copy(tg).sub(piv).multiplyScalar(s);tg.copy(piv).add(_ty);if(y0<4){const dy=y0-cam.y;cam.y+=dy;tg.y+=dy;}if(tg.y<0)tg.y=0;}}}}
     TC.prev={mx,my,ang,d};}
 }
 function tEnd(){const p=tPts();clearTimeout(TC.lp);
@@ -4236,13 +4240,14 @@ function touchFrame(dt,now){
   {const nb=navBusy();if(nb!==TC.nb){TC.nb=nb;controls.touches=nb?{ONE:THREE.TOUCH.ROTATE,TWO:THREE.TOUCH.DOLLY_PAN}:{ONE:THREE.TOUCH.ROTATE,TWO:-1};if(nb){TC.pts.clear();TC.mode=null;TC.vel.set(0,0,0);}}}
   if((VM||XR.on)&&PS.on)paseo(false);
   if(false){moveBy(_tq.copy(TC.vel).multiplyScalar(dt));TC.vel.multiplyScalar(Math.exp(-4.2*dt));if(TC.vel.length()<0.05+camera.position.y*0.002)TC.vel.set(0,0,0);}
+  if(TC.pend.lengthSq()>1e-8){if(tween)TC.pend.set(0,0,0);else{const f=Math.min(1,dt*14);_tq.copy(TC.pend).multiplyScalar(f);moveBy(_tq);TC.pend.sub(_tq);if(TC.pend.lengthSq()<1e-6&&!TC.pts.size){moveBy(TC.pend);TC.pend.set(0,0,0);}}}
   if(TC.north&&!tween){const a=TC.ang*DEG;if(Math.abs(a)<0.004||now-TC.north.t0>2500)TC.north=null;else{const st=a*Math.min(1,dt*7);
     const piv=(PS.on||camera.position.y<4)?camera.position.clone():controls.target.clone();yawAbout(piv,-st*NSIGN);}}
   if(PS.on&&!tween){const cam=camera.position,tg=controls.target;
     if(PS.jx||PS.jy){camera.getWorldDirection(_tr);_tr.y=0;_tr.normalize();_ty.set(-_tr.z,0,_tr.x);const mag=Math.min(1,Math.hypot(PS.jx,PS.jy)),sp=1.2+4.3*mag*mag;
       _tq.set(0,0,0).addScaledVector(_tr,-PS.jy).addScaledVector(_ty,PS.jx);if(_tq.lengthSq()>1e-6){_tq.normalize().multiplyScalar(sp*dt);moveBy(_tq);}}
     const dy=PS.h-cam.y;if(Math.abs(dy)>1e-4){cam.y+=dy;tg.y+=dy;}}
-  const busy=(TC.pts.size>0&&TC.moved)||TC.vel.lengthSq()>1e-4||(PS.on&&(PS.jx||PS.jy));if(busy){TC.idle=0;lowQ(true);}else if(TC.low){TC.idle+=dt;if(TC.idle>0.35)lowQ(false);}
+  const busy=(TC.pts.size>0&&TC.moved)||TC.pend.lengthSq()>1e-4||TC.vel.lengthSq()>1e-4||(PS.on&&(PS.jx||PS.jy));if(busy){TC.idle=0;lowQ(true);}else if(TC.low){TC.idle+=dt;if(TC.idle>0.35)lowQ(false);}
 }
 const NSIGN=1;
 window.__tc={cam:()=>({p:camera.position.toArray().map(v=>+v.toFixed(3)),t:controls.target.toArray().map(v=>+v.toFixed(3)),ang:+TC.ang.toFixed(2),pr:renderer.getPixelRatio()}),nr:v=>{TC.nr=v;},ground:(x,y)=>{const P=tGround(x,y);return P&&P.toArray().map(v=>+v.toFixed(2));},PS,TC};
