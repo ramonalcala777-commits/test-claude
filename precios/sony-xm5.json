@@ -1,0 +1,8 @@
+{
+  "producto": "Sony WH-1000XM5",
+  "fecha": "2026-10-19",
+  "ofertas": [
+    {"tienda": "PcComponentes", "precio": 277.83, "url": "https://www.pccomponentes.com/sony-wh1000xm5bce7-auriculares-inalambricos-con-cancelacion-de-ruido-negros"},
+    {"tienda": "Fnac", "precio": 259.99, "url": "https://www.fnac.es/Auriculares-Noise-Cancelling-Sony-WH-1000XM5S-Negro-Auriculares-Auriculares-Bluetooth/a9349161"}
+  ]
+}
