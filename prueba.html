@@ -206,7 +206,7 @@ body.vmode #miniWrap{display:none}
     <h3>Ratón</h3><ul><li><b>Arrastrar</b> con el botón izquierdo: girar alrededor del punto que miras</li><li><b>Botón derecho</b> o <b>Mayús + arrastrar</b>: desplazarse sobre el suelo</li><li><b>Rueda</b>: acercar o alejar hacia donde apunta el ratón</li><li><b>Doble clic</b>: volar a ese punto</li><li><b>Clic en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: andar a la altura de los ojos; arrastrar para mirar</li></ul>
     <h3>Teclado</h3><ul><li><b>W A S D</b> o <b>flechas</b>: andar</li><li><b>Q / E</b>: girar a izquierda / derecha</li><li><b>R / F</b>: subir / bajar</li><li><b>Mayús</b>: más rápido</li><li><b>?</b>: esta ayuda</li></ul>
     <h3>Móvil</h3><ul><li><b>Un dedo</b>: girar alrededor del punto que miras</li><li><b>Dos dedos</b>: moverlos juntos para desplazarse; abrirlos o cerrarlos para acercar o alejar hacia ese punto</li><li><b>Doble toque</b>: volar a ese punto</li><li><b>Toque en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: el joystick para andar y un dedo para mirar</li></ul>
-    <h3>Vídeo del año</h3><ul><li><b>Toca la pantalla</b> para ver la barra: pausa, 10 s atrás o adelante, avance y salir</li><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v30.2 · 21 oct 2026</p></div>
+    <h3>Vídeo del año</h3><ul><li><b>Toca la pantalla</b> para ver la barra: pausa, 10 s atrás o adelante, avance y salir</li><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v30.3 · 21 oct 2026</p></div>
   <button class="btn" id="toggle" type="button" aria-expanded="true" aria-controls="panel">Ocultar ajustes</button>
 
   <aside id="panel" aria-label="Ajustes de la escena">
@@ -291,7 +291,7 @@ body.vmode #miniWrap{display:none}
       <div class="sl"><span>Campo visión</span><input type="range" id="fov" min="30" max="80" step="1" value="55" aria-label="Campo de visión"><output id="fovOut">55°</output></div>
       <p class="note">Si va a tirones en el móvil, baja la calidad.</p>
     </section>
-    <p class="ver">Versión v30.2 · 21 oct 2026</p>
+    <p class="ver">Versión v30.3 · 21 oct 2026</p>
   </aside>
 
   <div id="miniWrap"><canvas id="mini" aria-label="Minimapa de la finca: toca para ir a ese punto"></canvas></div>
@@ -825,9 +825,9 @@ function patch(mat,o){
        float len=step(0.965,bh(floor(vBW*vec3(140.0,260.0,140.0))));diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.62,0.58,0.5),len*0.55*(1.0-uBarkOld*0.6));}`)
       .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=0.9;');}
     if(o.leafFx){f=f.replace('#include <common>','#include <common>\nuniform vec3 uSunV,uSunC;uniform float uLW;')
-      .replace('#include <color_fragment>','#include <color_fragment>\nif(!gl_FrontFacing){float gy=dot(diffuseColor.rgb,vec3(0.3,0.55,0.15));diffuseColor.rgb=mix(diffuseColor.rgb,vec3(gy)*vec3(1.0,1.1,0.84),0.52)*1.22;}else{diffuseColor.rgb*=0.93;}')
-      .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=(gl_FrontFacing?0.46:0.9)*(1.0-0.62*uLW);')
-      .replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );','{vec3 Vd=normalize(vViewPosition);float bk=max(0.0,-dot(normal,uSunV));float look=pow(max(0.0,dot(-Vd,uSunV)),3.0);outgoingLight+=diffuseColor.rgb*uSunC*(0.10*bk+0.75*bk*look);}\ngl_FragColor = vec4( outgoingLight, diffuseColor.a );');}
+      .replace('#include <color_fragment>','#include <color_fragment>\nif(!gl_FrontFacing){float gy=dot(diffuseColor.rgb,vec3(0.3,0.55,0.15));diffuseColor.rgb=mix(diffuseColor.rgb,vec3(gy)*vec3(1.0,1.1,0.84),0.45)*1.06;}else{diffuseColor.rgb*=0.93;}')
+      .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=(gl_FrontFacing?0.62:0.9)*(1.0-0.5*uLW);')
+      .replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );','{vec3 Vd=normalize(vViewPosition);float bk=max(0.0,-dot(normal,uSunV));float look=pow(max(0.0,dot(-Vd,uSunV)),3.0);outgoingLight+=diffuseColor.rgb*uSunC*(0.08*bk+0.5*bk*look);}\ngl_FragColor = vec4( outgoingLight, diffuseColor.a );');}
     if(o.strawTint)f=f.replace('#include <map_fragment>','#include <map_fragment>\n{float sfw=length(fwidth(vViewPosition));float sk=1.0-smoothstep(0.3,0.75,sfw);float sh2=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(0.06711056,0.00583715))));if(sh2>sk)discard;}\n{float l=dot(diffuseColor.rgb,vec3(0.33));vec3 g=mix(vec3(0.05,0.085,0.025),vec3(0.16,0.22,0.07),clamp(l*1.7,0.0,1.0));diffuseColor.rgb=mix(diffuseColor.rgb,g,uGreen*0.85);diffuseColor.rgb*=mix(vec3(1.0),vec3(0.82,0.8,0.76),uGW*(1.0-uGreen));}\n#ifdef USE_UV\n{vec2 q=vUv*vec2(36.0,30.0);vec2 c=floor(q),fq=fract(q)-0.5;float hh=fract(sin(dot(c,vec2(12.9898,78.233)))*43758.5453);float pm=step(1.0-0.5*uPop,hh)*smoothstep(0.34,0.1,length(fq))*smoothstep(22.0,55.0,length(vViewPosition));diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.6,0.035,0.02),pm*0.92);}\n#endif');
     if(o.frDots){v='varying vec3 vFW;\n'+v.replace('#include <logdepthbuf_vertex>','{vec4 fw=vec4(transformed,1.0);\n#ifdef USE_INSTANCING\nfw=instanceMatrix*fw;\n#endif\nvFW=(modelMatrix*fw).xyz;}\n#include <logdepthbuf_vertex>');
       f=f.replace('#include <common>','#include <common>\nvarying vec3 vFW;uniform vec4 uFrPk;uniform vec2 uFrD;').replace('#include <color_fragment>','#include <color_fragment>\n'+
@@ -1106,15 +1106,15 @@ function genTree(seed,A,opt){
           const q=new THREE.Vector3(ax+x*rx*rr,cy+yy*ry*rr*(yy<0?0.85:1),az+z*rx*rr);if(q.y<y0+0.25)continue;
           sites.push({q,td:new THREE.Vector3(x,0.2,z).normalize(),phi:rf()*6.283,r:0.3*rf(),r2:rf(),ext:true});}}}}
   // v30.2: las hojas y racimos de relleno se acercan a la rama más próxima (nada flotando en el aire)
-  {const cs=0.25,GR=new Map();let np=0;branches.forEach(b=>{if(b.depth<1)return;const n=b.pts.length;for(let i=0;i<n;i++){const p=b.pts[i];
-      if(i>0){const q0=b.pts[i-1],m=Math.max(1,Math.ceil(q0.distanceTo(p)/0.06));for(let k=1;k<=m;k++){const P=q0.clone().lerp(p,k/m),kk=Math.floor(P.x/cs)+','+Math.floor(P.y/cs)+','+Math.floor(P.z/cs);let a=GR.get(kk);if(!a)GR.set(kk,a=[]);a.push(P);np++;}}}});
+  {const cs=0.3,GR=new Map();let np=0;const kOf=(x,y,z)=>(x+512)*1048576+(y+512)*1024+(z+512);
+    const addP=P=>{const kk=kOf(Math.floor(P.x/cs),Math.floor(P.y/cs),Math.floor(P.z/cs));let a=GR.get(kk);if(!a)GR.set(kk,a=[]);a.push(P);np++;};
+    branches.forEach(b=>{if(b.depth<1)return;const n=b.pts.length;for(let i=1;i<n;i++){const q0=b.pts[i-1],p=b.pts[i],m=Math.max(1,Math.ceil(q0.distanceTo(p)/0.12));for(let k=1;k<=m;k++)addP(q0.clone().lerp(p,k/m));}});
     const near=q=>{const ix=Math.floor(q.x/cs),iy=Math.floor(q.y/cs),iz=Math.floor(q.z/cs);let best=null,bd=1e9;
-      for(let R=1;R<=12;R++){for(let x=-R;x<=R;x++)for(let y=-R;y<=R;y++)for(let z=-R;z<=R;z++){if(R>1&&Math.max(Math.abs(x),Math.abs(y),Math.abs(z))<R)continue;const a=GR.get((ix+x)+','+(iy+y)+','+(iz+z));if(!a)continue;for(const p of a){const d=p.distanceToSquared(q);if(d<bd){bd=d;best=p;}}}
-        if(best&&Math.sqrt(bd)<(R-0.5)*cs)break;}return best;};
+      for(let R=0;R<=4;R++){for(let x=-R;x<=R;x++)for(let y=-R;y<=R;y++){const ex=Math.abs(x)===R||Math.abs(y)===R;for(let z=-R;z<=R;z+=(ex?1:Math.max(1,2*R))){const a=GR.get(kOf(ix+x,iy+y,iz+z));if(!a)continue;for(const p of a){const d=p.distanceToSquared(q);if(d<bd){bd=d;best=p;}}}}
+        if(best&&Math.sqrt(bd)<R*cs)break;}return best;};
     const snap=(q,lim)=>{const p=near(q);if(!p)return;const d=q.distanceTo(p);if(d>lim)q.sub(p).multiplyScalar(lim/d).add(p);};
-    if(np){sites.forEach(S2=>{if(S2.fill||S2.ext)snap(S2.q,0.1);});SHOOT.near=near;
-      SHOOT.add=P=>{const kk=Math.floor(P.x/cs)+','+Math.floor(P.y/cs)+','+Math.floor(P.z/cs);let a=GR.get(kk);if(!a)GR.set(kk,a=[]);a.push(P);};
-      SHOOT.del=P=>{const kk=Math.floor(P.x/cs)+','+Math.floor(P.y/cs)+','+Math.floor(P.z/cs),a=GR.get(kk);if(a){const i=a.indexOf(P);if(i>=0)a.splice(i,1);}};}else SHOOT.near=null;}
+    if(np){sites.forEach(S2=>{if(S2.fill)snap(S2.q,0.1);});SHOOT.near=near;SHOOT.add=addP;
+      SHOOT.del=P=>{const a=GR.get(kOf(Math.floor(P.x/cs),Math.floor(P.y/cs),Math.floor(P.z/cs)));if(a){const i=a.indexOf(P);if(i>=0)a.splice(i,1);}};}else SHOOT.near=null;}
   // nodos -> foliolos (hoja compuesta de 1, 3 o 5)
   const leaves=[],buds=[];const pd=new THREE.Vector3(),a=new THREE.Vector3(),n0=new THREE.Vector3(),side=new THREE.Vector3(),a1=new THREE.Vector3();
   // árboles formados: se reparte el tope de hojas entre todos los nudos antes de crearlas (y las yemas igual)
@@ -4540,7 +4540,7 @@ function frameIn(now){
   if(!started){started=true;setTimeout(()=>$('loading').classList.add('done'),60);}
   requestAnimationFrame(frame);
 }
-window.__tramo={fade:()=>({ok:!!FADE.ok,n:FADE.list.length,v:FADE.list.map(c=>c.fading?+c.fading.t.toFixed(2):-1)}),cutPng:()=>CUT.cv?CUT.cv.toDataURL():null,setCut,startVideo,endVideo,goTo:(k)=>goPlace(k,true),look:(p,t)=>{S.cam='libre';tween=null;camera.position.set(...p);controls.target.set(...t);controls.update();},S,setDoy,applyTime,buildField,info:()=>JSON.stringify(renderer.info.render),stats:()=>JSON.stringify({active:CH.active.size,cache:CH.cache.size,near:NEAR.length,far:CH.cur&&CH.cur.far.count}),time:(fn)=>{const t=performance.now();fn();return Math.round(performance.now()-t);},selectTree:i=>showCard(TREES[i])};
+window.__tramo={gt:(A,n,cap)=>{const t=performance.now();for(let i=0;i<n;i++)genTree(1000+i*17,A,{cap:cap||1200,seg1:14,seg2:7,kmax:1.8});return Math.round(performance.now()-t);},fade:()=>({ok:!!FADE.ok,n:FADE.list.length,v:FADE.list.map(c=>c.fading?+c.fading.t.toFixed(2):-1)}),cutPng:()=>CUT.cv?CUT.cv.toDataURL():null,setCut,startVideo,endVideo,goTo:(k)=>goPlace(k,true),look:(p,t)=>{S.cam='libre';tween=null;camera.position.set(...p);controls.target.set(...t);controls.update();},S,setDoy,applyTime,buildField,info:()=>JSON.stringify(renderer.info.render),stats:()=>JSON.stringify({active:CH.active.size,cache:CH.cache.size,near:NEAR.length,far:CH.cur&&CH.cur.far.count}),time:(fn)=>{const t=performance.now();fn();return Math.round(performance.now()-t);},selectTree:i=>showCard(TREES[i])};
 setTimeout(()=>{
   try{
     {const hb=[...document.querySelectorAll('.seg[data-k="season"] button')].find(b=>b.textContent.trim()==='Hoy');if(hb){hb.dataset.v=String(TODAY.doy);hb.title='Hoy: '+dateLong(TODAY.doy);}}presetFor(S.doy);
