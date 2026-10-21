@@ -206,7 +206,7 @@ body.vmode #miniWrap{display:none}
     <h3>Ratón</h3><ul><li><b>Arrastrar</b> con el botón izquierdo: girar alrededor del punto que miras</li><li><b>Botón derecho</b> o <b>Mayús + arrastrar</b>: desplazarse sobre el suelo</li><li><b>Rueda</b>: acercar o alejar hacia donde apunta el ratón</li><li><b>Doble clic</b>: volar a ese punto</li><li><b>Clic en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: andar a la altura de los ojos; arrastrar para mirar</li></ul>
     <h3>Teclado</h3><ul><li><b>W A S D</b> o <b>flechas</b>: andar</li><li><b>Q / E</b>: girar a izquierda / derecha</li><li><b>R / F</b>: subir / bajar</li><li><b>Mayús</b>: más rápido</li><li><b>?</b>: esta ayuda</li></ul>
     <h3>Móvil</h3><ul><li><b>Un dedo</b>: girar alrededor del punto que miras</li><li><b>Dos dedos</b>: moverlos juntos para desplazarse; abrirlos o cerrarlos para acercar o alejar hacia ese punto</li><li><b>Doble toque</b>: volar a ese punto</li><li><b>Toque en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: el joystick para andar y un dedo para mirar</li></ul>
-    <h3>Vídeo del año</h3><ul><li><b>Toca la pantalla</b> para ver la barra: pausa, 10 s atrás o adelante, avance y salir</li><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v30.1 · 21 oct 2026</p></div>
+    <h3>Vídeo del año</h3><ul><li><b>Toca la pantalla</b> para ver la barra: pausa, 10 s atrás o adelante, avance y salir</li><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v30.2 · 21 oct 2026</p></div>
   <button class="btn" id="toggle" type="button" aria-expanded="true" aria-controls="panel">Ocultar ajustes</button>
 
   <aside id="panel" aria-label="Ajustes de la escena">
@@ -291,7 +291,7 @@ body.vmode #miniWrap{display:none}
       <div class="sl"><span>Campo visión</span><input type="range" id="fov" min="30" max="80" step="1" value="55" aria-label="Campo de visión"><output id="fovOut">55°</output></div>
       <p class="note">Si va a tirones en el móvil, baja la calidad.</p>
     </section>
-    <p class="ver">Versión v30.1 · 21 oct 2026</p>
+    <p class="ver">Versión v30.2 · 21 oct 2026</p>
   </aside>
 
   <div id="miniWrap"><canvas id="mini" aria-label="Minimapa de la finca: toca para ir a ese punto"></canvas></div>
@@ -1019,6 +1019,7 @@ function growth(A){const age=Math.max(A,0.02),sz=sizeOf(age);return{age,sz,trunk
 const UNLOCK=[0,0,0.9,2.3,3.6,4.8];
 let PRU_FORCE=null;
 function unprunedNow(){if(PRU_FORCE!==null)return PRU_FORCE;if(S.year!==LAB_YEAR)return false;if(VM&&VM.hold&&VM.hold.lab.k==='poda')return VM.hold.p<0.5;return S.doy<15;}
+const SHOOT={near:null};
 function genTree(seed,A,opt){
   const G=growth(A),branches=[],nodes=[],sites=[];
   const ramp=d=>d>4?0:smooth(UNLOCK[d],UNLOCK[d]+0.7,G.age);
@@ -1088,8 +1089,8 @@ function genTree(seed,A,opt){
         const q=an.clone().addScaledVector(rv,rad).addScaledVector(out,rad*0.35*rf());q.y-=rad*0.35*rf();
         if(q.y<hc-0.3||Math.hypot(q.x,q.z)<0.35*Rt&&q.y<hc+Ry*0.9)continue;
         const td=out.clone().multiplyScalar(0.7).add(new THREE.Vector3(0,0.3+rv.y*0.3,0)).addScaledVector(rv,0.4).normalize();
-        nodes.push({q,td,phi:rf()*6.283,tip:rf()<0.08,f:0.3+0.7*rf(),seed:hashI(seed,7000+k)});
-        if(q.y<hc+Ry*1.3&&rf()<0.09)sites.push({q:q.clone().addScaledVector(out,0.12),td,phi:rf()*6.283,r:rf(),r2:rf()});}
+        nodes.push({q,td,phi:rf()*6.283,tip:rf()<0.08,f:0.3+0.7*rf(),seed:hashI(seed,7000+k),fill:1});
+        if(q.y<hc+Ry*1.3&&rf()<0.09)sites.push({q:q.clone().addScaledVector(out,0.12),td,phi:rf()*6.283,r:rf(),r2:rf(),fill:1});}
       // cúpula: semiejes ~0,9 del tope de copa, base algo por encima de la cruz; borde con lóbulos para que no sea una bola perfecta
       if(nD>0){const y0=hc*0.85,cy=(y0+Ht)/2,ry=(Ht-y0)/2,rx=Rt*0.92,lob=[rf()*6.283,rf()*6.283,rf()*6.283];
         for(let k=0;k<nD;k++){let x,y,z;do{x=rf()*2-1;y=rf()*2-1;z=rf()*2-1;}while(x*x+y*y+z*z>1);
@@ -1098,16 +1099,34 @@ function genTree(seed,A,opt){
           const rr=sh*lb;const q=new THREE.Vector3(ax+x*rx*rr,cy+y*ry*rr*(y<0?0.85:1),az+z*rx*rr);
           if(q.y<y0+0.05)continue;if(HOLE>0.01&&y>-0.1&&Math.hypot(x,z)*rr<0.5*HOLE)continue;
           const td=new THREE.Vector3(x*0.75,0.35+y*0.5,z*0.75).addScaledVector(rv.set(rf()-0.5,rf()-0.5,rf()-0.5),0.5).normalize();
-          nodes.push({q,td,phi:rf()*6.283,tip:rf()<0.07,f:0.3+0.7*rf(),seed:hashI(seed,9000+k)});
-          if(sh>0.8&&q.y<cy+ry*0.6&&rf()<0.05)sites.push({q:q.clone(),td,phi:rf()*6.283,r:0.3+0.7*rf(),r2:rf()});}
+          nodes.push({q,td,phi:rf()*6.283,tip:rf()<0.07,f:0.3+0.7*rf(),seed:hashI(seed,9000+k),fill:1});
+          if(sh>0.8&&q.y<cy+ry*0.6&&rf()<0.05)sites.push({q:q.clone(),td,phi:rf()*6.283,r:0.3+0.7*rf(),r2:rf(),fill:1});}
         const nS=Math.round(520*FRM);for(let k=0;k<nS;k++){const az1=rf()*6.283,yy=-0.5+1.42*Math.pow(rf(),0.85),hz=Math.sqrt(Math.max(0,1-yy*yy));
           const lb=1+0.09*Math.sin(3*az1+lob[0])+0.06*Math.sin(5*az1+lob[1]),rr=(1.04+0.08*rf())*lb,x=Math.cos(az1)*hz,z=Math.sin(az1)*hz;
           const q=new THREE.Vector3(ax+x*rx*rr,cy+yy*ry*rr*(yy<0?0.85:1),az+z*rx*rr);if(q.y<y0+0.25)continue;
           sites.push({q,td:new THREE.Vector3(x,0.2,z).normalize(),phi:rf()*6.283,r:0.3*rf(),r2:rf(),ext:true});}}}}
+  // v30.2: las hojas y racimos de relleno se acercan a la rama más próxima (nada flotando en el aire)
+  {const cs=0.25,GR=new Map();let np=0;branches.forEach(b=>{if(b.depth<1)return;const n=b.pts.length;for(let i=0;i<n;i++){const p=b.pts[i];
+      if(i>0){const q0=b.pts[i-1],m=Math.max(1,Math.ceil(q0.distanceTo(p)/0.06));for(let k=1;k<=m;k++){const P=q0.clone().lerp(p,k/m),kk=Math.floor(P.x/cs)+','+Math.floor(P.y/cs)+','+Math.floor(P.z/cs);let a=GR.get(kk);if(!a)GR.set(kk,a=[]);a.push(P);np++;}}}});
+    const near=q=>{const ix=Math.floor(q.x/cs),iy=Math.floor(q.y/cs),iz=Math.floor(q.z/cs);let best=null,bd=1e9;
+      for(let R=1;R<=12;R++){for(let x=-R;x<=R;x++)for(let y=-R;y<=R;y++)for(let z=-R;z<=R;z++){if(R>1&&Math.max(Math.abs(x),Math.abs(y),Math.abs(z))<R)continue;const a=GR.get((ix+x)+','+(iy+y)+','+(iz+z));if(!a)continue;for(const p of a){const d=p.distanceToSquared(q);if(d<bd){bd=d;best=p;}}}
+        if(best&&Math.sqrt(bd)<(R-0.5)*cs)break;}return best;};
+    const snap=(q,lim)=>{const p=near(q);if(!p)return;const d=q.distanceTo(p);if(d>lim)q.sub(p).multiplyScalar(lim/d).add(p);};
+    if(np){sites.forEach(S2=>{if(S2.fill||S2.ext)snap(S2.q,0.1);});SHOOT.near=near;
+      SHOOT.add=P=>{const kk=Math.floor(P.x/cs)+','+Math.floor(P.y/cs)+','+Math.floor(P.z/cs);let a=GR.get(kk);if(!a)GR.set(kk,a=[]);a.push(P);};
+      SHOOT.del=P=>{const kk=Math.floor(P.x/cs)+','+Math.floor(P.y/cs)+','+Math.floor(P.z/cs),a=GR.get(kk);if(a){const i=a.indexOf(P);if(i>=0)a.splice(i,1);}};}else SHOOT.near=null;}
   // nodos -> foliolos (hoja compuesta de 1, 3 o 5)
   const leaves=[],buds=[];const pd=new THREE.Vector3(),a=new THREE.Vector3(),n0=new THREE.Vector3(),side=new THREE.Vector3(),a1=new THREE.Vector3();
   // árboles formados: se reparte el tope de hojas entre todos los nudos antes de crearlas (y las yemas igual)
   const cap=Math.round(opt.cap*(1+0.6*ramF)*(1+0.3*FRM+0.5*Math.max(0,DOME*0.85-FRM)));let nn=0;for(const L of nodes)if(!L.budOnly)nn++;const keepQ=Math.min(1,cap/Math.max(1,nn));
+  if(SHOOT.near){const near=SHOOT.near,cs=0.3,grp=new Map();
+    for(const L of nodes){if(!L.fill||L.budOnly)continue;if(keepQ<1&&(hashI(L.seed,7)&65535)/65536>=keepQ)continue;const k=Math.floor(L.q.x/cs)+','+Math.floor(L.q.y/cs)+','+Math.floor(L.q.z/cs);let g=grp.get(k);if(!g)grp.set(k,g=[]);g.push(L);}
+    const C=new THREE.Vector3(),D=new THREE.Vector3(),Pj=new THREE.Vector3();
+    const GL=[...grp.values()].map(g=>{const c=new THREE.Vector3();g.forEach(L=>c.add(L.q));c.multiplyScalar(1/g.length);const p=near(c);return {g,c,d:p?p.distanceTo(c):1e9};}).sort((a,b)=>a.d-b.d);
+    for(const {g,c} of GL){C.copy(c);const p0=near(C);if(!p0)continue;const p=p0.clone();SHOOT.del(p0);const len=p.distanceTo(C);if(len<0.07)continue;
+      D.subVectors(C,p).normalize();const E=C.clone().addScaledVector(D,0.1),L2=len+0.1,M=p.clone().lerp(E,0.5);M.y+=0.04*L2;
+      branches.push({pts:[p.clone(),M,E],rad:[0.0045,0.0035,0.0022],depth:2,twig:1});for(let k=1;k<=4;k++){const P=p.clone().lerp(E,k/4);P.y+=0.04*L2*4*(k/4)*(1-k/4);SHOOT.add(P);}
+      g.forEach(L=>{const t=clamp(Pj.subVectors(L.q,p).dot(D),0.15*L2,L2);Pj.copy(p).addScaledVector(D,t);Pj.y+=0.04*L2*4*(t/L2)*(1-t/L2);const off=L.q.clone().sub(Pj);const dl=off.length();if(dl>0.05)off.multiplyScalar(0.05/dl);L.q.copy(Pj).add(off);});}}
   for(const L of nodes){
     if(!L.budOnly&&keepQ<1&&(hashI(L.seed,7)&65535)/65536>=keepQ)continue;
     const r=rng(L.seed);
