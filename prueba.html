@@ -206,7 +206,7 @@ body.vmode #miniWrap{display:none}
     <h3>Ratón</h3><ul><li><b>Arrastrar</b> con el botón izquierdo: girar alrededor del punto que miras</li><li><b>Botón derecho</b> o <b>Mayús + arrastrar</b>: desplazarse sobre el suelo</li><li><b>Rueda</b>: acercar o alejar hacia donde apunta el ratón</li><li><b>Doble clic</b>: volar a ese punto</li><li><b>Clic en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: andar a la altura de los ojos; arrastrar para mirar</li></ul>
     <h3>Teclado</h3><ul><li><b>W A S D</b> o <b>flechas</b>: andar</li><li><b>Q / E</b>: girar a izquierda / derecha</li><li><b>R / F</b>: subir / bajar</li><li><b>Mayús</b>: más rápido</li><li><b>?</b>: esta ayuda</li></ul>
     <h3>Móvil</h3><ul><li><b>Un dedo</b>: girar alrededor del punto que miras</li><li><b>Dos dedos</b>: moverlos juntos para desplazarse; abrirlos o cerrarlos para acercar o alejar hacia ese punto</li><li><b>Doble toque</b>: volar a ese punto</li><li><b>Toque en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: el joystick para andar y un dedo para mirar</li></ul>
-    <h3>Vídeo del año</h3><ul><li><b>Toca la pantalla</b> para ver la barra: pausa, 10 s atrás o adelante, avance y salir</li><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v31 · 24 oct 2026</p></div>
+    <h3>Vídeo del año</h3><ul><li><b>Toca la pantalla</b> para ver la barra: pausa, 10 s atrás o adelante, avance y salir</li><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v32 · 24 oct 2026</p></div>
   <button class="btn" id="toggle" type="button" aria-expanded="true" aria-controls="panel">Ocultar ajustes</button>
 
   <aside id="panel" aria-label="Ajustes de la escena">
@@ -291,7 +291,7 @@ body.vmode #miniWrap{display:none}
       <div class="sl"><span>Campo visión</span><input type="range" id="fov" min="30" max="80" step="1" value="55" aria-label="Campo de visión"><output id="fovOut">55°</output></div>
       <p class="note">Si va a tirones en el móvil, baja la calidad.</p>
     </section>
-    <p class="ver">Versión v31 · 24 oct 2026</p>
+    <p class="ver">Versión v32 · 24 oct 2026</p>
   </aside>
 
   <div id="miniWrap"><canvas id="mini" aria-label="Minimapa de la finca: toca para ir a ese punto"></canvas></div>
@@ -684,14 +684,17 @@ const STRIPS=FD.strips.map((s,i)=>({u0:s[0],v0:s[1],u1:s[2],v1:s[3],i}));
 const vAt=(r,u)=>r.v0+(r.v1-r.v0)*(r.u1===r.u0?0:(u-r.u0)/(r.u1-r.u0));
 
 /* ---------- Fenología (Sirora, La Mancha, orientativa) ---------- */
-const PROD={2027:0.06,2028:0.28,2029:0.42,2030:0.58,2031:0.75,2032:0.88,2033:0.95,2034:1,2035:1};
+const PROD={2028:0.06,2029:0.24,2030:0.4,2031:0.56,2032:0.72,2033:0.86,2034:0.95,2035:1};
 /* tamaño a final de verano según edad (años desde la plantación + 0,75): altura, diámetro de copa y de tronco (m) */
 const SIZE=[[0,1.2,0.25,0.016],[0.75,1.48,1.1,0.03],[1.75,2.0,1.1,0.04],[2.75,2.2,1.8,0.05],[3.75,2.3,2.6,0.075],[4.75,2.5,2.9,0.09],[5.75,2.7,3.2,0.11],[6.75,2.9,3.5,0.13],[7.75,3.1,3.8,0.15],[8.75,3.3,4.1,0.16],[9.75,3.5,4.3,0.17],[10.75,3.6,4.5,0.18]];
 function sizeOf(A){if(A<=SIZE[0][0])return SIZE[0].slice(1);for(let i=1;i<SIZE.length;i++){if(A<=SIZE[i][0]){const a=SIZE[i-1],b=SIZE[i],t=(A-a[0])/(b[0]-a[0]);return [a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t,a[3]+(b[3]-a[3])*t];}}return SIZE[SIZE.length-1].slice(1);}
 const HULLK=[[116,'#b35a4a'],[148,'#a8834f'],[170,'#9fb35e'],[200,'#b3bb62'],[216,'#c8bb62'],[227,'#d69a78'],[238,'#d9787c'],[250,'#d2646f'],[260,'#c25a66']];
 function hullAt(doy){const k=HULLK;if(doy<=k[0][0])return C(k[0][1]);for(let i=1;i<k.length;i++)if(doy<=k[i][0]){const t=(doy-k[i-1][0])/(k[i][0]-k[i-1][0]);return mixC(C(k[i-1][1]),C(k[i][1]),t);}return C(k[k.length-1][1]);}
 const prodOf=y=>PROD[y]||0;
-const ageOf=(y,doy)=>Math.max(0.02,(y-2025)-0.25+smooth(88,212,doy));
+// v32: edad «de tamaño». 2025-2026 sin cambios; 2027 es intermedio; final de 2028 = final del antiguo 2027 (2,75); desde ahí alcanza el árbol adulto a final de 2035 (10,75)
+const ageRaw=(y,doy)=>Math.max(0.02,(y-2025)-0.25+smooth(88,212,doy));
+function ageMap(a){if(a<=1.75)return a;if(a<=3.75)return 1.75+(a-1.75)*0.5;return 2.75+(a-3.75)*8/7;}
+const ageOf=(y,doy)=>ageMap(ageRaw(y,doy));
 function phen(doy,year){
   const p=prodOf(year)>0,mow=year===LAB_YEAR?196.5:228;
   return{
@@ -1024,6 +1027,8 @@ const COL={trunk:C('#8d8373'),trunkOld:C('#675b4e'),shoot:C('#7c6448'),shootTip:
   leafD:C('#3b602e'),leafM:C('#517d36'),leafL:C('#73a045'),leafY:C('#a4b858'),leafB:C('#9a6a3e'),
   prot:C('#3aae90'),stake:C('#a3a8ab'),tie:C('#d4482b'),bud:C('#6b4a33')};
 // vigor de la Sirora: brotes un 50 % más largos con la misma ramificación desde 2026; la copa no pasa del marco (5,5 m de diámetro, 5 m de alto)
+// v32: medio ancho máximo de la copa hacia la calle (6,5 m entre filas → 2,3 m libres) y altura libre bajo la copa
+const CROWN_Z=2.1,SKIRT=1.0;
 const VGF=A=>1+0.95*smooth(0.75,1.75,A);const CROWN_R=2.75,CROWN_H=5.0;
 function growth(A){const age=Math.max(A,0.02),sz=sizeOf(age);return{age,sz,trunkR:sz[2]/2,L1:age<1.73?0.1+1.08*age/1.73:Math.min(0.45+0.42*age,3.0),scaffEl:48+14*smooth(1.8,3.4,age)};}
 const UNLOCK=[0,0,0.9,2.3,3.6,4.8];
@@ -1115,6 +1120,15 @@ function genTree(seed,A,opt){
           const lb=1+0.09*Math.sin(3*az1+lob[0])+0.06*Math.sin(5*az1+lob[1]),rr=(1.04+0.08*rf())*lb,x=Math.cos(az1)*hz,z=Math.sin(az1)*hz;
           const q=new THREE.Vector3(ax+x*rx*rr,cy+yy*ry*rr*(yy<0?0.85:1),az+z*rx*rr);if(q.y<y0+0.25)continue;
           sites.push({q,td:new THREE.Vector3(x,0.2,z).normalize(),phi:rf()*6.283,r:0.3*rf(),r2:rf(),ext:true});}}}}
+  // v32: copa ovalada (el eje z local va a lo ancho de la calle; los árboles solo giran 0° o 180°) y falda despejada para vibrador y paraguas
+  let kz=1;{const ax0=tp[6].x,az0=tp[6].z,HZ=(CROWN_Z-0.42)/1.1;let mz=0;const zs=[];nodes.forEach(L=>zs.push(Math.abs(L.q.z-az0)));branches.forEach(b=>{if(b.depth>=1)b.pts.forEach(q=>zs.push(Math.abs(q.z-az0)));});
+    zs.sort((x,y)=>x-y);mz=zs.length?zs[Math.floor(zs.length*0.97)]:0;if(mz>HZ)kz=HZ/mz;
+    const cz=q=>{let z=(q.z-az0)*kz;if(Math.abs(z)>HZ)z=Math.sign(z)*(HZ+(Math.abs(z)-HZ)*0.25);q.z=az0+z;};
+    const sk=G.age>=1.75?SKIRT/0.9:0;
+    branches.forEach(b=>{if(b.depth<1)return;b.pts.forEach((q,i)=>{cz(q);if(sk&&i>0&&q.y<sk)q.y=sk+(q.y-sk)*0.15;});});
+    nodes.forEach(L=>{cz(L.q);if(kz<1){L.td.z*=kz;L.td.normalize();}});sites.forEach(S2=>{cz(S2.q);});
+    if(sk){for(let i=nodes.length-1;i>=0;i--)if(nodes[i].q.y<sk+0.04)nodes.splice(i,1);for(let i=sites.length-1;i>=0;i--)if(sites[i].q.y<sk+0.02)sites.splice(i,1);}
+    if(CROWN.v)CROWN.v.kz=kz;}
   // v30.2: las hojas y racimos de relleno se acercan a la rama más próxima (nada flotando en el aire)
   {const cs=0.3,GR=new Map();let np=0;const kOf=(x,y,z)=>(x+512)*1048576+(y+512)*1024+(z+512);
     const addP=P=>{const kk=kOf(Math.floor(P.x/cs),Math.floor(P.y/cs),Math.floor(P.z/cs));let a=GR.get(kk);if(!a)GR.set(kk,a=[]);a.push(P);np++;};
@@ -1150,8 +1164,9 @@ function genTree(seed,A,opt){
     leaves.push({p:L.q.clone(),d:a.clone(),n:n0.clone(),s:slc,young:L.tip?1:0,cr:r(),emerge:clamp(0.7*L.f+0.3*r(),0,1),fall:r(),keep:r(),w:r(),at});
   }
   let out=leaves;if(keepQ<1){const k=Math.min(opt.kmax?1.55+(opt.kmax-1.55)*FRM:1.55,Math.sqrt(1/keepQ));out.forEach(l=>l.s*=k);}
+  {const az0=tp[6].z,LZ=CROWN_Z/1.1;out.forEach(l=>{const tip=l.p.z-az0+l.d.z*l.s;if(Math.abs(tip)>LZ){l.d.z=-l.d.z*0.6;l.d.normalize();const t2=l.p.z-az0+l.d.z*l.s;if(Math.abs(t2)>LZ)l.s*=Math.max(0.5,(LZ-Math.abs(l.p.z-az0))/Math.max(0.05,Math.abs(l.d.z*l.s)));}});}
   let ext=0.3;branches.forEach(b=>b.pts.forEach(p=>{ext=Math.max(ext,Math.hypot(p.x,p.z));}));
-  const crown=CROWN.v;CROWN.v=null;return {branches,leaves:out,buds,sites,G,hc,ext,crown};
+  const crown=CROWN.v;CROWN.v=null;let extZ=0.3;{const az0=tp[6].z;out.forEach(l=>{extZ=Math.max(extZ,Math.abs(l.p.z-az0));});}return {branches,leaves:out,buds,sites,G,hc,ext,extZ,crown};
 }
 function leafColor(l,y){
   let c=l.cr<0.4?mixC(COL.leafD,COL.leafM,l.cr/0.4):mixC(COL.leafM,COL.leafL,(l.cr-0.4)/0.6*0.8);
@@ -1593,16 +1608,16 @@ function* buildChunkGen(cell,A){
   const bark=new GB(),barkF=new GB();const volList=[],leafList=[],budList=[],litterList=[],fruit=[],male=[],nutList=[],cutList=[];const lab26=S.year===LAB_YEAR;const sidesBy=[8,5,4,3,3];
   for(const t of cell.trees){
     const T=treeFor(t,A);
-    t.h=T.branches.reduce((m,b)=>Math.max(m,b.pts[b.pts.length-1].y),1.3);t.hc=T.hc;t.ext=T.ext;
-    const rot=rng(t.sid*31)()*6.283;t.rot=rot;
-    const vg=0.9+((hashI(t.sid,11)>>>13)%200)/1000,rt=rng(t.sid*53+9);t.vg=vg;t.h*=vg;t.ext*=vg;
+    t.h=T.branches.reduce((m,b)=>Math.max(m,b.pts[b.pts.length-1].y),1.3);t.hc=T.hc;t.ext=T.ext;t.extZ=T.extZ;
+    const rot=rng(t.sid*31)()<0.5?0:Math.PI;t.rot=rot;
+    const vg=0.9+((hashI(t.sid,11)>>>13)%200)/1000,rt=rng(t.sid*53+9);t.vg=vg;t.h*=vg;t.ext*=vg;t.extZ*=vg;
     const tint=[0.93+0.12*rt(),0.95+0.1*rt(),0.9+0.16*rt()];
     M.makeRotationY(rot).scale(Sc.set(vg,vg,vg)).setPosition(t.u,0,t.v);
     T.branches.forEach(b=>{if(q.sides===0&&b.depth>=3||q.sides===1&&b.depth>=5)return;const fine=b.twig||b.depth>=3||b.rad[0]<0.009;
       let pts=b.pts,rad=b.rad;if(fine&&pts.length>4){const keep=pts.map((_,i)=>i).filter(i=>i%2===0||i===pts.length-1);pts=keep.map(i=>b.pts[i]);rad=keep.map(i=>b.rad[i]);}
       const sd=fine?3:Math.max(3,sidesBy[Math.min(4,b.depth)]-(q.sides===0?1:0));tube(fine?barkF:bark,pts,rad,sd,f=>barkColor(b.depth,f,T.G),M);});
     const Mc=M.clone();T.leaves.forEach(l=>leafList.push({l,M:Mc,tint}));
-    if(T.crown&&T.crown.k>0.15){const c=T.crown,Mv=new THREE.Matrix4().makeTranslation(c.cx,c.cy+c.ry*0.04,c.cz).multiply(new THREE.Matrix4().makeScale(c.rx*0.66*c.k+0.05,c.ry*0.64*c.k+0.05,c.rx*0.66*c.k+0.05));volList.push(M.clone().multiply(Mv));}
+    if(T.crown&&T.crown.k>0.15){const c=T.crown,Mv=new THREE.Matrix4().makeTranslation(c.cx,c.cy+c.ry*0.04,c.cz).multiply(new THREE.Matrix4().makeScale(c.rx*0.66*c.k+0.05,c.ry*0.64*c.k+0.05,c.rx*0.66*c.k*(c.kz||1)+0.05));volList.push(M.clone().multiply(Mv));}
     if(lab26&&G.age<1.2)T.branches.forEach(b=>{if(b.depth!==1)return;const n=b.pts.length,e=b.pts[n-1].clone().applyMatrix4(M),d=b.pts[n-1].clone().sub(b.pts[n-2]).transformDirection(M);cutList.push([e,d,b.rad[n-1]*vg*1.15]);});
     {const Mb=M.clone();T.buds.forEach(b=>{if(q.sides===0&&b.dp>=3||q.sides===1&&b.dp>=5)return;budList.push({b,M:Mb});});}
     if(prod>0){const lim=Math.round(q.clusters*prod),arr=T.sites.slice().sort((a,b)=>a.r-b.r).slice(0,lim);
@@ -1765,7 +1780,7 @@ function updateShade(){
   SHADE.u.uD.value=SHADE.dB*clamp(sun.intensity/1.5,0,1)*(1-0.5*S.clouds);SHADE.u.uSun.value.copy(SUNDIR);SHADE.u.uCam.value.copy(camera.position);SHADE.u.uNear.value=Q[S.quality].shadowR;
   LFX.sunV.value.copy(SUNDIR).transformDirection(camera.matrixWorldInverse);LFX.sunC.value.copy(sun.color).multiplyScalar(sun.intensity*0.55);}
 const _m4=new THREE.Matrix4(),_q4=new THREE.Quaternion(),_s4=new THREE.Vector3(),_p4=new THREE.Vector3(),_yax=new THREE.Vector3(0,1,0);
-function treeMatrix(t){const h=hashI(t.sid,11);_q4.setFromAxisAngle(_yax,(h%6283)/1000);const s=0.9+((h>>>13)%200)/1000;return _m4.compose(_p4.set(t.u,0,t.v),_q4,_s4.set(s,s,s));}
+function treeMatrix(t){const h=hashI(t.sid,11);_q4.setFromAxisAngle(_yax,(h&1)?Math.PI:0);const s=0.9+((h>>>13)%200)/1000;return _m4.compose(_p4.set(t.u,0,t.v),_q4,_s4.set(s,s,s));}
 function rebuildRings(f){
   const as=CH.cur;if(!as)return;CH.ringFocus.copy(f);CH.dirtyRings=false;
   const q=Q[S.quality],Rm2=q.mid*q.mid,Rl2=Math.pow(Math.min(q.mid*0.5,55),2),Rs2=Math.pow(q.shadowR+8,2),mid=[];for(let v=0;v<NV;v++)mid.push([[],[],[]]);
@@ -1933,7 +1948,7 @@ function showCard(t){
    '<p class="where">Fila '+t.row+' · árbol '+t.pos+' · '+PIECE_N[t.piece]+(t.tramo?' · tramo de Randy y Ruso':'')+'</p>'+
    '<div class="kv"><span>'+(t.t?'Otro macho más cercano':'Macho más cercano')+'</span><b>'+TYPE_N[t.mt]+' a '+fmt(t.dm,1)+' m</b></div>'+
    '<div class="kv"><span>Altura el '+dateShort(S.doy)+' de '+S.year+'</span><b>≈ '+fmt(t.h,1)+' m</b></div>'+
-   '<div class="kv"><span>Copa</span><b>≈ '+fmt((t.ext||0.3)*2,1)+' m</b></div>'+
+   '<div class="kv"><span>Copa (fila · calle)</span><b>≈ '+fmt(Math.min(2*CROWN_R,(t.ext||0.3)*2),1)+' · '+fmt(Math.min((t.ext||0.3)*2,(t.extZ||t.ext||0.3)*2+0.3),1)+' m</b></div>'+
    '<div class="kv"><span>Cruz</span><b>'+fmt(t.hc,2)+' m</b></div>'+
    (nc?'<div class="kv"><span>'+(t.t?'Panículas dibujadas':'Racimos dibujados')+'</span><b>'+nc+'</b></div>':'')+
    '<div class="kv"><span>Riego por árbol</span><b>≈ '+fmt(lph,1)+' l/h</b></div>'+
@@ -1994,10 +2009,10 @@ function applyTime(){frostUpd();
 }
 function updateYearNote(){
   const y=S.year,A=ageOf(y,S.doy);
-  let t=y===2025?'Primer verde: plantón con 2–3 brotes desde la cruz.':y===2026?'Segundo verde.':'Árboles de unos '+fmt(Math.max(A,0.1),1)+' años en esta fecha.';
+  const Ar=ageRaw(y,S.doy);let t=y===2025?'Primer verde: plantón con 2–3 brotes desde la cruz.':y===2026?'Segundo verde.':'Árboles de unos '+fmt(Math.max(Ar,0.1),1)+' años en esta fecha.';
   t+=y>=2027?' Dos gomas por fila, a 1 m a cada lado del tronco.':' Una goma por fila, pegada al protector.';
   t+=y<=2029?' Protector y tutor.':' Protector (se mantiene por los conejos); tutor retirado en enero de 2030.';
-  const aa=ageOf(y,S.doy),sz=sizeOf(aa),vg=VGF(aa);t+=' Tamaño en esta fecha: ≈'+fmt(Math.min(CROWN_H,1.1+(sz[0]-1.1)*vg),1)+' m de alto y '+fmt(Math.min(2*CROWN_R,sz[1]*vg),1)+' m de copa.';
+  const aa=ageOf(y,S.doy),sz=sizeOf(aa),vg=VGF(aa);{const cw=Math.min(2*CROWN_R,sz[1]*vg);t+=' Tamaño en esta fecha: ≈'+fmt(Math.min(CROWN_H,1.1+(sz[0]-1.1)*vg),1)+' m de alto y '+fmt(cw,1)+' m de copa a lo largo de la fila'+(cw>2*CROWN_Z?' ('+fmt(2*CROWN_Z,1)+' m a lo ancho, para dejar '+fmt(6.5-2*CROWN_Z,1)+' m de calle al tractor y al paraguas)':'')+'.';}
   if(prodOf(y)>0)t+=' En producción ('+(prodOf(y)<0.5?'primeras cosechas':prodOf(y)<0.95?'producción creciente':'plena producción')+').';
   if(y>2026)t+=' Tamaños estimados a partir de fotos de referencia.';
   $('yearOut').textContent=y;$('yearNote').textContent=t;
@@ -4576,7 +4591,7 @@ function frameIn(now){
   if(!started){started=true;setTimeout(()=>$('loading').classList.add('done'),60);}
   requestAnimationFrame(frame);
 }
-window.__tramo={gt:(A,n,cap)=>{const t=performance.now();for(let i=0;i<n;i++)genTree(1000+i*17,A,{cap:cap||1200,seg1:14,seg2:7,kmax:1.8});return Math.round(performance.now()-t);},fade:()=>({ok:!!FADE.ok,n:FADE.list.length,v:FADE.list.map(c=>c.fading?+c.fading.t.toFixed(2):-1)}),cutPng:()=>CUT.cv?CUT.cv.toDataURL():null,setCut,startVideo,endVideo,goTo:(k)=>goPlace(k,true),look:(p,t)=>{S.cam='libre';tween=null;camera.position.set(...p);controls.target.set(...t);controls.update();},S,setDoy,applyTime,buildField,info:()=>JSON.stringify(renderer.info.render),stats:()=>JSON.stringify({active:CH.active.size,cache:CH.cache.size,near:NEAR.length,far:CH.cur&&CH.cur.far.count}),time:(fn)=>{const t=performance.now();fn();return Math.round(performance.now()-t);},selectTree:i=>showCard(TREES[i])};
+window.__tramo={tr:i=>({u:TREES[i].u,v:TREES[i].v}),gt:(A,n,cap)=>{const t=performance.now();for(let i=0;i<n;i++)genTree(1000+i*17,A,{cap:cap||1200,seg1:14,seg2:7,kmax:1.8});return Math.round(performance.now()-t);},fade:()=>({ok:!!FADE.ok,n:FADE.list.length,v:FADE.list.map(c=>c.fading?+c.fading.t.toFixed(2):-1)}),cutPng:()=>CUT.cv?CUT.cv.toDataURL():null,setCut,startVideo,endVideo,goTo:(k)=>goPlace(k,true),look:(p,t)=>{S.cam='libre';tween=null;camera.position.set(...p);controls.target.set(...t);controls.update();},S,setDoy,applyTime,buildField,info:()=>JSON.stringify(renderer.info.render),stats:()=>JSON.stringify({active:CH.active.size,cache:CH.cache.size,near:NEAR.length,far:CH.cur&&CH.cur.far.count}),time:(fn)=>{const t=performance.now();fn();return Math.round(performance.now()-t);},selectTree:i=>showCard(TREES[i])};
 setTimeout(()=>{
   try{
     {const hb=[...document.querySelectorAll('.seg[data-k="season"] button')].find(b=>b.textContent.trim()==='Hoy');if(hb){hb.dataset.v=String(TODAY.doy);hb.title='Hoy: '+dateLong(TODAY.doy);}}presetFor(S.doy);
