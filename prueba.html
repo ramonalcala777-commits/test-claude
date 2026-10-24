@@ -206,7 +206,7 @@ body.vmode #miniWrap{display:none}
     <h3>Ratón</h3><ul><li><b>Arrastrar</b> con el botón izquierdo: girar alrededor del punto que miras</li><li><b>Botón derecho</b> o <b>Mayús + arrastrar</b>: desplazarse sobre el suelo</li><li><b>Rueda</b>: acercar o alejar hacia donde apunta el ratón</li><li><b>Doble clic</b>: volar a ese punto</li><li><b>Clic en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: andar a la altura de los ojos; arrastrar para mirar</li></ul>
     <h3>Teclado</h3><ul><li><b>W A S D</b> o <b>flechas</b>: andar</li><li><b>Q / E</b>: girar a izquierda / derecha</li><li><b>R / F</b>: subir / bajar</li><li><b>Mayús</b>: más rápido</li><li><b>?</b>: esta ayuda</li></ul>
     <h3>Móvil</h3><ul><li><b>Un dedo</b>: girar alrededor del punto que miras</li><li><b>Dos dedos</b>: moverlos juntos para desplazarse; abrirlos o cerrarlos para acercar o alejar hacia ese punto</li><li><b>Doble toque</b>: volar a ese punto</li><li><b>Toque en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: el joystick para andar y un dedo para mirar</li></ul>
-    <h3>Vídeo del año</h3><ul><li><b>Toca la pantalla</b> para ver la barra: pausa, 10 s atrás o adelante, avance y salir</li><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v32 · 24 oct 2026</p></div>
+    <h3>Vídeo del año</h3><ul><li><b>Toca la pantalla</b> para ver la barra: pausa, 10 s atrás o adelante, avance y salir</li><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v32.1 · 24 oct 2026</p></div>
   <button class="btn" id="toggle" type="button" aria-expanded="true" aria-controls="panel">Ocultar ajustes</button>
 
   <aside id="panel" aria-label="Ajustes de la escena">
@@ -291,7 +291,7 @@ body.vmode #miniWrap{display:none}
       <div class="sl"><span>Campo visión</span><input type="range" id="fov" min="30" max="80" step="1" value="55" aria-label="Campo de visión"><output id="fovOut">55°</output></div>
       <p class="note">Si va a tirones en el móvil, baja la calidad.</p>
     </section>
-    <p class="ver">Versión v32 · 24 oct 2026</p>
+    <p class="ver">Versión v32.1 · 24 oct 2026</p>
   </aside>
 
   <div id="miniWrap"><canvas id="mini" aria-label="Minimapa de la finca: toca para ir a ese punto"></canvas></div>
@@ -1107,7 +1107,7 @@ function genTree(seed,A,opt){
         nodes.push({q,td,phi:rf()*6.283,tip:rf()<0.08,f:0.3+0.7*rf(),seed:hashI(seed,7000+k),fill:1});
         if(q.y<hc+Ry*1.3&&rf()<0.09)sites.push({q:q.clone().addScaledVector(out,0.12),td,phi:rf()*6.283,r:rf(),r2:rf(),fill:1});}
       // cúpula: semiejes ~0,9 del tope de copa, base algo por encima de la cruz; borde con lóbulos para que no sea una bola perfecta
-      if(nD>0){const y0=hc*0.85,cy=(y0+Ht)/2,ry=(Ht-y0)/2,rx=Rt*0.92;CROWN.v={cx:ax,cy,cz:az,rx,ry,k:Math.min(1,DM*1.3)};const _u0=0,lob=[rf()*6.283,rf()*6.283,rf()*6.283];
+      if(nD>0){const y0=hc*0.85,cy=(y0+Ht)/2,ry=(Ht-y0)/2,rx=Rt*0.92;CROWN.v={cx:ax,cy,cz:az,rx,ry,k:smooth(3.8,5.2,G.age)};const _u0=0,lob=[rf()*6.283,rf()*6.283,rf()*6.283];
         for(let k=0;k<nD;k++){let x,y,z;do{x=rf()*2-1;y=rf()*2-1;z=rf()*2-1;}while(x*x+y*y+z*z>1);
           const L=Math.hypot(x,y,z)||1,sh=0.62+0.38*Math.pow(rf(),0.35);x/=L;y/=L;z/=L;
           const az0=Math.atan2(z,x),lb=1+0.09*Math.sin(3*az0+lob[0])+0.06*Math.sin(5*az0+lob[1])+0.05*Math.sin(2*y*3+lob[2]);
@@ -1160,7 +1160,7 @@ function genTree(seed,A,opt){
     a.copy(L.td).multiplyScalar(0.5).addScaledVector(pd,0.86);a.y-=0.2+0.28*smooth(2,5,G.age);a.normalize();
     const sl=(L.tip?0.075+0.04*r():0.15+0.06*r())*(1+0.3*ramF);
     n0.copy(UP).multiplyScalar(0.85).addScaledVector(pd,0.5);n0.x+=(r()-0.5)*0.5;n0.z+=(r()-0.5)*0.5;n0.normalize();
-    let at=L.tip?(r()<0.5?0:1):(r()<0.08?0:r()<0.78?1:2);let slc=sl;if(L.fill&&r()<0.7){at=3;slc=sl*1.85;}
+    let at=L.tip?(r()<0.5?0:1):(r()<0.08?0:r()<0.78?1:2);let slc=sl;if(L.fill&&r()<0.7*smooth(3.3,4.8,G.age)){at=3;slc=sl*1.85;}
     leaves.push({p:L.q.clone(),d:a.clone(),n:n0.clone(),s:slc,young:L.tip?1:0,cr:r(),emerge:clamp(0.7*L.f+0.3*r(),0,1),fall:r(),keep:r(),w:r(),at});
   }
   let out=leaves;if(keepQ<1){const k=Math.min(opt.kmax?1.55+(opt.kmax-1.55)*FRM:1.55,Math.sqrt(1/keepQ));out.forEach(l=>l.s*=k);}
@@ -1723,7 +1723,7 @@ function buildAssets(A){
     const T=genTree(5000+vv*97,A,lt?{cap:G.age<2.2?30:180,maxD:2,seg1:5,seg2:3,kmax:2.4}:{cap:G.age<2.2?60:520,maxD:3,seg1:6,seg2:4,kmax:2.1});
     const gb=new GB(true,true);
     T.branches.forEach(b=>{if(b.depth>(lt?1:2))return;tube(gb,b.pts,b.rad.map(x=>x*1.15),b.depth===0?(lt?4:5):3,f=>barkColor(b.depth,f,T.G),null);});
-    T.leaves.forEach(l=>{X.copy(l.d);Y.crossVectors(l.n,X).normalize();Z.crossVectors(X,Y);const ss=l.s*(lt?(G.age<2.2?1.5:1.75):1.2);
+    T.leaves.forEach(l=>{X.copy(l.d);Y.crossVectors(l.n,X).normalize();Z.crossVectors(X,Y);const ss=l.s*(l.at===3?(lt?1.2:1.0):(lt?(G.age<2.2?1.5:1.75):1.2));
       const col=leafColor(l,l.p.y);gb.cs=[l.emerge,l.fall,1,l.w];gb.cb=[l.p.x,l.p.y,l.p.z];const ids=[];
       for(const [x,y] of [[0,-0.5],[1,-0.5],[0,0.5],[1,0.5]]){P.copy(l.p).addScaledVector(X,x*ss).addScaledVector(Y,y*ss);gb.cu=[(x+l.at)/4,y+0.5];ids.push(gb.v(P.x,P.y,P.z,Z.x,Z.y,Z.z,col));}
       gb.tri(ids[0],ids[1],ids[2]);gb.tri(ids[2],ids[1],ids[3]);});
