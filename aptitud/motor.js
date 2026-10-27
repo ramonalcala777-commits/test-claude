@@ -31,8 +31,10 @@
   // ---------- Pistacho ----------
   function pistachio(c, d0, P) {
     const S = seasons(c, d0); const ref = P.ref;
+    // fin del frío: cuando se cubren las porciones de referencia o, como tarde, en la fecha tope (inviernos pobres en frío)
+    const chillEnd = s => { const ic = reach(c.cp, 100, s.a, s.b, ref.cp); const cap = dayIndex(d0, s.y, 1, 1) + (P.chillCapDoy || 999) - 1; return ic < 0 || ic > cap ? cap : ic; };
     // floración del Kerman (referencia)
-    const kb = S.map(s => { const ic = reach(c.cp, 100, s.a, s.b, ref.cp); if (ic < 0) return -1; return reach(c.gdha, 1, ic + 1, s.b, ref.gdh); });
+    const kb = S.map(s => reach(c.gdha, 1, chillEnd(s) + 1, s.b, ref.gdh));
     // GDH medio por día en los 10 días previos a la floración del Kerman (para pasar desfases en días a calor)
     let gs = 0, gn = 0; kb.forEach(i => { if (i > 10) { gs += sumRange(c.gdha, 1, i - 10, i) / 10; gn++; } });
     const gpd = gn ? gs / gn : 300;
@@ -40,8 +42,7 @@
     for (const v of P.varieties) {
       const gReq = ref.gdh + v.offset * gpd;
       const rows = S.map((s, k) => {
-        const ic = reach(c.cp, 100, s.a, s.b, ref.cp); if (ic < 0) return null;
-        const f = reach(c.gdha, 1, ic + 1, s.b, gReq); if (f < 0) return null;
+        const f = reach(c.gdha, 1, chillEnd(s) + 1, s.b, gReq); if (f < 0) return null;
         const r = { y: s.y, fb: doyOf(d0, f), cpAtBloom: sumRange(c.cp, 100, s.a, f), chillOk: sumRange(c.cp, 100, s.a, f) >= v.cp };
         if (v.sex === 'M') return r;
         let surv = 1, tmb = 99;
