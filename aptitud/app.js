@@ -60,10 +60,19 @@
     for (let j = 0; j < h; j += 1) for (let i = 0; i < w; i += 1) { if (!inside(i + .5, j + .5)) continue; const p = at(i, j); if (!(p.z > -100)) continue; n++; s5 += p.t5; s20 += p.t20; sz += p.z; if (!low || p.z < low.z) low = p; }
     const mid = at(Math.floor(w / 2), Math.floor(h / 2));
     const par = n ? { z: sz / n, t5: s5 / n, t20: s20 / n } : mid;
-    return { par, low: low || mid, n };
+    if (!low) low = mid;
+    // escala de 5 km (MDT 200 m): fracción del terreno que queda por debajo
+    const H5 = 5600, u5 = `https://servicios.idee.es/wcs-inspire/mdt?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=Elevacion25830_200&FORMAT=image/tiff&SUBSET=x(${Math.round(cx - H5)},${Math.round(cx + H5)})&SUBSET=y(${Math.round(cy - H5)},${Math.round(cy + H5)})`;
+    try {
+      const t5k = await GeoTIFF.fromArrayBuffer(await (await fetch(u5)).arrayBuffer()); const im5 = await t5k.getImage();
+      const w5 = im5.getWidth(), h5 = im5.getHeight(), [r5k] = await im5.readRasters(), res5 = 2 * H5 / w5, k5 = 5000 / res5;
+      const pctOf = z0 => { let n5 = 0, lo = 0; for (let j = 0; j < h5; j++) for (let i = 0; i < w5; i++) { const dx = i + .5 - w5 / 2, dy = j + .5 - h5 / 2; if (dx * dx + dy * dy > k5 * k5) continue; const v = r5k[j * w5 + i]; if (v < -100) continue; n5++; if (v < z0) lo++; } return lo / n5; };
+      par.pct = pctOf(par.z); low.pct = pctOf(low.z);
+    } catch (e) { par.pct = low.pct = null; }
+    return { par, low, n };
   }
   function reliefDelta(p, elevCell, info) {
-    const RL = window.RELIEVE; const f = q => RL.b5 * q.t5 + RL.b20 * q.t20 + RL.c * (q.z - elevCell);
+    const RL = window.RELIEVE; const f = q => RL.b5 * q.t5 + RL.b20 * q.t20 + (q.pct != null ? RL.bp * q.pct : RL.bp * 0.4) + RL.c * (q.z - elevCell);
     const ws = info.map(s => 1 / Math.max(s[2], 3) ** 2), W = ws.reduce((a, b) => a + b, 0);
     const ref = info.reduce((a, s, i) => a + (RL.est[s[0]] || 0) * ws[i] / W, 0);
     return Math.max(-3, Math.min(3, f(p) - ref));
@@ -73,7 +82,7 @@
     for (let i = 0; i < t.length; i++) { const v = cell.tmin[i] / 10; const k = v <= 5 ? 1 : v >= 12 ? 0 : (12 - v) / 7; t[i] = Math.round((v + d * k) * 10); }
     return Object.assign({}, cell, { tmin: t });
   }
-  const reliefClass = t5 => t5 <= -5 ? 'fondo de vaguada' : t5 <= -2 ? 'zona baja' : t5 < 2 ? 'llano' : t5 < 5 ? 'zona alta' : 'loma o cerro';
+  const reliefClass = q => (q.pct != null && q.pct <= 0.15 && Math.abs(q.t5) < 3 && Math.abs(q.t20) < 10) ? 'fondo de vega o valle ancho' : q.t5 <= -5 ? 'fondo de vaguada' : q.t5 <= -2 ? 'zona baja' : q.t5 < 2 ? (q.pct != null && q.pct >= 0.85 ? 'llano alto (páramo)' : 'llano') : q.t5 < 5 ? 'zona alta' : 'loma o cerro';
 
   async function loadMeta() { if (!META) META = await (await fetch('grid/meta.json')).json(); return META; }
 
@@ -149,7 +158,7 @@
     const st = C.info.map(s => `${s[1]} (${fmt(s[2])} km)`).join(' · ');
     $('facts').innerHTML = [['Recinto SIGPAC', C.code, 1], ['Superficie', fmt(pr.superficie, 2) + ' ha'], ['Altitud', (pr.altitud != null ? fmt(pr.altitud) + ' m' : '—') + (C.elev != null ? ` · celda ${fmt(C.elev)} m` : '')],
       ['Pendiente', fmt(pr.pendiente_media, 1) + ' %'],
-      ['Relieve', C.rel ? `${reliefClass(C.rel.par.t5)} · noches de helada ${C.rel.delta >= 0 ? '+' : '−'}${fmt(Math.abs(C.rel.delta), 1)} °C respecto a la celda${C.rel.deltaLow < C.rel.delta - 0.3 ? ` · zona más baja del recinto ${C.rel.deltaLow >= 0 ? '+' : '−'}${fmt(Math.abs(C.rel.deltaLow), 1)} °C` : ''}` : 'no disponible (sin ajuste)'], ['Uso SIGPAC', pr.uso_sigpac || '—'], ['Estaciones de corrección', st], ['Campañas', `${C.W[0].y}–${C.W[n - 1].y} (${n})`],
+      ['Relieve', C.rel ? `${reliefClass(C.rel.par)}${C.rel.par.pct != null ? ` (el ${Math.round((1 - C.rel.par.pct) * 100)} % del terreno en 5 km está más alto)` : ''} · noches de helada ${C.rel.delta >= 0 ? '+' : '−'}${fmt(Math.abs(C.rel.delta), 1)} °C respecto a la celda${C.rel.deltaLow < C.rel.delta - 0.3 ? ` · zona más baja del recinto ${C.rel.deltaLow >= 0 ? '+' : '−'}${fmt(Math.abs(C.rel.deltaLow), 1)} °C` : ''}` : 'no disponible (sin ajuste)'], ['Uso SIGPAC', pr.uso_sigpac || '—'], ['Estaciones de corrección', st], ['Campañas', `${C.W[0].y}–${C.W[n - 1].y} (${n})`],
       ['Inviernos ≤ −12 °C', `${w.filter(x => x <= -12).length} de ${n} · mín. ${fmt(Math.min(...w), 1)} °C`]]
       .map(([k, v, code]) => `<div class="fact"><div class="k">${k}</div><div class="v${code ? ' code' : ''}">${v}</div></div>`).join('');
     document.querySelectorAll('[data-sp]').forEach(b => { b.setAttribute('aria-pressed', state.sp === b.dataset.sp); b.onclick = () => { state.sp = b.dataset.sp; state.sel = null; render(); }; });
