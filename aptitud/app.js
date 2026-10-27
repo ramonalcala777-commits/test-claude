@@ -13,7 +13,7 @@
 
   // ---------- mapa ----------
   const map = L.map('map', { zoomControl: true }).setView([39.3, -2.9], 8);
-  L.tileLayer.wms('https://www.ign.es/wms-inspire/pnoa-ma', { layers: 'OI.OrthoimageCoverage', format: 'image/jpeg', attribution: 'PNOA © IGN', maxZoom: 20 }).addTo(map);
+  L.tileLayer('https://www.ign.es/wmts/pnoa-ma?request=GetTile&service=WMTS&VERSION=1.0.0&Layer=OI.OrthoimageCoverage&Style=default&Format=image/jpeg&TileMatrixSet=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}', { attribution: 'PNOA © IGN', maxZoom: 19 }).addTo(map);
   L.tileLayer.wms('https://wms.mapa.gob.es/sigpac/wms', { layers: 'recinto', format: 'image/png', transparent: true, minZoom: 15, attribution: 'SIGPAC © FEGA' }).addTo(map);
   let poly = null;
   map.on('click', async e => {
@@ -50,7 +50,7 @@
     const resp = await fetch(`grid/celdas/${idx}.bin.gz`);
     const buf = await new Response(resp.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
     const cell = Motor.cellArrays(buf, M.nd);
-    current = { code: p.join(':'), pr, c, idx, cell, info: M.cells[idx], elev: M.elev ? M.elev[idx] : null, d0: Date.parse(M.d0 + 'T00:00:00Z') };
+    current = { code: [String(p[0]).padStart(2, '0'), String(p[1]).padStart(3, '0'), p[2], p[3], p[4], p[5], p[6]].join(':'), pr, c, idx, cell, info: M.cells[idx], elev: M.elev ? M.elev[idx] : null, d0: Date.parse(M.d0 + 'T00:00:00Z') };
     state.sel = null; status(''); compute(); $('results').hidden = false;
   }
 
