@@ -55,8 +55,9 @@
         if (v.sex === 'M') return r;
         const fe = frostEval(c, d0, f, P.stages); r.loss = fe.loss; r.tminBloom = fe.tminBloom; r.fz = fe.fz;
         const h = reach(c.gdd7, 10, f, s.bx, v.gdd);
-        r.harv = h < 0 ? -1 : doyOf(d0, h);
-        let af = 0; if (h > 0) { const s9 = dayIndex(d0, s.y, 9, 1); for (let i = s9; i <= h; i++) if (c.tmin[i] / 10 <= P.autumnFrost) { af = 1; break; } }
+        const hc = h < 0 ? -1 : v.days ? Math.round((h + f + v.days) / 2) : h;   // cosecha: media entre los grados-día y los días fijos desde la flor
+        r.harv = hc < 0 ? -1 : doyOf(d0, hc);
+        let af = 0; if (hc > 0) { const s9 = dayIndex(d0, s.y, 9, 1); for (let i = s9; i <= hc; i++) if (c.tmin[i] / 10 <= P.autumnFrost) { af = 1; break; } }
         r.autumn = af; return r;
       });
       res[v.name] = { v, rows };

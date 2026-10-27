@@ -7,11 +7,11 @@ window.CONFIG = {
     stages: [[-24, -17, -5, -8], [-16, -6, -3, -5], [-5, 5, -2, -4], [6, 30, -1.5, -3.5]], // yema hinchada B, brácteas separándose y racimo C-D (Couceiro y Guerrero, tabla 10.9, medias 1999-2004), flor, fruto cuajado: [desde, hasta (días respecto a plena flor), T 10 %, T 90 %]
     autumnFrost: -2,
     varieties: [
-      { name: 'Kerman', sex: 'H', cp: 90, offset: 0, gdd: 2120, males: ['Peter', 'Ruso (02-18)'] },
-      { name: 'Sirora', sex: 'H', cp: 59, offset: -4.7, gdd: 2030, males: ['Randy', 'C-Especial', 'Peter', 'Ruso (02-18)'] },
-      { name: 'Golden Hills', sex: 'H', cp: 45, offset: -8, gdd: 2100, males: ['Randy'] },
-      { name: 'Lost Hills', sex: 'H', cp: 45, offset: -6, gdd: 2070, males: ['Randy'] },
-      { name: 'Larnaka', sex: 'H', cp: 48, offset: -10.5, gdd: 1990, males: ['C-Especial'] },
+      { name: 'Kerman', sex: 'H', cp: 90, offset: 0, gdd: 2120, days: 147, males: ['Peter', 'Ruso (02-18)'] },
+      { name: 'Sirora', sex: 'H', cp: 59, offset: -4.7, gdd: 2030, days: 142, males: ['Randy', 'C-Especial', 'Peter', 'Ruso (02-18)'] },
+      { name: 'Golden Hills', sex: 'H', cp: 45, offset: -8, gdd: 2100, days: 150, males: ['Randy'] },
+      { name: 'Lost Hills', sex: 'H', cp: 45, offset: -6, gdd: 2070, days: 147, males: ['Randy'] },
+      { name: 'Larnaka', sex: 'H', cp: 48, offset: -10.5, gdd: 1990, days: 144, males: ['C-Especial'] },
       { name: 'Peter', sex: 'M', cp: 69, offset: -1.2 },
       { name: 'Ruso (02-18)', sex: 'M', cp: 69, offset: -2.2 },   // 02-18 de El Chaparrillo: ~1 día antes que Peter (Couceiro y Guerrero, tabla 10.10, medias 1999-2004)
       { name: 'Randy', sex: 'M', cp: 45, offset: -8 },
@@ -33,7 +33,7 @@ window.CONFIG = {
   },
   // Umbrales de los criterios: [condiciona, excluye]
   crit: {
-    pist: { loss: [10, 25], bad: [3, 6], chill: [0.1, 0.3], late: [0.2], veryLate: 0.2, veryLateDoy: 305, autumn: [0.15], overlap: [0.7, 0.4],
+    pist: { loss: [10, 25], bad: [3, 6], chill: [0.1, 0.3], veryLate: [0.1, 0.3], veryLateDoy: 305, autumn: [0.15], overlap: [0.7, 0.4],
       rainBloomDays: 3, rainBloom: [0.4, 9], windLow: 1.0, windHigh: 6.0, hr: [50, 60], preRainMm: 50, preRain: [0.3, 0.7],
       boty: [12, 25], hot: [3], w12: 0.25, w20: 0.05, bloomHotT: 30, bloomHotDays: 2, bloomHot: [0.15, 0.4] },
     alm: { loss: [10, 25], bad: [3, 6], bee: [25, 10], beeWind: 4.5, moniliaDays: 4, monilia: [0.4, 9], spring: [18, 30],
