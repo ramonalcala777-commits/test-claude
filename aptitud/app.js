@@ -2,7 +2,7 @@
   const $ = id => document.getElementById(id);
   const DEF = JSON.parse(JSON.stringify(window.CONFIG));
   let CFG = DEF;
-  try { const s = localStorage.getItem('aptitud-params-v3'); if (s) CFG = Object.assign(JSON.parse(JSON.stringify(DEF)), JSON.parse(s)); } catch (e) {}
+  try { const s = localStorage.getItem('aptitud-params-v4'); if (s) CFG = Object.assign(JSON.parse(JSON.stringify(DEF)), JSON.parse(s)); } catch (e) {}
   let META = null, current = null, state = { sp: 'p', sel: null };
   const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   const fdate = doy => { if (doy == null || doy < 0) return '—'; const d = new Date(Date.UTC(2021, 0, 1) + (Math.round(doy) - 1) * 864e5); return d.getUTCDate() + ' ' + MES[d.getUTCMonth()]; };
@@ -148,6 +148,16 @@
     // criterios completos y veredicto razonado
     for (const r of p) { if (r.male) continue; r.mhTxt = fdate(r.mh); r.crit = Criterios.pist(cell, d0, r, current, CFG.crit.pist); const v = Criterios.verdict(r.crit); r.cls = v.cls; r.vd = v; }
     for (const r of a) { r.crit = Criterios.alm(cell, d0, r, current, CFG.crit.alm); const v = Criterios.verdict(r.crit); r.cls = v.cls; r.vd = v; }
+    // mismos criterios con las 10 últimas campañas (el veredicto sigue saliendo de toda la serie)
+    const yMax = Math.max(...current.W.map(x => x.y)), yR = yMax - 9; current.yR = yR; current.yMax = yMax;
+    const cut = R => { const o = { res: {}, gpd: R.gpd }; for (const [n, v] of Object.entries(R.res)) o.res[n] = { v: v.v, rows: v.rows.map(x => x && x.y >= yR ? x : null) }; return o; };
+    const curR = Object.assign({}, current, { W: current.W.filter(x => x.y >= yR) });
+    const scl = (K, nR, nF) => Object.assign({}, K, { bad: K.bad.map(b => b * nR / nF) });
+    const pR = sumP(cut(P)), aR = sumA(cut(A));
+    for (const r of p) { if (r.male) continue; const q = pR.find(x => x.nm === r.nm); q.mhTxt = fdate(q.mh); const nR = q.rows.filter(Boolean).length, nF = r.rows.filter(Boolean).length;
+      if (nR >= 8) { r.critR = Criterios.pist(cell, d0, q, curR, scl(CFG.crit.pist, nR, nF)); r.clsR = Criterios.verdict(r.critR).cls; } }
+    for (const r of a) { const q = aR.find(x => x.nm === r.nm); const nR = q.rows.filter(Boolean).length, nF = r.rows.filter(Boolean).length;
+      if (nR >= 8) { r.critR = Criterios.alm(cell, d0, q, curR, scl(CFG.crit.alm, nR, nF)); r.clsR = Criterios.verdict(r.critR).cls; } }
     render();
   }
 
@@ -169,7 +179,7 @@
     $('rankTitle').textContent = state.sp === 'p' ? 'Variedades de pistacho' : 'Variedades de almendro (autofértiles)';
     $('verdict').textContent = ok.length ? `${ok.length === 1 ? 'Variedad apta' : 'Variedades aptas'} de ${spn}: ${ok.join(', ')}.${wa.length ? ' Aptas con condiciones: ' + wa.join(', ') + '.' : ''}` : wa.length ? `Ninguna variedad de ${spn} sale apta sin condiciones. Aptas con condiciones: ${wa.join(', ')}.` : `Zona no apta para ${spn}: todas las variedades tienen algún criterio que las excluye.`;
     const chip = r => `<span class="chip ${r.cls}">${LBL[r.cls]}</span>`;
-    const why = r => { const L = [...r.vd.ex.map(x => x.nombre), ...r.vd.co.map(x => x.nombre)]; return L.length ? L.join(' · ') : 'Sin limitaciones climáticas'; };
+    const why = r => { const L = [...r.vd.ex.map(x => x.nombre), ...r.vd.co.map(x => x.nombre)]; return (L.length ? L.join(' · ') : 'Sin limitaciones climáticas') + (r.clsR && r.clsR !== r.cls ? ` <em>· últimos 10 años: ${LBL[r.clsR].toLowerCase()}</em>` : ''); };
     let head, body;
     if (state.sp === 'a') {
       head = '<tr><th>Variedad</th><th>Veredicto</th><th>Motivos</th><th>Plena flor media</th><th>Pérdida por helada</th></tr>';
@@ -188,7 +198,10 @@
 
   function detail(r, rows) {
     const y0 = current.W[0].y, n = r.l.length;
-    $('crit').innerHTML = `<h2>${r.nm}: ${LBL[r.cls].toLowerCase()}</h2><div class="critlist">` + r.crit.slice().sort((a, b) => b.nivel - a.nivel).map(x => `<div class="crit l${x.nivel}"><span class="chip ${['ok', 'warn', 'bad'][x.nivel]}">${['Sin limitación', 'Condiciona', 'Excluye'][x.nivel]}</span><div><b>${x.nombre}</b><div class="cv">${x.valor}</div>${x.nivel ? `<div class="cm">${x.motivo}</div>` : ''}</div></div>`).join('') + '</div>';
+    const NV = ['Sin limitación', 'Condiciona', 'Excluye'], yr = `${current.yR}–${current.yMax}`;
+    const rec = x => { const y = (r.critR || []).find(z => z.id === x.id); return y && y.nivel !== x.nivel ? `<div class="recent ${['ok', 'warn', 'bad'][y.nivel]}">Últimos 10 años (${yr}): <b>${NV[y.nivel].toLowerCase()}</b> · ${y.valor}</div>` : ''; };
+    const head = r.clsR && r.clsR !== r.cls ? `<p class="note">Con toda la serie sale <b>${LBL[r.cls].toLowerCase()}</b>; con solo los últimos 10 años (${yr}) saldría <b>${LBL[r.clsR].toLowerCase()}</b>. El veredicto usa toda la serie; la diferencia indica hacia dónde va el clima.</p>` : r.clsR ? `<p class="note">Con solo los últimos 10 años (${yr}) el veredicto es el mismo.</p>` : '';
+    $('crit').innerHTML = `<h2>${r.nm}: ${LBL[r.cls].toLowerCase()}</h2>${head}<div class="critlist">` + r.crit.slice().sort((a, b) => b.nivel - a.nivel).map(x => `<div class="crit l${x.nivel}"><span class="chip ${['ok', 'warn', 'bad'][x.nivel]}">${NV[x.nivel]}</span><div><b>${x.nombre}</b><div class="cv">${x.valor}</div>${x.nivel ? `<div class="cm">${x.motivo}</div>` : ''}${rec(x)}</div></div>`).join('') + '</div>';
     $('detTitle').textContent = `${r.nm}: pérdida por helada y fecha de floración, año a año`;
     $('detLegend').innerHTML = '<span style="--c:var(--frost)">Pérdida por helada</span><span style="--c:var(--flor)">Plena flor prevista</span>';
     const W = 620, H = 250, ml = 40, mr = 46, mt = 12, mb = 34, iw = W - ml - mr, ih = H - mt - mb, bw = iw / n;
@@ -227,8 +240,8 @@
     ['verdict.okLoss', 'Apta: pérdida media máx. (%)'], ['verdict.warnLoss', 'Con riesgo: pérdida media máx. (%)']];
   const getp = (o, p) => p.split('.').reduce((a, k) => a[k], o); const setp = (o, p, v) => { const ks = p.split('.'); const last = ks.pop(); ks.reduce((a, k) => a[k], o)[last] = v; };
   $('params').innerHTML = PF.map(([p, l]) => `<label>${l}<input id="p-${p.replace(/\./g, '_')}" data-p="${p}" type="number" step="any" value="${getp(CFG, p)}"></label>`).join('');
-  $('recalc').onclick = () => { document.querySelectorAll('[data-p]').forEach(i => setp(CFG, i.dataset.p, parseFloat(i.value))); try { localStorage.setItem('aptitud-params-v3', JSON.stringify(CFG)); } catch (e) {} if (current) compute(); };
-  $('reset').onclick = () => { CFG = JSON.parse(JSON.stringify(DEF)); try { localStorage.removeItem('aptitud-params-v3'); } catch (e) {} document.querySelectorAll('[data-p]').forEach(i => i.value = getp(CFG, i.dataset.p)); if (current) compute(); };
+  $('recalc').onclick = () => { document.querySelectorAll('[data-p]').forEach(i => setp(CFG, i.dataset.p, parseFloat(i.value))); try { localStorage.setItem('aptitud-params-v4', JSON.stringify(CFG)); } catch (e) {} if (current) compute(); };
+  $('reset').onclick = () => { CFG = JSON.parse(JSON.stringify(DEF)); try { localStorage.removeItem('aptitud-params-v4'); } catch (e) {} document.querySelectorAll('[data-p]').forEach(i => i.value = getp(CFG, i.dataset.p)); if (current) compute(); };
 
   $('calib').innerHTML = (window.CALIB && window.CALIB.html) || '';
   $('method').innerHTML = (window.CALIB && window.CALIB.method) || '';

@@ -19,7 +19,7 @@
   // ---------- pistacho ----------
   function pist(c, d0, r, all, K) {
     const out = []; const rows = r.rows.filter(Boolean); const n = rows.length; const ys = rows.map(x => x.y);
-    out.push({ id: 'helada', nombre: 'Heladas en floración y cuajado', valor: `pérdida media ${Math.round(r.ml)} % · ${r.bad} de ${r.l.length} años con más de la mitad`, nivel: r.ml > K.loss[1] || r.bad > K.bad[1] ? 2 : r.ml > K.loss[0] || r.bad > K.bad[0] ? 1 : 0, motivo: 'Las heladas en racimo, flor o fruto recién cuajado se llevan la cosecha.' });
+    out.push({ id: 'helada', nombre: 'Heladas en floración y cuajado', valor: `pérdida media ${Math.round(r.ml)} % · ${r.bad} de ${n} años con más de la mitad`, nivel: r.ml > K.loss[1] || r.bad > K.bad[1] ? 2 : r.ml > K.loss[0] || r.bad > K.bad[0] ? 1 : 0, motivo: 'Las heladas en racimo, flor o fruto recién cuajado se llevan la cosecha.' });
     const cf = r.chillFail / n; out.push({ id: 'frio', nombre: 'Frío invernal', valor: `${r.chillFail} de ${n} inviernos sin frío suficiente`, nivel: lvl(cf, K.chill[0], K.chill[1]), motivo: 'Sin el frío de la variedad la brotación es irregular y la floración de hembra y macho no coincide.' });
     const vlate = rows.filter(x => x.harv < 0 || x.harv > K.veryLateDoy).length;
     out.push({ id: 'cosecha', nombre: 'Calor para madurar', valor: `cosecha mediana ${r.mhTxt} · ${r.late} de ${n} años después del 15 oct · ${vlate} después del 1 nov`, nivel: vlate / n > K.veryLate ? 2 : r.late / n > K.late[0] ? 1 : 0, motivo: 'Sin calor suficiente el fruto no llena bien y la cosecha se va al otoño, con riesgo de lluvias y heladas.' });
@@ -43,6 +43,10 @@
     // golpes de calor
     const hot = years.map(y => { let n = 0; for (let i = idx(d0, y, 6, 1); i <= idx(d0, y, 8, 31); i++) if (c.tmax[i] / 10 >= 40) n++; return n; });
     const hm = mean(hot); out.push({ id: 'calor', nombre: 'Golpes de calor (≥ 40 °C)', valor: `${f1(hm)} días al año de junio a agosto`, nivel: lvl(hm, K.hot[0], 99), motivo: 'Los golpes de calor en el llenado aumentan los frutos vacíos.' });
+    // calor en floración (±7 días de la plena flor de la variedad)
+    const bh = rows.map(x => { const i = iOfDoy(d0, x.y, x.fb); let k = 0; for (let j = i - 7; j <= i + 7; j++) if (c.tmax[j] / 10 >= K.bloomHotT) k++; return k; });
+    const fbh = bh.filter(v => v >= K.bloomHotDays).length / bh.length;
+    out.push({ id: 'calorflor', nombre: 'Calor en floración', valor: `${pc(fbh)} de los años con ${K.bloomHotDays} o más días ≥ ${K.bloomHotT} °C en floración`, nivel: lvl(fbh, K.bloomHot[0], K.bloomHot[1]), motivo: 'Con más de 30 °C en floración el polen pierde viabilidad y el estigma se seca antes de tiempo: peor cuajado y más frutos vacíos.' });
     // frío extremo
     const w = all.W.map(x => x.t); const f12 = w.filter(x => x <= -12).length / w.length, f20 = w.filter(x => x <= -20).length / w.length;
     out.push({ id: 'invierno', nombre: 'Frío extremo de invierno', valor: `${w.filter(x => x <= -12).length} de ${w.length} inviernos ≤ −12 °C · mínima ${f1(Math.min(...w))} °C`, nivel: f20 > K.w20 ? 2 : f12 > K.w12 ? 1 : 0, motivo: 'Por debajo de −12 °C sufren los plantones; por debajo de −20 °C también la madera de los adultos.' });
@@ -52,7 +56,7 @@
   // ---------- almendro ----------
   function alm(c, d0, r, all, K) {
     const out = []; const rows = r.rows.filter(Boolean); const n = rows.length; const years = [...new Set(rows.map(x => x.y))];
-    out.push({ id: 'helada', nombre: 'Heladas en floración y cuajado', valor: `pérdida media ${Math.round(r.ml)} % · ${r.bad} de ${r.l.length} años con más de la mitad`, nivel: r.ml > K.loss[1] || r.bad > K.bad[1] ? 2 : r.ml > K.loss[0] || r.bad > K.bad[0] ? 1 : 0, motivo: 'La helada en flor abierta o en fruto recién cuajado es el principal riesgo del almendro.' });
+    out.push({ id: 'helada', nombre: 'Heladas en floración y cuajado', valor: `pérdida media ${Math.round(r.ml)} % · ${r.bad} de ${n} años con más de la mitad`, nivel: r.ml > K.loss[1] || r.bad > K.bad[1] ? 2 : r.ml > K.loss[0] || r.bad > K.bad[0] ? 1 : 0, motivo: 'La helada en flor abierta o en fruto recién cuajado es el principal riesgo del almendro.' });
     const bee = rows.map(x => { const a = iOfDoy(d0, x.y, x.fb) - 5, b = iOfDoy(d0, x.y, x.fb) + 5; let h = 0, has = 0; for (let i = a; i <= b; i++) { if (c.rain[i] < 0 || c.wind[i] < 0) continue; has++; if (c.rain[i] / 10 < 1 && c.wind[i] / 10 < K.beeWind) h += c.h15[i]; } return has >= 8 ? h : null; }).filter(v => v != null);
     if (bee.length >= 8) { const m = mean(bee); out.push({ id: 'abejas', nombre: 'Horas de vuelo de abejas en floración', valor: `${Math.round(m)} horas de media (≥ 15 °C, sin lluvia, poco viento)`, nivel: lvl(m, K.bee[0], K.bee[1], false), motivo: 'Aunque la variedad sea autofértil, las abejas mejoran mucho el cuajado; con frío, lluvia o viento no vuelan.' }); }
     const rb = rows.map(x => rainDays(c, iOfDoy(d0, x.y, x.fb) - 3, iOfDoy(d0, x.y, x.fb) + 10)).filter(v => v != null);
