@@ -1,27 +1,27 @@
 // Parámetros por defecto (editables desde la web). Fuentes en el apartado «Cómo se calcula».
 window.CONFIG = {
   pist: {
-    ref: { name: 'Kerman', cp: 80, gdh: 8800 },          // calibrado con Caravaca 2018 y Valladolid 2018-2020
+    ref: { name: 'Kerman', cp: 90, gdh: 6800 },          // calibrado con Caravaca 2018-2023 y Castilla y León 2018-2020
     stages: [[-20, -6, -3, -5], [-5, 5, -2, -4], [6, 30, -1.5, -3.5]], // [desde, hasta (días respecto a plena flor), T 10 %, T 90 %]
     autumnFrost: -2,
     varieties: [
-      { name: 'Kerman', sex: 'H', cp: 80, offset: 0, gdd: 2100, males: ['Peter'] },
-      { name: 'Sirora', sex: 'H', cp: 59, offset: -7, gdd: 1970, males: ['Randy', 'C-Especial', 'Peter'] },
-      { name: 'Golden Hills', sex: 'H', cp: 45, offset: -8, gdd: 2080, males: ['Randy'] },
-      { name: 'Lost Hills', sex: 'H', cp: 45, offset: -6, gdd: 1990, males: ['Randy'] },
-      { name: 'Larnaka', sex: 'H', cp: 48, offset: -9, gdd: 2000, males: ['C-Especial'] },
-      { name: 'Peter', sex: 'M', cp: 69, offset: -1 },
+      { name: 'Kerman', sex: 'H', cp: 90, offset: 0, gdd: 2120, males: ['Peter'] },
+      { name: 'Sirora', sex: 'H', cp: 59, offset: -4.7, gdd: 2030, males: ['Randy', 'C-Especial', 'Peter'] },
+      { name: 'Golden Hills', sex: 'H', cp: 45, offset: -8, gdd: 2100, males: ['Randy'] },
+      { name: 'Lost Hills', sex: 'H', cp: 45, offset: -6, gdd: 2070, males: ['Randy'] },
+      { name: 'Larnaka', sex: 'H', cp: 48, offset: -10.5, gdd: 1990, males: ['C-Especial'] },
+      { name: 'Peter', sex: 'M', cp: 69, offset: -1.2 },
       { name: 'Randy', sex: 'M', cp: 45, offset: -8 },
-      { name: 'C-Especial', sex: 'M', cp: 48, offset: -10 }
+      { name: 'C-Especial', sex: 'M', cp: 48, offset: -8 }
     ]
   },
   alm: {
-    ref: { name: 'Guara', cu: 340, gdh: 8159 },
+    ref: { name: 'Guara', cu: 850, gdh: 5500 },   // calibrado con Caravaca 2018-2020 y 2023; validado con Lauranne en Albacete 2022-2023
     stages: [[-25, -12, -5, -8], [-11, -3, -3.5, -5.5], [-2, 4, -2.5, -4], [5, 10, -2, -3], [11, 30, -1, -2]],
     varieties: [
-      { name: 'Belona', offset: -2 }, { name: 'Soleta', offset: -2 }, { name: 'Guara', offset: 0 }, { name: 'Vairo', offset: 0 },
-      { name: 'Constantí', offset: 1 }, { name: 'Lauranne (Avijor)', offset: 5 }, { name: 'Marinada', offset: 8 },
-      { name: 'Makako', offset: 14 }, { name: 'Penta', offset: 16 }, { name: 'Mardía', offset: 21 }, { name: 'Tardona', offset: 26 }
+      { name: 'Belona', offset: 0 }, { name: 'Soleta', offset: 0 }, { name: 'Guara', offset: 0 }, { name: 'Vairo', offset: 2.6 },
+      { name: 'Constantí', offset: 2.6 }, { name: 'Lauranne (Avijor)', offset: 4.3 }, { name: 'Marinada', offset: 6.5 },
+      { name: 'Makako', offset: 13 }, { name: 'Penta', offset: 15.6 }, { name: 'Mardía', offset: 24 }, { name: 'Tardona', offset: 25.3 }
     ]
   },
   // Umbrales de los criterios: [condiciona, excluye]
