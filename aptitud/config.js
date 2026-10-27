@@ -3,8 +3,8 @@ window.CONFIG = {
   pist: {
     ref: { name: 'Kerman', cp: 90, gdh: 6800 },
     chillCapDoy: 75,
-    stageNames: ['yema hinchada', 'racimo saliendo', 'floración', 'fruto recién cuajado'],   // si el 16 de marzo no se han cubierto las porciones de frío, el calor empieza a contar igualmente (Caravaca 2023)          // calibrado con Caravaca 2018-2023 y Castilla y León 2018-2020
-    stages: [[-20, -12, -5, -8], [-11, -6, -3, -5], [-5, 5, -2, -4], [6, 30, -1.5, -3.5]], // yema hinchada B, racimo C-D, flor, fruto cuajado: [desde, hasta (días respecto a plena flor), T 10 %, T 90 %]
+    stageNames: ['yema hinchada', 'brácteas separándose o racimo saliendo', 'floración', 'fruto recién cuajado'],   // si el 16 de marzo no se han cubierto las porciones de frío, el calor empieza a contar igualmente (Caravaca 2023)          // calibrado con Caravaca 2018-2023 y Castilla y León 2018-2020
+    stages: [[-24, -17, -5, -8], [-16, -6, -3, -5], [-5, 5, -2, -4], [6, 30, -1.5, -3.5]], // yema hinchada B, brácteas separándose y racimo C-D (Couceiro y Guerrero, tabla 10.9, medias 1999-2004), flor, fruto cuajado: [desde, hasta (días respecto a plena flor), T 10 %, T 90 %]
     autumnFrost: -2,
     varieties: [
       { name: 'Kerman', sex: 'H', cp: 90, offset: 0, gdd: 2120, males: ['Peter', 'Ruso (02-18)'] },
