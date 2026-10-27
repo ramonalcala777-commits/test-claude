@@ -84,7 +84,7 @@
   }
   const reliefClass = q => (q.pct != null && q.pct <= 0.15 && Math.abs(q.t5) < 3 && Math.abs(q.t20) < 10) ? 'fondo de vega o valle ancho' : q.t5 <= -5 ? 'fondo de vaguada' : q.t5 <= -2 ? 'zona baja' : q.t5 < 2 ? (q.pct != null && q.pct >= 0.85 ? 'llano alto (páramo)' : 'llano') : q.t5 < 5 ? 'zona alta' : 'loma o cerro';
 
-  async function loadMeta() { if (!META) META = await (await fetch('grid/meta.json')).json(); return META; }
+  async function loadMeta() { if (!META) META = await (await fetch('grid/meta.json?d=20260929')).json(); return META; }
 
   async function analyse(code) {
     const p = code.split(/[:.\-\s\/]+/).map(Number);
@@ -104,7 +104,7 @@
     const idx = i * lon.length + j;
     if (!M.cells[idx]) { status('Ese recinto queda fuera de la zona calculada (Castilla-La Mancha y bordes).'); return; }
     status('Cargando 31 campañas de clima de la celda…');
-    const resp = await fetch(`grid/celdas/${idx}.bin.gz`);
+    const resp = await fetch(`grid/celdas/${idx}.bin.gz?d=20260929`);
     const buf = await new Response(resp.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
     let cell = Motor.cellArrays(buf, M.nd);
     let rel = null;
