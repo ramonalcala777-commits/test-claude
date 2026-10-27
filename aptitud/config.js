@@ -34,7 +34,7 @@ window.CONFIG = {
   // Umbrales de los criterios: [condiciona, excluye]
   crit: {
     pist: { loss: [10, 25], bad: [3, 6], chill: [0.1, 0.3], veryLate: [0.1, 0.3], veryLateDoy: 305, autumn: [0.15], overlap: [0.7, 0.4],
-      rainBloomDays: 3, rainBloom: [0.4, 9], windLow: 1.0, windHigh: 6.0, hr: [50, 60], preRainMm: 50, preRain: [0.3, 0.7],
+      rainBloomDays: 3, rainBloom: [0.4, 9], windLow: 1.0, windHigh: 6.0, hr: [58, 65], preRainMm: 50, preRain: [0.3, 0.7],
       boty: [12, 25], hot: [3], w12: 0.25, w20: 0.05, bloomHotT: 30, bloomHotDays: 2, bloomHot: [0.15, 0.4] },
     alm: { loss: [10, 25], bad: [3, 6], bee: [25, 10], beeWind: 4.5, moniliaDays: 4, monilia: [0.4, 9], spring: [18, 30],
       harvRainMm: 50, harvRain: [0.4, 9], w15alm: 0.1 }

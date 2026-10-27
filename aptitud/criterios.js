@@ -33,7 +33,7 @@
     // humedad de verano
     const years = [...new Set(ys)];
     const hr = seasonVals(c, d0, years, y => meanOf(c.rh, idx(d0, y, 6, 1), idx(d0, y, 9, 30), 10));
-    if (hr.length >= 8) { const h = mean(hr); out.push({ id: 'hr', nombre: 'Humedad relativa en verano', valor: `${Math.round(h)} % de media (junio a septiembre)`, nivel: lvl(h, K.hr[0], K.hr[1]), motivo: 'Con veranos húmedos aumentan Alternaria, Septoria y Botryosphaeria, y el fruto se mancha.' }); }
+    if (hr.length >= 8) { const h = mean(hr); out.push({ id: 'hr', nombre: 'Humedad relativa en verano', valor: `${Math.round(h)} % de media (junio a septiembre, día y noche)`, nivel: lvl(h, K.hr[0], K.hr[1]), motivo: 'Humedad media de verano (día y noche). Por encima del 58 % aumenta claramente la presión de Alternaria y Botryosphaeria y conviene reforzar los tratamientos.' }); }
     // lluvia en precosecha
     const pre = rows.map(x => x.harv > 0 ? rainSum(c, idx(d0, x.y, 8, 15), iOfDoy(d0, x.y, x.harv)) : null).filter(v => v != null);
     if (pre.length >= 8) { const fr = pre.filter(v => v > K.preRainMm).length / pre.length; out.push({ id: 'lluviacosecha', nombre: 'Lluvia en precosecha (15 ago – cosecha)', valor: `${pc(fr)} de los años con más de ${K.preRainMm} mm`, nivel: lvl(fr, K.preRain[0], K.preRain[1]), motivo: 'La lluvia con el fruto abierto mancha la cáscara, favorece Aspergillus (aflatoxinas) y complica el secado.' }); }
