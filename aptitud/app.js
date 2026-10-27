@@ -2,7 +2,7 @@
   const $ = id => document.getElementById(id);
   const DEF = JSON.parse(JSON.stringify(window.CONFIG));
   let CFG = DEF;
-  try { const s = localStorage.getItem('aptitud-params-v4'); if (s) CFG = Object.assign(JSON.parse(JSON.stringify(DEF)), JSON.parse(s)); } catch (e) {}
+  try { const s = localStorage.getItem('aptitud-params-v5'); if (s) CFG = Object.assign(JSON.parse(JSON.stringify(DEF)), JSON.parse(s)); } catch (e) {}
   let META = null, current = null, state = { sp: 'p', sel: null };
   const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   const fdate = doy => { if (doy == null || doy < 0) return '—'; const d = new Date(Date.UTC(2021, 0, 1) + (Math.round(doy) - 1) * 864e5); return d.getUTCDate() + ' ' + MES[d.getUTCMonth()]; };
@@ -235,13 +235,13 @@
   }
 
   // ---------- parámetros ----------
-  const PF = [['pist.ref.cp', 'Kerman: frío (porciones)'], ['pist.ref.gdh', 'Kerman: calor hasta flor (GDH)'], ['pist.stages.1.2', 'Pistacho: flor, T 10 % daño (°C)'], ['pist.stages.1.3', 'Pistacho: flor, T 90 % daño (°C)'], ['pist.stages.2.2', 'Pistacho: fruto cuajado, T 10 % (°C)'],
+  const PF = [['pist.ref.cp', 'Kerman: frío (porciones)'], ['pist.ref.gdh', 'Kerman: calor hasta flor (GDH)'], ['pist.stages.2.2', 'Pistacho: flor, T 10 % daño (°C)'], ['pist.stages.2.3', 'Pistacho: flor, T 90 % daño (°C)'], ['pist.stages.3.2', 'Pistacho: fruto cuajado, T 10 % (°C)'],
     ['alm.ref.cu', 'Guara: frío (unidades Utah)'], ['alm.ref.gdh', 'Guara: calor hasta flor (GDH)'], ['alm.stages.2.2', 'Almendro: flor abierta, T 10 % (°C)'], ['alm.stages.2.3', 'Almendro: flor abierta, T 90 % (°C)'], ['alm.stages.4.2', 'Almendro: fruto cuajado, T 10 % (°C)'],
     ['verdict.okLoss', 'Apta: pérdida media máx. (%)'], ['verdict.warnLoss', 'Con riesgo: pérdida media máx. (%)']];
   const getp = (o, p) => p.split('.').reduce((a, k) => a[k], o); const setp = (o, p, v) => { const ks = p.split('.'); const last = ks.pop(); ks.reduce((a, k) => a[k], o)[last] = v; };
   $('params').innerHTML = PF.map(([p, l]) => `<label>${l}<input id="p-${p.replace(/\./g, '_')}" data-p="${p}" type="number" step="any" value="${getp(CFG, p)}"></label>`).join('');
-  $('recalc').onclick = () => { document.querySelectorAll('[data-p]').forEach(i => setp(CFG, i.dataset.p, parseFloat(i.value))); try { localStorage.setItem('aptitud-params-v4', JSON.stringify(CFG)); } catch (e) {} if (current) compute(); };
-  $('reset').onclick = () => { CFG = JSON.parse(JSON.stringify(DEF)); try { localStorage.removeItem('aptitud-params-v4'); } catch (e) {} document.querySelectorAll('[data-p]').forEach(i => i.value = getp(CFG, i.dataset.p)); if (current) compute(); };
+  $('recalc').onclick = () => { document.querySelectorAll('[data-p]').forEach(i => setp(CFG, i.dataset.p, parseFloat(i.value))); try { localStorage.setItem('aptitud-params-v5', JSON.stringify(CFG)); } catch (e) {} if (current) compute(); };
+  $('reset').onclick = () => { CFG = JSON.parse(JSON.stringify(DEF)); try { localStorage.removeItem('aptitud-params-v5'); } catch (e) {} document.querySelectorAll('[data-p]').forEach(i => i.value = getp(CFG, i.dataset.p)); if (current) compute(); };
 
   $('calib').innerHTML = (window.CALIB && window.CALIB.html) || '';
   $('method').innerHTML = (window.CALIB && window.CALIB.method) || '';
