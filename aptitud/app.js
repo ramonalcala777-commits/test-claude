@@ -239,9 +239,9 @@
     s += `<circle cx="${ml + 4}" cy="${H2 - 26}" r="3" fill="var(--flor)"/><text x="${ml + 11}" y="${H2 - 22}" style="font-size:10.5px">plena flor</text><text x="${ml + 74}" y="${H2 - 21}" style="font-size:13px;fill:var(--bad)">✱</text><text x="${ml + 86}" y="${H2 - 22}" style="font-size:10.5px">helada que hizo el daño (su color, la gravedad)</text>`;
     s += `</svg>`;
     // --- panel 3 (pistacho): cosecha ---
-    if (state.sp === 'p') { const hv = yrs.map(o => o.q.harv).filter(h => h > 0); if (hv.length) { const hlo = Math.min(...hv, 236) - 3, hhi = Math.max(...hv, 288) + 3, H3 = 74, t3 = 6, h3 = 50, y3 = d => t3 + (d - hlo) / (hhi - hlo) * h3;
-      s += `<svg viewBox="0 0 ${W} ${H3}" width="100%" role="img" aria-label="Fecha de cosecha prevista de ${r.nm} por año"><text x="${ml - 6}" y="${t3 + 9}" text-anchor="end" style="font-size:10.5px">Cosecha</text>`;
-      for (const d of [244, 258, 274, 288]) if (d >= hlo && d <= hhi) s += `<line x1="${ml}" x2="${W - mr}" y1="${y3(d)}" y2="${y3(d)}" stroke="${d === 288 ? 'var(--warn)' : 'var(--line)'}" ${d === 288 ? 'stroke-dasharray="3 3"' : ''}/><text x="${W - mr}" y="${y3(d) - 2}" text-anchor="end" style="font-size:10px">${fdate(d)}</text>`;
+    if (state.sp === 'p') { const hv = yrs.map(o => o.q.harv).filter(h => h > 0); if (hv.length) { const hlo = Math.min(...hv, 236) - 3, hhi = Math.max(...hv, 288) + 3, H3 = 112, t3 = 8, h3 = 92, y3 = d => t3 + (d - hlo) / (hhi - hlo) * h3;
+      s += `<svg viewBox="0 0 ${W} ${H3}" width="100%" role="img" aria-label="Fecha de cosecha prevista de ${r.nm} por año"><text x="${ml + 4}" y="${t3 + 8}" style="font-size:10.5px">Cosecha prevista (la línea discontinua es el 15 de octubre)</text>`;
+      for (const d of [244, 258, 274, 288]) if (d >= hlo && d <= hhi) s += `<line x1="${ml}" x2="${W - mr}" y1="${y3(d)}" y2="${y3(d)}" stroke="${d === 288 ? 'var(--warn)' : 'var(--line)'}" ${d === 288 ? 'stroke-dasharray="3 3"' : ''}/><text x="${ml - 6}" y="${y3(d) + 4}" text-anchor="end">${fdate(d)}</text>`;
       yrs.forEach(({ q, i }) => { if (q.harv > 0) s += `<circle cx="${cx(i)}" cy="${y3(q.harv)}" r="3" fill="${q.harv > 288 ? 'var(--warn)' : 'var(--pist)'}"/>`; else s += `<text x="${cx(i)}" y="${t3 + h3}" text-anchor="middle" style="fill:var(--bad)">×</text>`; });
       s += `</svg>`; } }
     // zonas táctiles por año (sobre todo el bloque)
@@ -267,7 +267,7 @@
     if (state.sp === 'p') {
       const ms = rows.filter(x => x.male), items = [r, ...ms]; const all = items.flatMap(x => [x.p10 - 6, x.p90 + 6]); const lo = Math.min(...all), hi = Math.max(...all);
       const W2 = 380, rowH = 34, H2 = items.length * rowH + 40, l2 = 92, r2 = 12, iw2 = W2 - l2 - r2, x = d => l2 + (d - lo) / (hi - lo) * iw2;
-      let g = `<svg viewBox="0 0 ${W2} ${H2}" width="100%" role="img" aria-label="Floración de ${r.nm} y machos">`;
+      let g = `<svg viewBox="0 0 ${W2} ${H2}" width="100%" style="max-width:480px" role="img" aria-label="Floración de ${r.nm} y machos">`;
       for (let d = Math.ceil(lo / 7) * 7; d <= hi; d += 7) g += `<line x1="${x(d)}" x2="${x(d)}" y1="8" y2="${H2 - 26}" stroke="var(--line)"/><text x="${x(d)}" y="${H2 - 10}" text-anchor="middle">${fdate(d)}</text>`;
       items.forEach((it, i) => { const y = 12 + i * rowH, half = it.male ? 6 : 5, col = it.male ? 'var(--pist)' : 'var(--flor)';
         g += `<text x="0" y="${y + 15}" style="fill:var(--ink)">${it.nm}</text><rect x="${x(it.p10 - half)}" y="${y + 4}" width="${x(it.p90 + half) - x(it.p10 - half)}" height="16" rx="3" fill="${col}" opacity=".22"/><rect x="${x(it.mb - half)}" y="${y + 4}" width="${x(it.mb + half) - x(it.mb - half)}" height="16" rx="3" fill="${col}"/>`;
