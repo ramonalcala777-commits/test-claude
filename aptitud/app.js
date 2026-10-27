@@ -227,7 +227,7 @@
     s += `<text x="${ml - 6}" y="${t1 - 6}" text-anchor="end" style="font-size:10.5px">Pérdida</text></svg>`;
     // --- panel 2: calendario (flor, helada, cosecha) ---
     const ds = []; yrs.forEach(({ q }) => { ds.push(q.fb); if (q.fz && q.fz.kill > 0) ds.push(q.fz.doy); });
-    const dlo = Math.min(...ds) - 4, dhi = Math.max(...ds) + 4, H2 = 168, t2 = 8, h2 = 130, y2 = d => t2 + (d - dlo) / (dhi - dlo) * h2;
+    const dlo = Math.min(...ds) - 4, dhi = Math.max(...ds) + 4, H2 = 190, t2 = 8, h2 = 130, y2 = d => t2 + (d - dlo) / (dhi - dlo) * h2;
     s += `<svg viewBox="0 0 ${W} ${H2}" width="100%" role="img" aria-label="Fecha de plena flor y de la helada dañina de ${r.nm} por año">`;
     s += `<rect x="${xR}" y="${t2}" width="${W - mr - xR}" height="${h2}" fill="var(--frost)" opacity=".07"/>`;
     for (let d = Math.ceil(dlo / 10) * 10; d <= dhi; d += 10) s += `<line x1="${ml}" x2="${W - mr}" y1="${y2(d)}" y2="${y2(d)}" stroke="var(--line)"/><text x="${ml - 6}" y="${y2(d) + 4}" text-anchor="end">${fdate(d)}</text>`;
@@ -236,6 +236,7 @@
         const yy = y2(q.fz.doy); s += `<path d="M${x - 4},${yy}L${x + 4},${yy}M${x},${yy - 4}L${x},${yy + 4}M${x - 3},${yy - 3}L${x + 3},${yy + 3}M${x - 3},${yy + 3}L${x + 3},${yy - 3}" stroke="${col(q.loss)}" stroke-width="1.6"/>`; }
       s += `<circle cx="${x}" cy="${y2(q.fb)}" r="3.2" fill="var(--flor)"/>`; });
     yrs.forEach(({ y, i }) => { if (i % 5 === 0 || i === n - 1) s += `<text x="${cx(i)}" y="${H2 - 8}" text-anchor="middle">${y}</text>`; });
+    s += `<circle cx="${ml + 4}" cy="${H2 - 26}" r="3" fill="var(--flor)"/><text x="${ml + 11}" y="${H2 - 22}" style="font-size:10.5px">plena flor</text><text x="${ml + 74}" y="${H2 - 21}" style="font-size:13px;fill:var(--bad)">✱</text><text x="${ml + 86}" y="${H2 - 22}" style="font-size:10.5px">helada que hizo el daño (su color, la gravedad)</text>`;
     s += `</svg>`;
     // --- panel 3 (pistacho): cosecha ---
     if (state.sp === 'p') { const hv = yrs.map(o => o.q.harv).filter(h => h > 0); if (hv.length) { const hlo = Math.min(...hv, 236) - 3, hhi = Math.max(...hv, 288) + 3, H3 = 74, t3 = 6, h3 = 50, y3 = d => t3 + (d - hlo) / (hhi - hlo) * h3;
@@ -256,7 +257,7 @@
       + `<div class="ywrap">${blocks}<div class="yhits">${yrs.map(({ i, y }) => `<button class="yhit" data-i="${i}" style="left:${(ml + i * bw) / W * 100}%;width:${bw / W * 100}%" aria-label="Ver ${y}"></button>`).join('')}</div></div>`
       + `<div id="yearCard" class="ycard" aria-live="polite"></div>`;
     document.querySelectorAll('#yearChart .yhit').forEach(b => b.onclick = () => pick(+b.dataset.i));
-    pick(state.yr != null && yrs.find(z => z.i === state.yr) ? state.yr : yrs.reduce((a, b) => b.q.loss >= a.q.loss ? b : a).i);
+    pick(state.yr != null && yrs.find(z => z.i === state.yr) ? state.yr : yrs[yrs.length - 1].i);
     // --- comparación de variedades ---
     const fem = rows.filter(x => !x.male).slice().sort((a, b) => a.mb - b.mb);
     const pc = q => { const v = q.rows.filter(Boolean); return [v.filter(z => z.loss >= 10).length / v.length * 100, v.filter(z => z.loss > 50).length / v.length * 100]; };
