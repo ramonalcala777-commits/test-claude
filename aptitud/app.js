@@ -15,6 +15,7 @@
   const map = L.map('map', { zoomControl: true }).setView([39.3, -2.9], 8);
   L.tileLayer('https://www.ign.es/wmts/pnoa-ma?request=GetTile&service=WMTS&VERSION=1.0.0&Layer=OI.OrthoimageCoverage&Style=default&Format=image/jpeg&TileMatrixSet=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}', { attribution: 'PNOA © IGN', maxZoom: 19 }).addTo(map);
   L.tileLayer.wms('https://wms.mapa.gob.es/sigpac/wms', { layers: 'recinto', format: 'image/png', transparent: true, minZoom: 15, attribution: 'SIGPAC © FEGA' }).addTo(map);
+  setTimeout(() => map.invalidateSize(), 400); window.addEventListener('load', () => map.invalidateSize());
   let poly = null;
   map.on('click', async e => {
     status('Buscando el recinto…');
@@ -38,7 +39,7 @@
     if (!gj.features || !gj.features.length) { status('Ese recinto no existe en el SIGPAC. Revisa el código.'); return; }
     const f = gj.features[0]; const pr = f.properties;
     if (poly) map.removeLayer(poly);
-    poly = L.geoJSON(f, { style: { color: '#ffd23f', weight: 3, fillOpacity: .08 } }).addTo(map); map.fitBounds(poly.getBounds(), { maxZoom: 16 });
+    poly = L.geoJSON(f, { style: { color: '#ffd23f', weight: 3, fillOpacity: .08 } }).addTo(map); map.invalidateSize(); map.fitBounds(poly.getBounds(), { maxZoom: 16 });
     const c = poly.getBounds().getCenter();
     const M = await loadMeta();
     const lat = M.lat, lon = M.lon;
