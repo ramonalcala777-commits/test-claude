@@ -5,12 +5,13 @@ window.CONFIG = {
     stages: [[-20, -6, -3, -5], [-5, 5, -2, -4], [6, 30, -1.5, -3.5]], // [desde, hasta (días respecto a plena flor), T 10 %, T 90 %]
     autumnFrost: -2,
     varieties: [
-      { name: 'Kerman', sex: 'H', cp: 90, offset: 0, gdd: 2120, males: ['Peter'] },
-      { name: 'Sirora', sex: 'H', cp: 59, offset: -4.7, gdd: 2030, males: ['Randy', 'C-Especial', 'Peter'] },
+      { name: 'Kerman', sex: 'H', cp: 90, offset: 0, gdd: 2120, males: ['Peter', 'Ruso (02-18)'] },
+      { name: 'Sirora', sex: 'H', cp: 59, offset: -4.7, gdd: 2030, males: ['Randy', 'C-Especial', 'Peter', 'Ruso (02-18)'] },
       { name: 'Golden Hills', sex: 'H', cp: 45, offset: -8, gdd: 2100, males: ['Randy'] },
       { name: 'Lost Hills', sex: 'H', cp: 45, offset: -6, gdd: 2070, males: ['Randy'] },
       { name: 'Larnaka', sex: 'H', cp: 48, offset: -10.5, gdd: 1990, males: ['C-Especial'] },
       { name: 'Peter', sex: 'M', cp: 69, offset: -1.2 },
+      { name: 'Ruso (02-18)', sex: 'M', cp: 69, offset: -2.2 },   // 02-18 de El Chaparrillo: ~1 día antes que Peter (Couceiro y Guerrero, tabla 10.10, medias 1999-2004)
       { name: 'Randy', sex: 'M', cp: 45, offset: -8 },
       { name: 'C-Especial', sex: 'M', cp: 48, offset: -8 }
     ]
