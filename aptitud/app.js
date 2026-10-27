@@ -261,9 +261,11 @@
     // --- comparación de variedades ---
     const fem = rows.filter(x => !x.male).slice().sort((a, b) => a.mb - b.mb);
     const pc = q => { const v = q.rows.filter(Boolean); return [v.filter(z => z.loss >= 10).length / v.length * 100, v.filter(z => z.loss > 50).length / v.length * 100]; };
-    const cmp = `<div class="eyebrow" style="margin:4px 0 6px">Años con helada dañina, de la variedad más temprana a la más tardía</div><div class="vcmp">` + fem.map(it => { const [d, g] = pc(it);
-      return `<button class="vrow${it.nm === r.nm ? ' on' : ''}" data-nm="${it.nm}"><span class="vn">${it.nm}<small>${fdate(it.mb)}</small></span><span class="vb"><i class="d" style="width:${d}%"></i><i class="g" style="width:${g}%"></i></span><span class="vv">${Math.round(d)} % · <b>${Math.round(g)} %</b></span></button>`; }).join('')
-      + `</div><p class="note" style="margin-top:6px">Barra clara: años con daño (≥ 10 %). Barra oscura: años con daño grave (&gt; 50 %). Toca una variedad para verla.</p>`;
+    const c10v = x => (Math.round(x / 10 * 10) / 10).toLocaleString('es-ES', { maximumFractionDigits: 1 });
+    const cmp = `<div class="eyebrow" style="margin:4px 0 6px">Años con helada dañina, de la variedad más temprana a la más tardía</div>`
+      + `<div class="vleg"><span><i style="background:var(--bad)"></i>Daño grave (&gt; 50 %)</span><span><i style="background:var(--warn)"></i>Daño moderado (10–50 %)</span><span><i style="background:var(--line)"></i>Sin daño</span></div><div class="vcmp">` + fem.map(it => { const [d, g] = pc(it);
+      return `<button class="vrow${it.nm === r.nm ? ' on' : ''}" data-nm="${it.nm}"><span class="vn">${it.nm}<small>flor ${fdate(it.mb)}</small></span><span class="vb"><i class="g" style="width:${g}%"></i><i class="d" style="left:${g}%;width:${d - g}%"></i></span><span class="vv"><b class="vd">${c10v(d)}</b> de cada 10 años con daño<br><b>${c10v(g)}</b> graves</span></button>`; }).join('')
+      + `</div><p class="note" style="margin-top:6px">Toca una variedad para ver su gráfico.</p>`;
     if (state.sp === 'p') {
       const ms = rows.filter(x => x.male), items = [r, ...ms]; const all = items.flatMap(x => [x.p10 - 6, x.p90 + 6]); const lo = Math.min(...all), hi = Math.max(...all);
       const W2 = 380, rowH = 34, H2 = items.length * rowH + 40, l2 = 92, r2 = 12, iw2 = W2 - l2 - r2, x = d => l2 + (d - lo) / (hi - lo) * iw2;
