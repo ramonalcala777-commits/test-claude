@@ -73,6 +73,22 @@ details p,details li{margin:0;font-size:.92rem} details ul{margin:0;padding-left
 [hidden]{display:none!important}
 .why{white-space:normal;min-width:220px;max-width:340px;font-size:.85rem;color:var(--muted)}
 .critlist{display:flex;flex-direction:column;gap:8px}
+.ysum{font-size:.9rem;margin-bottom:8px}
+.ywrap{position:relative;min-width:480px} .ywrap svg{display:block}
+.yhits{position:absolute;inset:0}
+.yhit{position:absolute;top:0;bottom:0;border:0;padding:0;margin:0;background:transparent;cursor:pointer;border-radius:4px}
+.yhit:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)} .yhit.on{background:color-mix(in srgb,var(--frost) 16%,transparent);outline:1px solid color-mix(in srgb,var(--frost) 50%,transparent)}
+.yhit:focus-visible{outline:2px solid var(--frost)}
+.ycard{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:.9rem;display:flex;flex-direction:column;gap:4px}
+.yc-h{display:flex;align-items:center;gap:10px;font-size:1rem}
+.vcmp{display:flex;flex-direction:column;gap:2px}
+.vrow{display:grid;grid-template-columns:120px 1fr 86px;gap:8px;align-items:center;border:0;background:transparent;color:var(--ink);font:inherit;font-size:.85rem;padding:4px 6px;border-radius:6px;cursor:pointer;text-align:left}
+.vrow:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)} .vrow.on{background:color-mix(in srgb,var(--frost) 14%,transparent);font-weight:600}
+.vrow:focus-visible{outline:2px solid var(--frost)}
+.vn{display:flex;flex-direction:column;line-height:1.15} .vn small{color:var(--muted);font-weight:400;font-size:.75rem}
+.vb{position:relative;height:12px;background:var(--line);border-radius:3px;overflow:hidden}
+.vb i{position:absolute;left:0;top:0;bottom:0} .vb .d{background:var(--warn);opacity:.55} .vb .g{background:var(--bad)}
+.vv{font-variant-numeric:tabular-nums;font-size:.8rem;color:var(--muted);text-align:right} .vv b{color:var(--bad)}
 .frostbox{display:flex;flex-direction:column;gap:6px}
 .ft{min-width:0;width:100%} .ft th,.ft td{white-space:normal;text-align:left;vertical-align:top} .ft small{color:var(--muted);font-size:.8rem;font-weight:400}
 .crit{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:start;padding:8px 0;border-bottom:1px solid var(--line)}
@@ -142,11 +158,11 @@ details p,details li{margin:0;font-size:.92rem} details ul{margin:0;padding-left
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="config.js?v=20261027l"></script>
-<script src="calib.js?v=20261027l"></script>
-<script src="relieve.js?v=20261027l"></script>
-<script src="motor.js?v=20261027l"></script>
-<script src="criterios.js?v=20261027l"></script>
-<script src="app.js?v=20261027l"></script>
+<script src="config.js?v=20261027m"></script>
+<script src="calib.js?v=20261027m"></script>
+<script src="relieve.js?v=20261027m"></script>
+<script src="motor.js?v=20261027m"></script>
+<script src="criterios.js?v=20261027m"></script>
+<script src="app.js?v=20261027m"></script>
 </body>
 </html>

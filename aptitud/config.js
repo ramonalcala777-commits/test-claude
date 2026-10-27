@@ -2,7 +2,8 @@
 window.CONFIG = {
   pist: {
     ref: { name: 'Kerman', cp: 90, gdh: 6800 },
-    chillCapDoy: 75,   // si el 16 de marzo no se han cubierto las porciones de frío, el calor empieza a contar igualmente (Caravaca 2023)          // calibrado con Caravaca 2018-2023 y Castilla y León 2018-2020
+    chillCapDoy: 75,
+    stageNames: ['yema hinchada', 'racimo saliendo', 'floración', 'fruto recién cuajado'],   // si el 16 de marzo no se han cubierto las porciones de frío, el calor empieza a contar igualmente (Caravaca 2023)          // calibrado con Caravaca 2018-2023 y Castilla y León 2018-2020
     stages: [[-20, -12, -5, -8], [-11, -6, -3, -5], [-5, 5, -2, -4], [6, 30, -1.5, -3.5]], // yema hinchada B, racimo C-D, flor, fruto cuajado: [desde, hasta (días respecto a plena flor), T 10 %, T 90 %]
     autumnFrost: -2,
     varieties: [
@@ -18,7 +19,8 @@ window.CONFIG = {
     ]
   },
   alm: {
-    ref: { name: 'Guara', cu: 850, gdh: 5500 },   // calibrado con Caravaca 2018-2020 y 2023; validado con Lauranne en Albacete 2022-2023
+    ref: { name: 'Guara', cu: 850, gdh: 5500 },
+    stageNames: ['yema (B–C)', 'botón floral (D–E)', 'flor abierta (F)', 'caída de pétalos (G)', 'fruto recién cuajado (H)'],   // calibrado con Caravaca 2018-2020 y 2023; validado con Lauranne en Albacete 2022-2023
     stages: [[-25, -12, -5, -8], [-11, -3, -3.5, -5.5], [-2, 4, -2.5, -4], [5, 10, -2, -3], [11, 40, -1, -2]],
     // frost: [ΔT10, ΔT90] respecto al Guara en flor (IRTA, Calle et al. 2025, cámara); se aplica a los estados de flor (D a G)
     varieties: [

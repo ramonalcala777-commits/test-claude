@@ -16,6 +16,14 @@
   function reachUtah(c, a, b, req) { let s = 0; for (let i = a; i < b; i++) { s = Math.max(0, s + c.utah[i] / 2); if (s >= req) return i; } return -1; }
   function sumRange(arr, scale, a, b) { let s = 0; for (let i = a; i < b; i++) s += arr[i] / scale; return s; }
   function minRange(arr, a, b) { let m = 99; for (let i = Math.max(0, a); i < b; i++) { const v = arr[i] / 10; if (v < m) m = v; } return m; }
+  function minIdx(arr, a, b) { let m = 99, mi = -1; for (let i = Math.max(0, a); i < b; i++) { const v = arr[i] / 10; if (v < m) { m = v; mi = i; } } return [m, mi]; }
+  // helada que más daño hace en el año: estado (índice), mínima, día y % que mata
+  function frostEval(c, d0, f, stages, adj) {
+    let surv = 1, tmb = 99, best = { k: -1, kill: 0, t: 99, i: -1 };
+    stages.forEach(([a, b, t10, t90], k) => { const [o10, o90] = adj ? adj(k) : [0, 0]; const [m, mi] = minIdx(c.tmin, f + a, f + b + 1); const kl = kill(m, t10 + o10, t90 + o90);
+      surv *= 1 - kl; if (a <= 0 && b >= 0) tmb = m; if (kl > best.kill || (best.kill === 0 && kl === 0 && m < best.t)) best = { k, kill: kl, t: m, i: mi }; });
+    return { loss: Math.round((1 - surv) * 100), tminBloom: tmb, fz: best.i < 0 ? null : { st: best.k, t: best.t, doy: doyOf(d0, best.i), d: best.i - f, kill: Math.round(best.kill * 100) } };
+  }
   const kill = (t, t10, t90) => t >= t10 ? 0 : t <= t90 ? Math.min(1, 0.9 + 0.05 * (t90 - t)) : 0.1 + 0.8 * (t10 - t) / (t10 - t90);
 
   function seasons(c, d0) {
@@ -45,9 +53,7 @@
         const f = reach(c.gdha, 1, chillEnd(s) + 1, s.b, gReq); if (f < 0) return null;
         const r = { y: s.y, fb: doyOf(d0, f), cpAtBloom: sumRange(c.cp, 100, s.a, f), chillOk: sumRange(c.cp, 100, s.a, f) >= v.cp };
         if (v.sex === 'M') return r;
-        let surv = 1, tmb = 99;
-        for (const [a, b, t10, t90] of P.stages) { const m = minRange(c.tmin, f + a, f + b + 1); surv *= 1 - kill(m, t10, t90); if (a <= 0 && b >= 0) tmb = m; }
-        r.loss = Math.round((1 - surv) * 100); r.tminBloom = tmb;
+        const fe = frostEval(c, d0, f, P.stages); r.loss = fe.loss; r.tminBloom = fe.tminBloom; r.fz = fe.fz;
         const h = reach(c.gdd7, 10, f, s.bx, v.gdd);
         r.harv = h < 0 ? -1 : doyOf(d0, h);
         let af = 0; if (h > 0) { const s9 = dayIndex(d0, s.y, 9, 1); for (let i = s9; i <= h; i++) if (c.tmin[i] / 10 <= P.autumnFrost) { af = 1; break; } }
@@ -70,11 +76,9 @@
       const rows = S.map((s, k) => {
         const r0 = ref[k]; if (!r0) return null;
         const f = reach(c.gdhr, 1, r0.br + 1, s.b, gReq); if (f < 0) return null;
-        let surv = 1, tmb = 99;
         const fd = v.frost || [0, 0];
-        A.stages.forEach(([a, b, t10, t90], k) => { const fl = k >= 1 && k <= 3; const m = minRange(c.tmin, f + a, f + b + 1);
-          surv *= 1 - kill(m, t10 + (fl ? fd[0] : 0), t90 + (fl ? fd[1] : 0)); if (a <= 0 && b >= 0) tmb = m; });
-        return { y: s.y, fb: doyOf(d0, f), loss: Math.round((1 - surv) * 100), tminBloom: tmb };
+        const fe = frostEval(c, d0, f, A.stages, k => k >= 1 && k <= 3 ? fd : [0, 0]);
+        return { y: s.y, fb: doyOf(d0, f), loss: fe.loss, tminBloom: fe.tminBloom, fz: fe.fz };
       });
       res[v.name] = { v, rows };
     }

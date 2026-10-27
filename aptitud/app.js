@@ -2,7 +2,7 @@
   const $ = id => document.getElementById(id);
   const DEF = JSON.parse(JSON.stringify(window.CONFIG));
   let CFG = DEF;
-  try { const s = localStorage.getItem('aptitud-params-v6'); if (s) CFG = Object.assign(JSON.parse(JSON.stringify(DEF)), JSON.parse(s)); } catch (e) {}
+  try { const s = localStorage.getItem('aptitud-params-v7'); if (s) CFG = Object.assign(JSON.parse(JSON.stringify(DEF)), JSON.parse(s)); } catch (e) {}
   let META = null, current = null, state = { sp: 'p', sel: null };
   const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   const fdate = doy => { if (doy == null || doy < 0) return '—'; const d = new Date(Date.UTC(2021, 0, 1) + (Math.round(doy) - 1) * 864e5); return d.getUTCDate() + ' ' + MES[d.getUTCMonth()]; };
@@ -194,6 +194,7 @@
     $('rank').innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
     document.querySelectorAll('#rank .row').forEach(tr => { const go = () => { state.sel = tr.dataset.nm; render(); }; tr.onclick = go; tr.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } }; });
     detail(rows.find(r => r.nm === state.sel), rows);
+    document.querySelectorAll('#sideChart .vrow').forEach(b => b.onclick = () => { state.sel = b.dataset.nm; render(); });
   }
 
   function detail(r, rows) {
@@ -209,19 +210,59 @@
     const rec = x => { const y = (r.critR || []).find(z => z.id === x.id); return y && y.nivel !== x.nivel ? `<div class="recent ${['ok', 'warn', 'bad'][y.nivel]}">Últimos 10 años (${yr}): <b>${NV[y.nivel].toLowerCase()}</b> · ${y.valor}</div>` : ''; };
     const head = r.clsR && r.clsR !== r.cls ? `<p class="note">Con toda la serie sale <b>${LBL[r.cls].toLowerCase()}</b>; con solo los últimos 10 años (${yr}) saldría <b>${LBL[r.clsR].toLowerCase()}</b>. El veredicto usa toda la serie; la diferencia indica hacia dónde va el clima.</p>` : r.clsR ? `<p class="note">Con solo los últimos 10 años (${yr}) el veredicto es el mismo.</p>` : '';
     $('crit').innerHTML = `<h2>${r.nm}: ${LBL[r.cls].toLowerCase()}</h2>${head}${frost}<div class="critlist">` + r.crit.slice().sort((a, b) => b.nivel - a.nivel).map(x => `<div class="crit l${x.nivel}"><span class="chip ${['ok', 'warn', 'bad'][x.nivel]}">${NV[x.nivel]}</span><div><b>${x.nombre}</b><div class="cv">${x.valor}</div>${x.nivel ? `<div class="cm">${x.motivo}</div>` : ''}${rec(x)}</div></div>`).join('') + '</div>';
-    $('detTitle').textContent = `${r.nm}: pérdida por helada y fecha de floración, año a año`;
-    $('detLegend').innerHTML = '<span style="--c:var(--frost)">Pérdida por helada</span><span style="--c:var(--flor)">Plena flor prevista</span>';
-    const W = 620, H = 250, ml = 40, mr = 46, mt = 12, mb = 34, iw = W - ml - mr, ih = H - mt - mb, bw = iw / n;
-    const fbv = r.fb.filter(x => x != null); const bmin = Math.min(...fbv) - 4, bmax = Math.max(...fbv) + 4; const yb = d => mt + ih - (d - bmin) / (bmax - bmin) * ih;
-    let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:520px" role="img" aria-label="Pérdida por helada y floración de ${r.nm}">`;
-    for (const v of [0, 25, 50, 75, 100]) { const y = mt + ih - v / 100 * ih; s += `<line x1="${ml}" x2="${W - mr}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${ml - 6}" y="${y + 4}" text-anchor="end">${v}%</text>`; }
-    for (let d = Math.ceil(bmin / 10) * 10; d <= bmax; d += 10) s += `<text x="${W - mr + 6}" y="${yb(d) + 4}">${fdate(d)}</text>`;
-    r.l.forEach((v, i) => { if (v == null) return; const h = v / 100 * ih; const rw = r.rows[i]; s += `<rect x="${ml + i * bw + 1.5}" y="${mt + ih - h}" width="${bw - 3}" height="${h}" fill="var(--frost)" opacity="${v >= 50 ? 1 : .55}"><title>${y0 + i}: ${v} % de pérdida · mín. ${rw ? fmt(rw.tminBloom, 1) : '—'} °C en floración</title></rect>`; if (i % 5 === 0 || i === n - 1) s += `<text x="${ml + i * bw + bw / 2}" y="${H - mb + 16}" text-anchor="middle">${y0 + i}</text>`; });
-    let path = ''; r.fb.forEach((d, i) => { if (d == null) return; path += (path ? 'L' : 'M') + (ml + i * bw + bw / 2).toFixed(1) + ',' + yb(d).toFixed(1); });
-    s += `<path d="${path}" fill="none" stroke="var(--flor)" stroke-width="1.8"/>`;
-    r.fb.forEach((d, i) => { if (d != null) s += `<circle cx="${ml + i * bw + bw / 2}" cy="${yb(d)}" r="2.6" fill="var(--flor)"><title>${y0 + i}: plena flor ${fdate(d)}</title></circle>`; });
-    s += `<line x1="${ml}" x2="${W - mr}" y1="${mt + ih}" y2="${mt + ih}" stroke="var(--muted)"/></svg>`;
-    $('yearChart').innerHTML = s;
+    $('detTitle').textContent = `${r.nm}: heladas y floración, año a año`;
+    $('detLegend').innerHTML = '<span style="--c:var(--line)">Menos del 10 %</span><span style="--c:var(--warn)">Daño (10–50 %)</span><span style="--c:var(--bad)">Daño grave (&gt; 50 %)</span>';
+    const SN = (state.sp === 'p' ? CFG.pist : CFG.alm).stageNames || [];
+    const yrs = r.rows.map((q, i) => ({ q, y: y0 + i, i })).filter(o => o.q);
+    const W = 640, ml = 46, mr = 14, iw = W - ml - mr, bw = iw / n, cx = i => ml + i * bw + bw / 2;
+    const col = v => v > 50 ? 'var(--bad)' : v >= 10 ? 'var(--warn)' : 'var(--line)';
+    const xR = ml + (current.yR - y0) * bw;
+    // --- panel 1: pérdida ---
+    const H1 = 170, t1 = 26, h1 = 120, y1 = v => t1 + h1 - v / 100 * h1;
+    let s = `<svg viewBox="0 0 ${W} ${H1}" width="100%" role="img" aria-label="Pérdida por helada de ${r.nm} por año">`;
+    s += `<rect x="${xR}" y="${t1 - 18}" width="${W - mr - xR}" height="${h1 + 18}" fill="var(--frost)" opacity=".07"/><text x="${xR + 4}" y="${t1 - 6}" style="font-size:10.5px">últimos 10 años</text>`;
+    for (const v of [0, 50, 100]) s += `<line x1="${ml}" x2="${W - mr}" y1="${y1(v)}" y2="${y1(v)}" stroke="var(--line)"/><text x="${ml - 6}" y="${y1(v) + 4}" text-anchor="end">${v}%</text>`;
+    s += `<line x1="${ml}" x2="${W - mr}" y1="${y1(10)}" y2="${y1(10)}" stroke="var(--warn)" stroke-dasharray="3 3" opacity=".7"/><line x1="${ml}" x2="${W - mr}" y1="${y1(50)}" y2="${y1(50)}" stroke="var(--bad)" stroke-dasharray="3 3" opacity=".7"/>`;
+    yrs.forEach(({ q, i }) => { const v = q.loss, h = Math.max(1.5, v / 100 * h1); s += `<rect x="${ml + i * bw + 2}" y="${t1 + h1 - h}" width="${bw - 4}" height="${h}" rx="2" fill="${col(v)}"/>`; });
+    s += `<text x="${ml - 6}" y="${t1 - 6}" text-anchor="end" style="font-size:10.5px">Pérdida</text></svg>`;
+    // --- panel 2: calendario (flor, helada, cosecha) ---
+    const ds = []; yrs.forEach(({ q }) => { ds.push(q.fb); if (q.fz && q.fz.kill > 0) ds.push(q.fz.doy); });
+    const dlo = Math.min(...ds) - 4, dhi = Math.max(...ds) + 4, H2 = 168, t2 = 8, h2 = 130, y2 = d => t2 + (d - dlo) / (dhi - dlo) * h2;
+    s += `<svg viewBox="0 0 ${W} ${H2}" width="100%" role="img" aria-label="Fecha de plena flor y de la helada dañina de ${r.nm} por año">`;
+    s += `<rect x="${xR}" y="${t2}" width="${W - mr - xR}" height="${h2}" fill="var(--frost)" opacity=".07"/>`;
+    for (let d = Math.ceil(dlo / 10) * 10; d <= dhi; d += 10) s += `<line x1="${ml}" x2="${W - mr}" y1="${y2(d)}" y2="${y2(d)}" stroke="var(--line)"/><text x="${ml - 6}" y="${y2(d) + 4}" text-anchor="end">${fdate(d)}</text>`;
+    yrs.forEach(({ q, i }) => { const x = cx(i);
+      if (q.fz && q.fz.kill > 0) { s += `<line x1="${x}" x2="${x}" y1="${y2(q.fb)}" y2="${y2(q.fz.doy)}" stroke="${col(q.loss)}" stroke-width="1.5" opacity=".6"/>`;
+        const yy = y2(q.fz.doy); s += `<path d="M${x - 4},${yy}L${x + 4},${yy}M${x},${yy - 4}L${x},${yy + 4}M${x - 3},${yy - 3}L${x + 3},${yy + 3}M${x - 3},${yy + 3}L${x + 3},${yy - 3}" stroke="${col(q.loss)}" stroke-width="1.6"/>`; }
+      s += `<circle cx="${x}" cy="${y2(q.fb)}" r="3.2" fill="var(--flor)"/>`; });
+    yrs.forEach(({ y, i }) => { if (i % 5 === 0 || i === n - 1) s += `<text x="${cx(i)}" y="${H2 - 8}" text-anchor="middle">${y}</text>`; });
+    s += `</svg>`;
+    // --- panel 3 (pistacho): cosecha ---
+    if (state.sp === 'p') { const hv = yrs.map(o => o.q.harv).filter(h => h > 0); if (hv.length) { const hlo = Math.min(...hv, 236) - 3, hhi = Math.max(...hv, 288) + 3, H3 = 74, t3 = 6, h3 = 50, y3 = d => t3 + (d - hlo) / (hhi - hlo) * h3;
+      s += `<svg viewBox="0 0 ${W} ${H3}" width="100%" role="img" aria-label="Fecha de cosecha prevista de ${r.nm} por año"><text x="${ml - 6}" y="${t3 + 9}" text-anchor="end" style="font-size:10.5px">Cosecha</text>`;
+      for (const d of [244, 258, 274, 288]) if (d >= hlo && d <= hhi) s += `<line x1="${ml}" x2="${W - mr}" y1="${y3(d)}" y2="${y3(d)}" stroke="${d === 288 ? 'var(--warn)' : 'var(--line)'}" ${d === 288 ? 'stroke-dasharray="3 3"' : ''}/><text x="${W - mr}" y="${y3(d) - 2}" text-anchor="end" style="font-size:10px">${fdate(d)}</text>`;
+      yrs.forEach(({ q, i }) => { if (q.harv > 0) s += `<circle cx="${cx(i)}" cy="${y3(q.harv)}" r="3" fill="${q.harv > 288 ? 'var(--warn)' : 'var(--pist)'}"/>`; else s += `<text x="${cx(i)}" y="${t3 + h3}" text-anchor="middle" style="fill:var(--bad)">×</text>`; });
+      s += `</svg>`; } }
+    // zonas táctiles por año (sobre todo el bloque)
+    const pick = i => { state.yr = i; const o = yrs.find(z => z.i === i); if (!o) return; const q = o.q, f = q.fz;
+      const sev = q.loss > 50 ? 'daño grave' : q.loss >= 10 ? 'daño' : 'sin daño apreciable';
+      const rel = f ? (f.d === 0 ? 'el mismo día de la plena flor' : f.d < 0 ? `${-f.d} días antes de la plena flor` : `${f.d} días después de la plena flor`) : '';
+      const fr = f && f.kill > 0 ? `<b>Peor helada:</b> ${fdate(f.doy)}, ${fmt(f.t, 1)} °C, con el árbol en <b>${SN[f.st] || 'estado ' + f.st}</b> (${rel}).` : f ? `Ninguna helada dañina alrededor de la floración. La mínima más baja fue ${fmt(f.t, 1)} °C el ${fdate(f.doy)}, en ${SN[f.st] || ''}.` : '';
+      const hv = state.sp === 'p' ? ` · <b>Cosecha prevista:</b> ${q.harv > 0 ? fdate(q.harv) : 'no llega a madurar'}` : '';
+      $('yearCard').innerHTML = `<div class="yc-h"><b>${o.y}</b><span class="chip ${q.loss > 50 ? 'bad' : q.loss >= 10 ? 'warn' : 'ok'}">${q.loss} % · ${sev}</span></div><div><b>Plena flor:</b> ${fdate(q.fb)}${hv}</div><div>${fr}</div>`;
+      document.querySelectorAll('#yearChart .yhit').forEach(e => e.classList.toggle('on', +e.dataset.i === i)); };
+    const blocks = s;
+    $('yearChart').innerHTML = `<div class="ysum">Daño en <b>${A.d} de ${A.n}</b> años (${A.c10d} de cada 10) · grave en <b>${A.g}</b> (${A.c10g} de cada 10). Últimos 10 años: daño en ${R.d}, grave en ${R.g}.</div>`
+      + `<div class="ywrap">${blocks}<div class="yhits">${yrs.map(({ i, y }) => `<button class="yhit" data-i="${i}" style="left:${(ml + i * bw) / W * 100}%;width:${bw / W * 100}%" aria-label="Ver ${y}"></button>`).join('')}</div></div>`
+      + `<div id="yearCard" class="ycard" aria-live="polite"></div>`;
+    document.querySelectorAll('#yearChart .yhit').forEach(b => b.onclick = () => pick(+b.dataset.i));
+    pick(state.yr != null && yrs.find(z => z.i === state.yr) ? state.yr : yrs.reduce((a, b) => b.q.loss >= a.q.loss ? b : a).i);
+    // --- comparación de variedades ---
+    const fem = rows.filter(x => !x.male).slice().sort((a, b) => a.mb - b.mb);
+    const pc = q => { const v = q.rows.filter(Boolean); return [v.filter(z => z.loss >= 10).length / v.length * 100, v.filter(z => z.loss > 50).length / v.length * 100]; };
+    const cmp = `<div class="eyebrow" style="margin:4px 0 6px">Años con helada dañina, de la variedad más temprana a la más tardía</div><div class="vcmp">` + fem.map(it => { const [d, g] = pc(it);
+      return `<button class="vrow${it.nm === r.nm ? ' on' : ''}" data-nm="${it.nm}"><span class="vn">${it.nm}<small>${fdate(it.mb)}</small></span><span class="vb"><i class="d" style="width:${d}%"></i><i class="g" style="width:${g}%"></i></span><span class="vv">${Math.round(d)} % · <b>${Math.round(g)} %</b></span></button>`; }).join('')
+      + `</div><p class="note" style="margin-top:6px">Barra clara: años con daño (≥ 10 %). Barra oscura: años con daño grave (&gt; 50 %). Toca una variedad para verla.</p>`;
     if (state.sp === 'p') {
       const ms = rows.filter(x => x.male), items = [r, ...ms]; const all = items.flatMap(x => [x.p10 - 6, x.p90 + 6]); const lo = Math.min(...all), hi = Math.max(...all);
       const W2 = 380, rowH = 34, H2 = items.length * rowH + 40, l2 = 92, r2 = 12, iw2 = W2 - l2 - r2, x = d => l2 + (d - lo) / (hi - lo) * iw2;
@@ -230,14 +271,11 @@
       items.forEach((it, i) => { const y = 12 + i * rowH, half = it.male ? 6 : 5, col = it.male ? 'var(--pist)' : 'var(--flor)';
         g += `<text x="0" y="${y + 15}" style="fill:var(--ink)">${it.nm}</text><rect x="${x(it.p10 - half)}" y="${y + 4}" width="${x(it.p90 + half) - x(it.p10 - half)}" height="16" rx="3" fill="${col}" opacity=".22"/><rect x="${x(it.mb - half)}" y="${y + 4}" width="${x(it.mb + half) - x(it.mb - half)}" height="16" rx="3" fill="${col}"/>`;
         if (it.male) g += `<text x="${W2 - r2}" y="${y + 16}" text-anchor="end" style="fill:var(--ink);font-weight:600">${fmt(r.ov[it.nm] * 100)}%</text>`; });
-      $('sideChart').innerHTML = '<div class="eyebrow" style="margin-bottom:6px">Coincidencia de floración con los machos</div>' + g + '</svg>';
-      $('detNote').textContent = `Banda oscura: ventana media (hembra receptiva ±5 días, macho emitiendo polen ±6 días); banda clara: rango entre años. Machos recomendados para ${r.nm}: ${(r.v.males || []).join(', ')}. Helada de otoño antes de la cosecha: ${r.autN} de ${n} años.`;
+      $('sideChart').innerHTML = '<div class="eyebrow" style="margin-bottom:6px">Coincidencia de floración con los machos</div>' + g + '</svg>' + cmp;
+      $('detNote').textContent = `Banda oscura: ventana media (hembra receptiva ±5 días, macho emitiendo polen ±6 días); banda clara: rango entre años. Machos recomendados para ${r.nm}: ${(r.v.males || []).join(', ')}. Helada de otoño antes de la cosecha: ${r.autN} de ${n} años. En el gráfico de la izquierda: pérdida por helada, plena flor (punto rosa), helada dañina (asterisco) y cosecha prevista; toca un año para ver su ficha.`;
     } else {
-      const order = rows.slice().sort((a, b) => a.mb - b.mb); const W2 = 380, rowH = 22, H2 = order.length * rowH + 30, l2 = 118, iw2 = W2 - l2 - 50, x = v => l2 + v / 100 * iw2;
-      let g = `<svg viewBox="0 0 ${W2} ${H2}" width="100%" role="img" aria-label="Pérdida media por variedad">`;
-      order.forEach((it, i) => { const y = 6 + i * rowH, me = it.nm === r.nm; g += `<text x="0" y="${y + 13}" style="fill:${me ? 'var(--ink)' : 'var(--muted)'};font-weight:${me ? 600 : 400}">${it.nm}</text><rect x="${l2}" y="${y + 3}" width="${Math.max(0, x(it.ml) - l2)}" height="13" rx="2" fill="var(--frost)" opacity="${me ? 1 : .45}"/><text x="${x(it.ml) + 5}" y="${y + 13}">${fmt(it.ml)}%</text>`; });
-      $('sideChart').innerHTML = '<div class="eyebrow" style="margin-bottom:6px">Pérdida media, de la más temprana a la más tardía</div>' + g + '</svg>';
-      $('detNote').textContent = 'Cada barra es la flor o el fruto perdido por helada ese año; la línea rosa, la fecha de plena flor prevista. Pasa el dedo por una barra para ver la mínima en floración.';
+      $('sideChart').innerHTML = cmp;
+      $('detNote').textContent = 'Arriba, la flor o el fruto perdido por helada cada año. Abajo, la plena flor (punto rosa) y la helada que hizo el daño (asterisco, en su fecha). Toca un año para ver su ficha.';
     }
   }
 
@@ -247,8 +285,8 @@
     ['verdict.okLoss', 'Apta: pérdida media máx. (%)'], ['verdict.warnLoss', 'Con riesgo: pérdida media máx. (%)']];
   const getp = (o, p) => p.split('.').reduce((a, k) => a[k], o); const setp = (o, p, v) => { const ks = p.split('.'); const last = ks.pop(); ks.reduce((a, k) => a[k], o)[last] = v; };
   $('params').innerHTML = PF.map(([p, l]) => `<label>${l}<input id="p-${p.replace(/\./g, '_')}" data-p="${p}" type="number" step="any" value="${getp(CFG, p)}"></label>`).join('');
-  $('recalc').onclick = () => { document.querySelectorAll('[data-p]').forEach(i => setp(CFG, i.dataset.p, parseFloat(i.value))); try { localStorage.setItem('aptitud-params-v6', JSON.stringify(CFG)); } catch (e) {} if (current) compute(); };
-  $('reset').onclick = () => { CFG = JSON.parse(JSON.stringify(DEF)); try { localStorage.removeItem('aptitud-params-v6'); } catch (e) {} document.querySelectorAll('[data-p]').forEach(i => i.value = getp(CFG, i.dataset.p)); if (current) compute(); };
+  $('recalc').onclick = () => { document.querySelectorAll('[data-p]').forEach(i => setp(CFG, i.dataset.p, parseFloat(i.value))); try { localStorage.setItem('aptitud-params-v7', JSON.stringify(CFG)); } catch (e) {} if (current) compute(); };
+  $('reset').onclick = () => { CFG = JSON.parse(JSON.stringify(DEF)); try { localStorage.removeItem('aptitud-params-v7'); } catch (e) {} document.querySelectorAll('[data-p]').forEach(i => i.value = getp(CFG, i.dataset.p)); if (current) compute(); };
 
   $('calib').innerHTML = (window.CALIB && window.CALIB.html) || '';
   $('method').innerHTML = (window.CALIB && window.CALIB.method) || '';
