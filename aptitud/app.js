@@ -28,6 +28,53 @@
   });
   $('form').addEventListener('submit', e => { e.preventDefault(); analyse($('code').value.trim()); });
 
+
+  // ---------- relieve (MDT 25 m del IGN, servicio WCS) ----------
+  function toUTM30(lat, lon) {
+    const a = 6378137, f = 1 / 298.257223563, k0 = 0.9996, e2 = f * (2 - f), ep2 = e2 / (1 - e2);
+    const phi = lat * Math.PI / 180, lam = lon * Math.PI / 180, lam0 = -3 * Math.PI / 180;
+    const N = a / Math.sqrt(1 - e2 * Math.sin(phi) ** 2), T = Math.tan(phi) ** 2, C = ep2 * Math.cos(phi) ** 2, A = Math.cos(phi) * (lam - lam0);
+    const M = a * ((1 - e2 / 4 - 3 * e2 ** 2 / 64 - 5 * e2 ** 3 / 256) * phi - (3 * e2 / 8 + 3 * e2 ** 2 / 32 + 45 * e2 ** 3 / 1024) * Math.sin(2 * phi) + (15 * e2 ** 2 / 256 + 45 * e2 ** 3 / 1024) * Math.sin(4 * phi) - (35 * e2 ** 3 / 3072) * Math.sin(6 * phi));
+    const x = 500000 + k0 * N * (A + (1 - T + C) * A ** 3 / 6 + (5 - 18 * T + T * T + 72 * C - 58 * ep2) * A ** 5 / 120);
+    const y = k0 * (M + N * Math.tan(phi) * (A * A / 2 + (5 - T + 9 * C + 4 * C * C) * A ** 4 / 24 + (61 - 58 * T + T * T + 600 * C - 330 * ep2) * A ** 6 / 720));
+    return [x, y];
+  }
+  let geotiffReady = null;
+  function loadGeoTIFF() { if (window.GeoTIFF) return Promise.resolve(); if (!geotiffReady) geotiffReady = new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }); return geotiffReady; }
+  async function relief(feature, center) {
+    await loadGeoTIFF();
+    const [cx, cy] = toUTM30(center.lat, center.lng), H = 2500, R = 25;
+    const u = `https://servicios.idee.es/wcs-inspire/mdt?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=Elevacion25830_25&FORMAT=image/tiff&SUBSET=x(${Math.round(cx - H)},${Math.round(cx + H)})&SUBSET=y(${Math.round(cy - H)},${Math.round(cy + H)})`;
+    const t = await GeoTIFF.fromArrayBuffer(await (await fetch(u)).arrayBuffer()); const im = await t.getImage();
+    const w = im.getWidth(), h = im.getHeight(), [z] = await im.readRasters(), res = 2 * H / w;
+    // imagen integral para medias de ventana
+    const I = new Float64Array((w + 1) * (h + 1)), Nn = new Float64Array((w + 1) * (h + 1));
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const v = z[j * w + i], ok = v > -100; const k = (j + 1) * (w + 1) + i + 1; I[k] = (ok ? v : 0) + I[k - 1] + I[k - w - 1] - I[k - w - 2]; Nn[k] = (ok ? 1 : 0) + Nn[k - 1] + Nn[k - w - 1] - Nn[k - w - 2]; }
+    const boxMean = (i, j, r) => { const x0 = Math.max(0, i - r), x1 = Math.min(w, i + r + 1), y0 = Math.max(0, j - r), y1 = Math.min(h, j + r + 1); const S = (A, a, b) => A[b * (w + 1) + a]; const s = S(I, x1, y1) - S(I, x0, y1) - S(I, x1, y0) + S(I, x0, y0), n = S(Nn, x1, y1) - S(Nn, x0, y1) - S(Nn, x1, y0) + S(Nn, x0, y0); return s / n; };
+    const r5 = Math.round(500 / res), r20 = Math.round(2000 / res);
+    const at = (i, j) => { const v = z[j * w + i]; return { z: v, t5: v - boxMean(i, j, r5), t20: v - boxMean(i, j, r20) }; };
+    // píxeles del recinto
+    const ring = (feature.geometry.type === 'Polygon' ? feature.geometry.coordinates[0] : feature.geometry.coordinates[0][0]).map(([lo, la]) => { const [x, y] = toUTM30(la, lo); return [(x - (cx - H)) / res, ((cy + H) - y) / res]; });
+    const inside = (px, py) => { let c = false; for (let a = 0, b = ring.length - 1; a < ring.length; b = a++) { const [xa, ya] = ring[a], [xb, yb] = ring[b]; if ((ya > py) !== (yb > py) && px < (xb - xa) * (py - ya) / (yb - ya) + xa) c = !c; } return c; };
+    let n = 0, s5 = 0, s20 = 0, sz = 0, low = null;
+    for (let j = 0; j < h; j += 1) for (let i = 0; i < w; i += 1) { if (!inside(i + .5, j + .5)) continue; const p = at(i, j); if (!(p.z > -100)) continue; n++; s5 += p.t5; s20 += p.t20; sz += p.z; if (!low || p.z < low.z) low = p; }
+    const mid = at(Math.floor(w / 2), Math.floor(h / 2));
+    const par = n ? { z: sz / n, t5: s5 / n, t20: s20 / n } : mid;
+    return { par, low: low || mid, n };
+  }
+  function reliefDelta(p, elevCell, info) {
+    const RL = window.RELIEVE; const f = q => RL.b5 * q.t5 + RL.b20 * q.t20 + RL.c * (q.z - elevCell);
+    const ws = info.map(s => 1 / Math.max(s[2], 3) ** 2), W = ws.reduce((a, b) => a + b, 0);
+    const ref = info.reduce((a, s, i) => a + (RL.est[s[0]] || 0) * ws[i] / W, 0);
+    return Math.max(-3, Math.min(3, f(p) - ref));
+  }
+  function adjustTmin(cell, d) {
+    const t = new Int16Array(cell.tmin.length);
+    for (let i = 0; i < t.length; i++) { const v = cell.tmin[i] / 10; const k = v <= 5 ? 1 : v >= 12 ? 0 : (12 - v) / 7; t[i] = Math.round((v + d * k) * 10); }
+    return Object.assign({}, cell, { tmin: t });
+  }
+  const reliefClass = t5 => t5 <= -5 ? 'fondo de vaguada' : t5 <= -2 ? 'zona baja' : t5 < 2 ? 'llano' : t5 < 5 ? 'zona alta' : 'loma o cerro';
+
   async function loadMeta() { if (!META) META = await (await fetch('grid/meta.json')).json(); return META; }
 
   async function analyse(code) {
@@ -50,8 +97,12 @@
     status('Cargando 31 campañas de clima de la celda…');
     const resp = await fetch(`grid/celdas/${idx}.bin.gz`);
     const buf = await new Response(resp.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
-    const cell = Motor.cellArrays(buf, M.nd);
-    current = { code: [String(p[0]).padStart(2, '0'), String(p[1]).padStart(3, '0'), p[2], p[3], p[4], p[5], p[6]].join(':'), pr, c, idx, cell, info: M.cells[idx], elev: M.elev ? M.elev[idx] : null, d0: Date.parse(M.d0 + 'T00:00:00Z') };
+    let cell = Motor.cellArrays(buf, M.nd);
+    let rel = null;
+    try { status('Leyendo el relieve de la parcela (IGN)…'); rel = await relief(f, c); } catch (e) { rel = null; }
+    const elevCell = M.elev ? M.elev[idx] : null;
+    if (rel && elevCell != null) { rel.delta = reliefDelta(rel.par, elevCell, M.cells[idx]); rel.deltaLow = reliefDelta(rel.low, elevCell, M.cells[idx]); cell = adjustTmin(cell, rel.delta); }
+    current = { rel, code: [String(p[0]).padStart(2, '0'), String(p[1]).padStart(3, '0'), p[2], p[3], p[4], p[5], p[6]].join(':'), pr, c, idx, cell, info: M.cells[idx], elev: M.elev ? M.elev[idx] : null, d0: Date.parse(M.d0 + 'T00:00:00Z') };
     state.sel = null; status(''); compute(); $('results').hidden = false;
   }
 
@@ -97,7 +148,8 @@
     const w = C.W.map(x => x.t), n = w.length;
     const st = C.info.map(s => `${s[1]} (${fmt(s[2])} km)`).join(' · ');
     $('facts').innerHTML = [['Recinto SIGPAC', C.code, 1], ['Superficie', fmt(pr.superficie, 2) + ' ha'], ['Altitud', (pr.altitud != null ? fmt(pr.altitud) + ' m' : '—') + (C.elev != null ? ` · celda ${fmt(C.elev)} m` : '')],
-      ['Pendiente', fmt(pr.pendiente_media, 1) + ' %'], ['Uso SIGPAC', pr.uso_sigpac || '—'], ['Estaciones de corrección', st], ['Campañas', `${C.W[0].y}–${C.W[n - 1].y} (${n})`],
+      ['Pendiente', fmt(pr.pendiente_media, 1) + ' %'],
+      ['Relieve', C.rel ? `${reliefClass(C.rel.par.t5)} · noches de helada ${C.rel.delta >= 0 ? '+' : '−'}${fmt(Math.abs(C.rel.delta), 1)} °C respecto a la celda${C.rel.deltaLow < C.rel.delta - 0.3 ? ` · zona más baja del recinto ${C.rel.deltaLow >= 0 ? '+' : '−'}${fmt(Math.abs(C.rel.deltaLow), 1)} °C` : ''}` : 'no disponible (sin ajuste)'], ['Uso SIGPAC', pr.uso_sigpac || '—'], ['Estaciones de corrección', st], ['Campañas', `${C.W[0].y}–${C.W[n - 1].y} (${n})`],
       ['Inviernos ≤ −12 °C', `${w.filter(x => x <= -12).length} de ${n} · mín. ${fmt(Math.min(...w), 1)} °C`]]
       .map(([k, v, code]) => `<div class="fact"><div class="k">${k}</div><div class="v${code ? ' code' : ''}">${v}</div></div>`).join('');
     document.querySelectorAll('[data-sp]').forEach(b => { b.setAttribute('aria-pressed', state.sp === b.dataset.sp); b.onclick = () => { state.sp = b.dataset.sp; state.sel = null; render(); }; });
