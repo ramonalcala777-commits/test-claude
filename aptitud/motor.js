@@ -70,7 +70,9 @@
         const r0 = ref[k]; if (!r0) return null;
         const f = reach(c.gdhr, 1, r0.br + 1, s.b, gReq); if (f < 0) return null;
         let surv = 1, tmb = 99;
-        for (const [a, b, t10, t90] of A.stages) { const m = minRange(c.tmin, f + a, f + b + 1); surv *= 1 - kill(m, t10, t90); if (a <= 0 && b >= 0) tmb = m; }
+        const fd = v.frost || [0, 0];
+        A.stages.forEach(([a, b, t10, t90], k) => { const fl = k >= 1 && k <= 3; const m = minRange(c.tmin, f + a, f + b + 1);
+          surv *= 1 - kill(m, t10 + (fl ? fd[0] : 0), t90 + (fl ? fd[1] : 0)); if (a <= 0 && b >= 0) tmb = m; });
         return { y: s.y, fb: doyOf(d0, f), loss: Math.round((1 - surv) * 100), tminBloom: tmb };
       });
       res[v.name] = { v, rows };

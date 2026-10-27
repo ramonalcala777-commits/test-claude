@@ -17,11 +17,14 @@ window.CONFIG = {
   },
   alm: {
     ref: { name: 'Guara', cu: 850, gdh: 5500 },   // calibrado con Caravaca 2018-2020 y 2023; validado con Lauranne en Albacete 2022-2023
-    stages: [[-25, -12, -5, -8], [-11, -3, -3.5, -5.5], [-2, 4, -2.5, -4], [5, 10, -2, -3], [11, 30, -1, -2]],
+    stages: [[-25, -12, -5, -8], [-11, -3, -3.5, -5.5], [-2, 4, -2.5, -4], [5, 10, -2, -3], [11, 40, -1, -2]],
+    // frost: [ΔT10, ΔT90] respecto al Guara en flor (IRTA, Calle et al. 2025, cámara); se aplica a los estados de flor (D a G)
     varieties: [
-      { name: 'Belona', offset: 0 }, { name: 'Soleta', offset: 0 }, { name: 'Guara', offset: 0 }, { name: 'Vairo', offset: 2.6 },
-      { name: 'Constantí', offset: 2.6 }, { name: 'Lauranne (Avijor)', offset: 4.3 }, { name: 'Marinada', offset: 6.5 },
-      { name: 'Makako', offset: 13 }, { name: 'Penta', offset: 15.6 }, { name: 'Mardía', offset: 24 }, { name: 'Tardona', offset: 25.3 }
+      { name: 'Belona', offset: 0, frost: [0.42, -0.02] }, { name: 'Soleta', offset: 0, frost: [-0.09, -0.16] }, { name: 'Guara', offset: 0, frost: [0, 0] },
+      { name: 'Vairo', offset: 2.6, frost: [-0.25, -1.16] }, { name: 'Constantí', offset: 2.6, frost: [-0.01, -0.05] },
+      { name: 'Lauranne (Avijor)', offset: 4.3, frost: [-0.28, -0.16] }, { name: 'Marinada', offset: 6.5, frost: [0.02, -0.44] },
+      { name: 'Makako', offset: 13, frost: [0, 0] }, { name: 'Penta', offset: 15.6, frost: [0.19, -0.55] },
+      { name: 'Mardía', offset: 24, frost: [-0.2, 0.02] }, { name: 'Tardona', offset: 25.3, frost: [0.04, -0.04] }
     ]
   },
   // Umbrales de los criterios: [condiciona, excluye]
