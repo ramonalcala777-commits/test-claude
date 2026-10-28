@@ -11,6 +11,7 @@
   const SRC = (document.currentScript && document.currentScript.src) || location.href;
   const BASE = new URL('.', SRC).href;          // carpeta aptitud/
   const DATA_V = '20260929';                     // cambiar al actualizar los datos (evita la caché)
+  const PARAMS_KEY = 'aptitud-params-v10';       // dónde guarda la web sus «Parámetros»: cambiarla cuando cambie la forma de config.js (la usan app.js y Mapa de Fincas)
   const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   const fdate = doy => { if (doy == null || doy < 0) return '—'; const d = new Date(Date.UTC(2021, 0, 1) + (Math.round(doy) - 1) * 864e5); return d.getUTCDate() + ' ' + MES[d.getUTCMonth()]; };
   const mean = a => { const v = a.filter(x => x != null && x >= 0); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
@@ -183,5 +184,5 @@
     };
   }
 
-  G.AptitudCore = { evaluar, prepare, compute, ready, reliefClass, fdate, center, DATA_V, BASE };
+  G.AptitudCore = { evaluar, prepare, compute, ready, reliefClass, fdate, center, DATA_V, BASE, PARAMS_KEY };
 })(window);

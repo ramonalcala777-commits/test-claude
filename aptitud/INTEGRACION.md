@@ -35,6 +35,7 @@ Un simulador que, para cualquier recinto SIGPAC de Castilla-La Mancha (y bordes)
    //   .rows: año a año {y, fb, loss, fz: peor helada {doy, t, st, d}, harv (pistacho)}; .ov: coincidencia con cada macho
    // R.relieve: {clase, delta, deltaLow, par, low}; R.campañas: {desde, hasta, ultimos10: [desde, hasta]}
    // R.etiquetas: {ok: 'Apta', warn: 'Apta con condiciones', bad: 'No apta'}; R.estados: nombres de los estados fenológicos
+   // AptitudCore.PARAMS_KEY: clave de localStorage donde la web guarda sus «Parámetros» (para calcular con los mismos)
    ```
    Probado desde otra página del mismo dominio: un recinto completo, relieve incluido, tarda unos 2,4 s. Así, cuando se recalibre el simulador, la app se actualiza sola. Mapa de Fincas solo tiene que hacer la parte visual. Para copiar el aspecto, la referencia es `app.js` (funciones `render` y `detail`) y los estilos de `index.html`.
 3. **CSP de la app** (entrega 60). Hay que permitir:

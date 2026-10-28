@@ -51,7 +51,8 @@
       const gReq = ref.gdh + v.offset * gpd;
       const rows = S.map((s, k) => {
         const f = reach(c.gdha, 1, chillEnd(s) + 1, s.b, gReq); if (f < 0) return null;
-        const r = { y: s.y, fb: doyOf(d0, f), cpAtBloom: sumRange(c.cp, 100, s.a, f), chillOk: sumRange(c.cp, 100, s.a, f) >= v.cp };
+        const cpNF = sumRange(c.cp, 100, dayIndex(d0, s.y - 1, 11, 1), dayIndex(d0, s.y, 3, 1));      // frío del 1 de noviembre al 28/29 de febrero
+        const r = { y: s.y, fb: doyOf(d0, f), cpAtBloom: sumRange(c.cp, 100, s.a, f), cpNF, chillOk: v.chillNF != null ? cpNF >= v.chillNF : sumRange(c.cp, 100, s.a, f) >= v.cp };
         if (v.sex === 'M') return r;
         const fe = frostEval(c, d0, f, P.stages); r.loss = fe.loss; r.tminBloom = fe.tminBloom; r.fz = fe.fz;
         const h = reach(c.gdd7, 10, f, s.bx, v.gdd);
