@@ -101,10 +101,17 @@ details p,details li{margin:0;font-size:.92rem} details ul{margin:0;padding-left
 .crit>div{min-width:0}
 .cper{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-top:2px}
 .ctodo{font-size:.8rem;color:var(--muted);margin-top:4px}
-details.yy{background:transparent;border:0;border-radius:0;padding:4px 0 0}
-details.yy summary{font-family:var(--body);font-size:.85rem;color:var(--frost)}
-.yyc{display:flex;flex-direction:column;gap:6px;margin-top:6px}
-.yyh{font-size:.85rem;font-weight:600}
+.yylink{border:0;background:transparent;color:var(--frost);font:inherit;font-size:.85rem;padding:2px 0;margin-top:4px;cursor:pointer}
+.yylink:hover{text-decoration:underline}
+.yylist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+details.yyd{background:var(--bg);padding:10px 14px;scroll-margin-top:12px}
+details.yyd summary{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;font-family:var(--body);font-size:.95rem}
+details.yyd summary .chip{grid-row:span 2;align-self:start;min-width:104px;text-align:center}
+.yyn{font-weight:600} .yyn::after{content:" ▸";color:var(--frost)} details[open] .yyn::after{content:" ▾"}
+details.yyd summary{list-style:none} details.yyd summary::-webkit-details-marker{display:none} .yys{grid-column:2;font-size:.83rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.yyb{margin-top:12px}
+.yyb .vrow.yw{grid-template-columns:150px 1fr auto}
+@media (max-width:520px){details.yyd summary .chip{min-width:0} .yyb .vrow.yw{grid-template-columns:110px 1fr auto}}
 </style>
 </head>
 <body>
@@ -145,6 +152,7 @@ details.yy summary{font-family:var(--body);font-size:.85rem;color:var(--frost)}
         <div class="detail-grid"><div class="chart" id="yearChart"></div><div class="chart" id="sideChart"></div></div>
         <p class="note" id="detNote"></p>
       </section>
+      <section class="panel" id="yyBox"></section>
     </div>
   </div>
 
@@ -166,12 +174,12 @@ details.yy summary{font-family:var(--body);font-size:.85rem;color:var(--frost)}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="config.js?v=20261030a"></script>
-<script src="calib.js?v=20261030a"></script>
-<script src="relieve.js?v=20261030a"></script>
-<script src="motor.js?v=20261030a"></script>
-<script src="criterios.js?v=20261030a"></script>
-<script src="aptitud-core.js?v=20261030a"></script>
-<script src="app.js?v=20261030a"></script>
+<script src="config.js?v=20261030b"></script>
+<script src="calib.js?v=20261030b"></script>
+<script src="relieve.js?v=20261030b"></script>
+<script src="motor.js?v=20261030b"></script>
+<script src="criterios.js?v=20261030b"></script>
+<script src="aptitud-core.js?v=20261030b"></script>
+<script src="app.js?v=20261030b"></script>
 </body>
 </html>

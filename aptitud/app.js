@@ -88,34 +88,111 @@
     document.querySelectorAll('#sideChart .vrow').forEach(b => b.onclick = () => { state.sel = b.dataset.nm; render(); });
   }
 
-  // gráfica «Año a año» de un criterio: un dato por campaña, franja de los últimos 10 años y rayas de umbral
-  function yyChart(s, box) {
-    if (!box || box.dataset.done) return; box.dataset.done = 1;
-    const y0 = current.W[0].y, n = current.yMax - y0 + 1, W = 640, ml = 46, mr = 112, iw = W - ml - mr, bw = iw / n, cx = i => ml + i * bw + bw / 2;
-    const P = s.ys.map((y, k) => ({ y, i: y - y0, v: s.v[k] })).filter(p => p.i >= 0 && p.i < n);
-    const isNeg = p => s.neg && p.v != null && p.v < 0, ok = P.filter(p => p.v != null && !isNeg(p)), lims = s.lim.filter(l => l[0] != null && isFinite(l[0]));
-    const all = [...ok.map(p => p.v), ...lims.map(l => l[0])]; if (!all.length) { box.innerHTML = '<p class="note">Sin datos.</p>'; return; }
-    let lo = Math.min(...all), hi = Math.max(...all); if (!s.pt) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
-    const pad = (hi - lo || 1) * .08; if (s.pt || lo < 0) lo -= pad; if (s.pt || hi > 0) hi += pad;
-    const H = 168, t = 22, h = 110, inv = s.fmt === 'doy', Y = v => t + (inv ? v - lo : hi - v) / (hi - lo) * h, xR = ml + (current.yR - y0) * bw;
-    const su = (s.u.match(/\((°C|%|mm|m\/s)\)/) || [])[1], fv = v => s.fmt === 'doy' ? fdate(v) : fmt(v, s.fmt === 'pct' ? 0 : Math.abs(v) < 10 && v % 1 ? 1 : 0) + (su ? (su === '%' ? ' %' : ' ' + su) : s.fmt === 'pct' ? ' %' : '');
+  // ---------- «Año a año» de cada criterio: una ficha como la de heladas, en su desplegable ----------
+  const NVL = ['Sin limitación', 'Condiciona', 'Excluye'], KCLS = ['ok', 'warn', 'bad'];
+  // lo común de una serie: años con dato, raya que pasa cada año, medias y textos
+  function yyStats(s) {
+    const y0 = current.W[0].y, n = current.yMax - y0 + 1, lims = s.lim.filter(l => l[0] != null && isFinite(l[0]));
+    const P = s.ys.map((y, k) => ({ y, i: y - y0, v: s.v[k], w: s.w ? s.w[k] : null })).filter(p => p.i >= 0 && p.i < n);
+    const neg = p => s.neg && p.v != null && p.v < 0;
     const hit = (v, l, k) => { const d = s.dir === 0 ? (k === 0 ? -1 : 1) : s.dir; return d > 0 ? (s.ge ? v >= l[0] : v > l[0]) : (s.ge ? v <= l[0] : v < l[0]); };
-    const kind = v => { let w = ''; lims.forEach((l, k) => { if (hit(v, l, k)) w = l[1] === 'bad' || w === 'bad' ? 'bad' : 'warn'; }); return w; };
-    const col = w => w === 'bad' ? 'var(--bad)' : w === 'warn' ? 'var(--warn)' : 'var(--frost)';
-    const step = (() => { const r = (hi - lo) / 4, p = Math.pow(10, Math.floor(Math.log10(r))), m = r / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p * (s.fmt === 'doy' ? 1 : 1); })();
-    let g = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${s.u} por año">`;
-    g += `<rect x="${xR}" y="${t - 14}" width="${W - mr - xR}" height="${h + 14}" fill="var(--frost)" opacity=".07"/><text x="${xR + 4}" y="${t - 4}" style="font-size:10.5px">últimos 10 años</text>`;
-    for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) g += `<line x1="${ml}" x2="${W - mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${ml - 6}" y="${Y(v) + 4}" text-anchor="end">${s.fmt === 'doy' ? fdate(v) : fmt(v, step < 1 ? 1 : 0)}</text>`;
+    const kind = p => { if (neg(p)) return 'bad'; if (p.v == null) return null; let w = ''; lims.forEach((l, k) => { if (hit(p.v, l, k)) w = l[1] === 'bad' || w === 'bad' ? 'bad' : 'warn'; }); return w; };
+    const bad = p => { if (neg(p)) return Infinity; if (p.v == null) return -Infinity; if (s.dir === 0 && lims.length > 1) return Math.max(lims[0][0] - p.v, p.v - lims[1][0]); return (s.dir || 1) * p.v; };
+    const su = (s.u.match(/\((°C|%|mm|m\/s)\)/) || [])[1];
+    const fv = v => s.fmt === 'doy' ? fdate(v) : fmt(v, s.fmt === 'pct' ? 0 : Math.abs(v) < 10 && v % 1 ? 1 : 0).replace(/^-/, '−') + (su ? (su === '%' ? ' %' : ' ' + su) : s.fmt === 'pct' ? ' %' : '');
+    const val = p => neg(p) ? s.neg : p.v == null ? 'sin dato' : fv(p.v);
+    const med = a => { const v = a.slice().sort((x, y) => x - y); return v.length ? (v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2) : null; };
+    const grp = ys => { const q = P.filter(p => ys(p.y) && (p.v != null || neg(p))), ok = q.filter(p => !neg(p)).map(p => p.v);
+      const m = s.fmt === 'doy' ? med(ok) : ok.length ? ok.reduce((a, b) => a + b, 0) / ok.length : null;
+      return { n: q.length, w: q.filter(p => kind(p)).length, b: q.filter(p => kind(p) === 'bad').length, m, y0: q.length ? q[0].y : '', y1: q.length ? q[q.length - 1].y : '' }; };
+    const A = grp(() => true), R = grp(y => y >= current.yR);
+    const c10 = (k, n) => n ? (k / n * 10).toLocaleString('es-ES', { maximumFractionDigits: 1 }) : '—';
+    const hasBad = lims.some(l => l[1] === 'bad') || !!s.neg, two = s.dir === 0;
+    return { y0, n, P, lims, neg, hit, kind, bad, fv, val, A, R, c10, hasBad, two };
+  }
+  // contexto de un año: ventana de fechas de la variedad o periodo fijo
+  function yyWhen(s, p) {
+    if (s.inv) return `Invierno ${p.y - 1}–${String(p.y).slice(-2)}`;
+    if (s.per) return s.per;
+    if (s.wf && p.w) return s.wf.split(' · ').filter(q => p.w[1] != null || !q.includes('{b}')).join(' · ').replace(/ \(\{b\}\)| \{b\}/g, m => p.w[1] != null ? m.replace('{b}', fdate(p.w[1])) : '').replace('{a}', fdate(p.w[0])).replace('{f}', fdate(p.w[2]));
+    return '';
+  }
+  function yyPanel(x, r, rows, box) {
+    const s = x.serie, S = yyStats(s), { y0, n, P, lims, A, R } = S;
+    if (!P.some(p => p.v != null)) { box.innerHTML = '<p class="note">Sin datos para esta parcela.</p>'; return; }
+    const sel = (state.yySel = state.yySel || {})[x.id];
+    const W = 580, ml = 46, mr = 104, iw = W - ml - mr, bw = iw / n, cx = i => ml + i * bw + bw / 2, xR = ml + (current.yR - y0) * bw;
+    const ok = P.filter(p => p.v != null && !S.neg(p));
+    const all = [...ok.map(p => p.v), ...lims.map(l => l[0])];
+    let lo = Math.min(...all), hi = Math.max(...all); if (!s.pt) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+    const pad = (hi - lo || 1) * .1; if (s.pt || lo < 0) lo -= pad; if (s.pt || hi > 0) hi += pad;
+    const H = 262, t = 30, h = 176, inv = s.fmt === 'doy', Y = v => t + (inv ? v - lo : hi - v) / (hi - lo) * h;
+    const col = k => k === 'bad' ? 'var(--bad)' : k === 'warn' ? 'var(--warn)' : 'var(--frost)';
+    const step = (() => { const q = (hi - lo) / 5, p = Math.pow(10, Math.floor(Math.log10(q))), m = q / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; })();
+    let g = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${x.nombre} de ${r.nm}, año a año">`;
+    g += `<rect x="${xR}" y="${t - 18}" width="${W - mr - xR}" height="${h + 18}" fill="var(--frost)" opacity=".07"/><text x="${xR + 4}" y="${t - 6}" style="font-size:10.5px">últimos 10 años</text>`;
+    g += `<text x="${ml - 6}" y="${t - 6}" text-anchor="end" style="font-size:10.5px">${s.fmt === 'doy' ? 'Fecha' : (s.u.match(/\(([^)]*)\)\s*$/) || [, ''])[1] || ''}</text>`;
+    for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) g += `<line x1="${ml}" x2="${W - mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${ml - 6}" y="${Y(v) + 4}" text-anchor="end">${s.fmt === 'doy' ? fdate(v) : fmt(v, step < 1 ? 1 : 0).replace(/^-/, '−')}</text>`;
     const z = Y(Math.min(Math.max(0, lo), hi));
-    ok.forEach(p => { const c = col(kind(p.v)); if (s.pt) g += `<circle cx="${cx(p.i)}" cy="${Y(p.v)}" r="3.2" fill="${c}"/>`; else { const a = Y(p.v), y = Math.min(a, z), hh = Math.max(1.5, Math.abs(a - z)); g += `<rect x="${ml + p.i * bw + 2}" y="${y}" width="${bw - 4}" height="${hh}" rx="2" fill="${c}"${kind(p.v) ? '' : ' opacity=".55"'}/>`; } });
-    P.filter(isNeg).forEach(p => { g += `<text x="${cx(p.i)}" y="${inv ? t + h + 4 : t + 8}" text-anchor="middle" style="fill:var(--bad);font-size:13px">×</text>`; });
-    lims.forEach(l => { const y = Y(l[0]), c = l[1] === 'bad' ? 'var(--bad)' : 'var(--warn)'; g += `<line x1="${ml}" x2="${W - mr}" y1="${y}" y2="${y}" stroke="${c}" stroke-dasharray="3 3" opacity=".8"/><text x="${W - mr + 4}" y="${y + 4}" style="font-size:10.5px;fill:${c}">${l[2]}</text>`; });
-    for (let i = 0; i < n; i++) if (i % 5 === 0 || i === n - 1) g += `<text x="${cx(i)}" y="${H - 14}" text-anchor="middle">${y0 + i}</text>`;
+    ok.forEach(p => { const k = S.kind(p), c = col(k);
+      if (s.pt) g += `<circle cx="${cx(p.i)}" cy="${Y(p.v)}" r="${k ? 4.2 : 3.6}" fill="${c}"${k ? '' : ' opacity=".8"'}/>`;
+      else { const a = Y(p.v), y = Math.min(a, z), hh = Math.max(1.5, Math.abs(a - z)); g += `<rect x="${ml + p.i * bw + 2}" y="${y}" width="${bw - 4}" height="${hh}" rx="2" fill="${c}"${k ? '' : ' opacity=".55"'}/>`; } });
+    P.filter(S.neg).forEach(p => { const yy = inv ? t + h - 6 : t + 6; g += `<path d="M${cx(p.i) - 4},${yy - 4}L${cx(p.i) + 4},${yy + 4}M${cx(p.i) - 4},${yy + 4}L${cx(p.i) + 4},${yy - 4}" stroke="var(--bad)" stroke-width="1.8"/>`; });
+    P.filter(p => p.v == null && !S.neg(p)).forEach(p => { g += `<text x="${cx(p.i)}" y="${z - 3}" text-anchor="middle" style="font-size:9px;opacity:.6">·</text>`; });
+    lims.forEach(l => { const y = Y(l[0]), c = l[1] === 'bad' ? 'var(--bad)' : 'var(--warn)'; g += `<line x1="${ml}" x2="${W - mr}" y1="${y}" y2="${y}" stroke="${c}" stroke-dasharray="4 3" opacity=".85"/><text x="${W - mr + 6}" y="${y + 4}" style="font-size:10.5px;fill:${c}">${l[2]}</text>`; });
+    if (A.m != null) g += `<line x1="${ml}" x2="${W - mr}" y1="${Y(A.m)}" y2="${Y(A.m)}" stroke="var(--ink)" stroke-dasharray="1 3" opacity=".55"/>`;
+    if (R.m != null) g += `<line x1="${xR}" x2="${W - mr}" y1="${Y(R.m)}" y2="${Y(R.m)}" stroke="var(--ink)" stroke-width="1.6" opacity=".7"/>`;
+    for (let i = 0; i < n; i++) if (i % 5 === 0 || i === n - 1) g += `<text x="${cx(i)}" y="${H - 24}" text-anchor="middle">${y0 + i}</text>`;
+    // leyenda dentro del gráfico
+    const ly = H - 7; let lx = ml;
+    const li = (sym, txt) => { const o = `${sym(lx)}<text x="${lx + 14}" y="${ly + 4}" style="font-size:10.5px">${txt}</text>`; lx += 22 + txt.length * 5.3; return o; };
+    g += li(x0 => s.pt ? `<circle cx="${x0 + 4}" cy="${ly}" r="3.5" fill="var(--frost)"/>` : `<rect x="${x0}" y="${ly - 5}" width="8" height="10" rx="2" fill="var(--frost)" opacity=".55"/>`, 'dato de cada año');
+    if (A.m != null) g += li(x0 => `<line x1="${x0 - 2}" x2="${x0 + 10}" y1="${ly}" y2="${ly}" stroke="var(--ink)" stroke-dasharray="1 3" opacity=".7"/>`, `${s.fmt === 'doy' ? 'mediana' : 'media'} ${A.y0}–${A.y1}: ${S.fv(A.m)}`);
+    if (R.m != null) g += li(x0 => `<line x1="${x0 - 2}" x2="${x0 + 10}" y1="${ly}" y2="${ly}" stroke="var(--ink)" stroke-width="1.6" opacity=".8"/>`, `últimos 10 años: ${S.fv(R.m)}`);
+    if (s.neg) g += li(x0 => `<path d="M${x0},${ly - 4}L${x0 + 8},${ly + 4}M${x0},${ly + 4}L${x0 + 8},${ly - 4}" stroke="var(--bad)" stroke-width="1.8"/>`, s.neg);
     g += '</svg>';
-    box.innerHTML = `<div class="yyh">${s.u}</div><div class="chart"><div class="ywrap">${g}<div class="yhits">${P.map(p => `<button class="yhit" data-y="${p.y}" style="left:${(ml + p.i * bw) / W * 100}%;width:${bw / W * 100}%" aria-label="Ver ${p.y}"></button>`).join('')}</div></div></div><div class="yyv note" aria-live="polite">Toca un año para ver su dato.</div><p class="note">${s.nota}</p>`;
-    box.querySelectorAll('.yhit').forEach(b => b.onclick = () => { const p = P.find(q => q.y === +b.dataset.y), w = p.v != null && !isNeg(p) ? kind(p.v) : '';
-      box.querySelectorAll('.yhit').forEach(e => e.classList.toggle('on', e === b));
-      box.querySelector('.yyv').innerHTML = `<b>${p.y}</b>: ${isNeg(p) ? s.neg : p.v == null ? 'sin dato' : fv(p.v)}${w ? ` · pasa la raya de ${lims.filter((l, k) => hit(p.v, l, k)).map(l => '«' + l[2] + '»').join(' y ')}` : ''}`; });
+    const lw = S.two ? 'quedan fuera de las rayas' : 'pasan la raya ámbar', lb = s.neg && !lims.some(l => l[1] === 'bad') ? s.neg : 'pasan la raya roja';
+    const sum = `<div class="ysum">${S.two ? 'Fuera de las rayas' : 'Pasan la raya ámbar'} <b>${A.w} de ${A.n}</b> años (${S.c10(A.w, A.n)} de cada 10)${S.hasBad ? ` · ${s.neg && !lims.some(l => l[1] === 'bad') ? 'no completan el calor' : 'la roja'} <b>${A.b}</b> (${S.c10(A.b, A.n)} de cada 10)` : ''}. Últimos 10 años: ${A === R ? '' : ''}${R.w} de ${R.n}${S.hasBad ? `, ${R.b} en rojo` : ''}.</div>`;
+    const hits = `<div class="yhits">${P.map(p => `<button class="yhit" data-y="${p.y}" style="left:${(ml + p.i * bw) / W * 100}%;width:${bw / W * 100}%" aria-label="Ver ${p.y}"></button>`).join('')}</div>`;
+    // columna derecha: toda la serie frente a los últimos 10 años, variedades y peores años
+    const tbl = `<div class="frostbox"><div class="eyebrow">${x.nombre} · ${r.nm}</div><table class="ft"><thead><tr><th>Periodo</th><th>Años que ${lw}</th>${S.hasBad ? `<th>Años que ${lb === s.neg ? 'no completan el calor' : 'pasan la roja'}</th>` : ''}<th>${s.fmt === 'doy' ? 'Mediana' : 'Media'}</th></tr></thead><tbody>`
+      + [[`Todo el registro (${A.y0}–${A.y1})`, A], [`Últimos 10 años (${R.y0}–${R.y1})`, R]].map(([tt, o]) => `<tr><td>${tt}</td><td><b>${o.w}</b> de ${o.n}<br><small>${S.c10(o.w, o.n)} de cada 10 años</small></td>${S.hasBad ? `<td><b>${o.b}</b> de ${o.n}<br><small>${S.c10(o.b, o.n)} de cada 10 años</small></td>` : ''}<td><b>${o.m == null ? '—' : S.fv(o.m)}</b></td></tr>`).join('') + '</tbody></table></div>';
+    const fem = rows.filter(q => !q.male), same = q => { const c = (q.critTodo || q.crit).find(z => z.id === x.id); return c && c.serie ? c.serie : null; };
+    const varies = fem.some(q => { const o = same(q); return o && JSON.stringify(o.v) !== JSON.stringify(s.v); });
+    let side = tbl;
+    if (varies) {
+      const its = fem.map(q => ({ q, s2: same(q) })).filter(o => o.s2).map(o => ({ ...o, st: yyStats(o.s2) })).sort((a, b) => a.q.mb - b.q.mb);
+      side += `<div class="eyebrow" style="margin:14px 0 6px">Por variedades, de la más temprana a la más tardía</div><div class="vleg"><span><i style="background:var(--bad)"></i>${S.hasBad ? (s.neg && !lims.some(l => l[1] === 'bad') ? 'No completa el calor' : 'Pasa la raya roja') : ''}</span><span><i style="background:var(--warn)"></i>${S.two ? 'Fuera de las rayas' : 'Pasa la raya ámbar'}</span><span><i style="background:var(--line)"></i>Año normal</span></div><div class="vcmp">`
+        + its.map(({ q, st }) => { const wq = st.A.n ? st.A.w / st.A.n * 100 : 0, bq = st.A.n ? st.A.b / st.A.n * 100 : 0;
+          return `<button class="vrow${q.nm === r.nm ? ' on' : ''}" data-nm="${q.nm}"><span class="vn">${q.nm}<small>flor ${fdate(q.mb)}</small></span><span class="vb"><i class="g" style="width:${bq}%"></i><i class="d" style="left:${bq}%;width:${wq - bq}%"></i></span><span class="vv"><b class="vd">${st.c10(st.A.w, st.A.n)}</b> de cada 10${S.hasBad ? `<br><b>${st.c10(st.A.b, st.A.n)}</b> en rojo` : ''}<br>${s.fmt === 'doy' ? 'mediana' : 'media'} ${st.A.m == null ? '—' : st.fv(st.A.m)}</span></button>`; }).join('') + '</div>';
+    }
+    const worst = P.filter(p => p.v != null || S.neg(p)).sort((a, b) => S.bad(b) - S.bad(a)).slice(0, 6);
+    const okv = ok.map(p => p.v), mn = Math.min(...okv), mx = Math.max(...okv), am = Math.max(...okv.map(Math.abs)) || 1, bar = v => s.fmt === 'doy' ? (v - mn) / ((mx - mn) || 1) : Math.abs(v) / am;
+    const wl = `<div class="eyebrow" style="margin:14px 0 6px">Los peores años</div><div class="vcmp">` + worst.map(p => { const k = S.kind(p), wd = S.neg(p) ? 100 : Math.max(3, bar(p.v) * 100);
+      return `<button class="vrow yw" data-y="${p.y}"><span class="vn">${p.y}<small>${yyWhen(s, p) || '&nbsp;'}</small></span><span class="vb"><i style="width:${wd}%;background:${col(k)}${k ? '' : ';opacity:.55'}"></i></span><span class="vv">${S.val(p)}</span></button>`; }).join('') + '</div>';
+    const rule = `<b>Cómo cuenta para la aptitud.</b> ${x.motivo} Resultado con los últimos 10 años: <b>${NVL[x.nivel].toLowerCase()}</b> (${x.valor})${r.critTodo && r.crit !== r.critTodo ? (() => { const t2 = r.critTodo.find(z => z.id === x.id); return t2 ? `; con toda la serie: <b>${NVL[t2.nivel].toLowerCase()}</b> (${t2.valor})` : ''; })() : ''}.`;
+    box.innerHTML = `<div class="detail-grid"><div class="chart">${sum}<div class="ywrap">${g}${hits}</div><div class="ycard yyv" aria-live="polite"></div>${wl}</div><div class="chart">${side}</div></div><p class="note" style="margin-top:10px">${s.nota} ${rule}</p>`;
+    const pick = y => { const p = P.find(q => q.y === y); if (!p) return; state.yySel[x.id] = y; const k = S.kind(p);
+      const all2 = P.filter(q => q.v != null || S.neg(q)), pos = all2.filter(q => S.bad(q) > S.bad(p)).length + 1, ties = all2.filter(q => S.bad(q) === S.bad(p)).length - 1;
+      const tag = p.v == null && !S.neg(p) ? 'sin dato' : k === 'bad' ? (S.neg(p) ? 'no completa el calor' : 'pasa la raya roja') : k === 'warn' ? (S.two ? 'fuera de las rayas' : 'pasa la raya ámbar') : 'año normal';
+      const which = k && !S.neg(p) ? lims.filter((l, j) => S.hit(p.v, l, j)).map(l => '«' + l[2] + '»').join(' y ') : '';
+      const vsm = p.v != null && !S.neg(p) && A.m != null && s.fmt !== 'doy' ? ` · ${p.v >= A.m ? 'por encima' : 'por debajo'} de la media (${S.fv(A.m)})` : '';
+      box.querySelector('.yyv').innerHTML = `<div class="yc-h"><b>${p.y}</b><span class="chip ${k || 'ok'}">${S.neg(p) ? s.neg : `${S.val(p)} · ${tag}`}</span></div>${yyWhen(s, p) ? `<div>${yyWhen(s, p)}</div>` : ''}<div>${which ? `Pasa la raya de ${which}.` : ''}${S.neg(p) ? ` Uno de los ${ties + 1} años de ${all2.length} en que no completa el calor.` : p.v != null ? ` Puesto ${pos} de ${all2.length} (1 = el peor año)${ties ? `, empatado con ${ties} ${ties === 1 ? 'año' : 'años'} más` : ''}${vsm}.` : ''}</div>`;
+      box.querySelectorAll('.yhit').forEach(e => e.classList.toggle('on', +e.dataset.y === y)); };
+    box.querySelectorAll('.yhit, .yw').forEach(b => b.onclick = () => pick(+b.dataset.y));
+    box.querySelectorAll('.vrow[data-nm]').forEach(b => b.onclick = () => { state.sel = b.dataset.nm; render(); });
+    const last = P.filter(p => p.v != null || S.neg(p)).pop();
+    pick(sel && P.find(p => p.y === sel) ? sel : last.y);
+  }
+  function yyBox(r, rows) {
+    const box = $('yyBox'); if (!box) return;
+    const L = r.crit.filter(x => x.serie).slice().sort((a, b) => b.nivel - a.nivel);
+    box.innerHTML = `<div class="panel-head"><h2>${r.nm}: cada criterio, año a año</h2><div class="legend"><span style="--c:var(--frost)">Año normal</span><span style="--c:var(--warn)">Pasa la raya ámbar</span><span style="--c:var(--bad)">Pasa la raya roja</span></div></div>`
+      + `<p class="note">Abre un criterio para ver su dato de cada campaña, con sus umbrales, las medias de toda la serie y de los últimos 10 años, la comparación entre variedades y los peores años. Toca un año para ver su ficha.</p><div class="yylist">`
+      + L.map(x => `<details class="yyd" data-id="${x.id}"${state.yy.has(x.id) ? ' open' : ''}><summary><span class="chip ${KCLS[x.nivel]}">${NVL[x.nivel]}</span><span class="yyn">${x.nombre}</span><span class="yys">${x.valor}</span></summary><div class="yyb"></div></details>`).join('') + '</div>';
+    box.querySelectorAll('.yyd').forEach(d => { const x = r.crit.find(z => z.id === d.dataset.id), b = d.querySelector('.yyb');
+      const go = () => { if (d.open) { state.yy.add(x.id); if (!b.dataset.done) { b.dataset.done = 1; yyPanel(x, r, rows, b); } } else state.yy.delete(x.id); };
+      d.addEventListener('toggle', go); if (d.open) go(); });
   }
 
   function detail(r, rows) {
@@ -133,10 +210,10 @@
     const per = x => comb && !x.soloTodo ? `Últimos 10 años (${yr})` : `Toda la serie (${yA})`;
     const todo = x => { if (!comb || x.soloTodo) return ''; const t = r.critTodo.find(z => z.id === x.id); return t && (t.nivel !== x.nivel || x.porSerie) ? `<div class="ctodo">Toda la serie (${yA}): <b>${NV[t.nivel].toLowerCase()}</b> · ${t.valor}</div>` : ''; };
     const head = comb ? `<p class="note">El veredicto se basa en los últimos 10 años; heladas y frío extremo tienen en cuenta toda la serie.${r.clsTodo && r.clsTodo !== r.cls ? ` Con toda la serie (${yA}) saldría <b>${LBL[r.clsTodo].toLowerCase()}</b>.` : ''}</p>` : `<p class="note">No hay suficientes campañas recientes: el veredicto usa toda la serie (${yA}).</p>`;
-    const yy = x => x.serie ? `<details class="yy" data-id="${x.id}"${state.yy.has(x.id) ? ' open' : ''}><summary>Año a año</summary><div class="yyc"></div></details>` : '';
+    const yy = x => x.serie ? `<button class="yylink" type="button" data-id="${x.id}">Año a año ↓</button>` : '';
     $('crit').innerHTML = `<h2>${r.nm}: ${LBL[r.cls].toLowerCase()}</h2>${head}${frost}<div class="critlist">` + r.crit.slice().sort((a, b) => b.nivel - a.nivel).map(x => `<div class="crit l${x.nivel}"><span class="chip ${['ok', 'warn', 'bad'][x.nivel]}">${NV[x.nivel]}</span><div><b>${x.nombre}</b><div class="cper">${per(x)}</div><div class="cv">${x.valor}</div>${x.nivel ? `<div class="cm">${x.motivo}</div>` : ''}${x.porSerie ? '<div class="recent warn">Se mantiene en condiciona por lo ocurrido en la serie completa</div>' : ''}${todo(x)}${yy(x)}</div></div>`).join('') + '</div>';
-    document.querySelectorAll('#crit .yy').forEach(d => { const x = r.crit.find(z => z.id === d.dataset.id), go = () => { if (d.open) { state.yy.add(x.id); yyChart(x.serie, d.querySelector('.yyc')); } else state.yy.delete(x.id); };
-      d.addEventListener('toggle', go); if (d.open) go(); });
+    yyBox(r, rows);
+    document.querySelectorAll('#crit .yylink').forEach(b => b.onclick = () => { const d = document.querySelector(`#yyBox .yyd[data-id="${b.dataset.id}"]`); if (!d) return; d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
     $('detTitle').textContent = `${r.nm}: heladas y floración, año a año`;
     $('detLegend').innerHTML = '<span style="--c:var(--line)">Menos del 10 %</span><span style="--c:var(--warn)">Daño (10–50 %)</span><span style="--c:var(--bad)">Daño grave (&gt; 50 %)</span>';
     const SN = (state.sp === 'p' ? CFG.pist : CFG.alm).stageNames || [];
