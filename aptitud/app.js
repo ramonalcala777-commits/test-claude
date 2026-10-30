@@ -4,7 +4,7 @@
   const KEY = window.AptitudCore.PARAMS_KEY;
   let CFG = DEF;
   try { const s = localStorage.getItem(KEY); if (s) CFG = Object.assign(JSON.parse(JSON.stringify(DEF)), JSON.parse(s)); } catch (e) {}
-  let META = null, current = null, state = { sp: 'p', sel: null };
+  let META = null, current = null, state = { sp: 'p', sel: null, yy: new Set() };
   const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   const fdate = doy => { if (doy == null || doy < 0) return '—'; const d = new Date(Date.UTC(2021, 0, 1) + (Math.round(doy) - 1) * 864e5); return d.getUTCDate() + ' ' + MES[d.getUTCMonth()]; };
   const fmt = (x, d = 0) => x == null || isNaN(x) ? '—' : x.toLocaleString('es-ES', { maximumFractionDigits: d, minimumFractionDigits: d });
@@ -70,7 +70,7 @@
     $('rankTitle').textContent = state.sp === 'p' ? 'Variedades de pistacho' : 'Variedades de almendro (autofértiles)';
     $('verdict').textContent = ok.length ? `${ok.length === 1 ? 'Variedad apta' : 'Variedades aptas'} de ${spn}: ${ok.join(', ')}.${wa.length ? ' Aptas con condiciones: ' + wa.join(', ') + '.' : ''}` : wa.length ? `Ninguna variedad de ${spn} sale apta sin condiciones. Aptas con condiciones: ${wa.join(', ')}.` : `Zona no apta para ${spn}: todas las variedades tienen algún criterio que las excluye.`;
     const chip = r => `<span class="chip ${r.cls}">${LBL[r.cls]}</span>`;
-    const why = r => { const L = [...r.vd.ex.map(x => x.nombre), ...r.vd.co.map(x => x.nombre)]; return (L.length ? L.join(' · ') : 'Sin limitaciones climáticas') + (r.clsR && r.clsR !== r.cls ? ` <em>· últimos 10 años: ${LBL[r.clsR].toLowerCase()}</em>` : ''); };
+    const why = r => { const L = [...r.vd.ex.map(x => x.nombre), ...r.vd.co.map(x => x.nombre)]; return (L.length ? L.join(' · ') : 'Sin limitaciones climáticas') + (r.clsTodo && r.clsTodo !== r.cls ? ` <em>· toda la serie: ${LBL[r.clsTodo].toLowerCase()}</em>` : ''); };
     let head, body;
     if (state.sp === 'a') {
       head = '<tr><th>Variedad</th><th>Veredicto</th><th>Motivos</th><th>Plena flor media</th><th>Pérdida por helada</th></tr>';
@@ -88,6 +88,36 @@
     document.querySelectorAll('#sideChart .vrow').forEach(b => b.onclick = () => { state.sel = b.dataset.nm; render(); });
   }
 
+  // gráfica «Año a año» de un criterio: un dato por campaña, franja de los últimos 10 años y rayas de umbral
+  function yyChart(s, box) {
+    if (!box || box.dataset.done) return; box.dataset.done = 1;
+    const y0 = current.W[0].y, n = current.yMax - y0 + 1, W = 640, ml = 46, mr = 112, iw = W - ml - mr, bw = iw / n, cx = i => ml + i * bw + bw / 2;
+    const P = s.ys.map((y, k) => ({ y, i: y - y0, v: s.v[k] })).filter(p => p.i >= 0 && p.i < n);
+    const isNeg = p => s.neg && p.v != null && p.v < 0, ok = P.filter(p => p.v != null && !isNeg(p)), lims = s.lim.filter(l => l[0] != null && isFinite(l[0]));
+    const all = [...ok.map(p => p.v), ...lims.map(l => l[0])]; if (!all.length) { box.innerHTML = '<p class="note">Sin datos.</p>'; return; }
+    let lo = Math.min(...all), hi = Math.max(...all); if (!s.pt) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+    const pad = (hi - lo || 1) * .08; if (s.pt || lo < 0) lo -= pad; if (s.pt || hi > 0) hi += pad;
+    const H = 168, t = 22, h = 110, inv = s.fmt === 'doy', Y = v => t + (inv ? v - lo : hi - v) / (hi - lo) * h, xR = ml + (current.yR - y0) * bw;
+    const su = (s.u.match(/\((°C|%|mm|m\/s)\)/) || [])[1], fv = v => s.fmt === 'doy' ? fdate(v) : fmt(v, s.fmt === 'pct' ? 0 : Math.abs(v) < 10 && v % 1 ? 1 : 0) + (su ? (su === '%' ? ' %' : ' ' + su) : s.fmt === 'pct' ? ' %' : '');
+    const hit = (v, l, k) => { const d = s.dir === 0 ? (k === 0 ? -1 : 1) : s.dir; return d > 0 ? (s.ge ? v >= l[0] : v > l[0]) : (s.ge ? v <= l[0] : v < l[0]); };
+    const kind = v => { let w = ''; lims.forEach((l, k) => { if (hit(v, l, k)) w = l[1] === 'bad' || w === 'bad' ? 'bad' : 'warn'; }); return w; };
+    const col = w => w === 'bad' ? 'var(--bad)' : w === 'warn' ? 'var(--warn)' : 'var(--frost)';
+    const step = (() => { const r = (hi - lo) / 4, p = Math.pow(10, Math.floor(Math.log10(r))), m = r / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p * (s.fmt === 'doy' ? 1 : 1); })();
+    let g = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${s.u} por año">`;
+    g += `<rect x="${xR}" y="${t - 14}" width="${W - mr - xR}" height="${h + 14}" fill="var(--frost)" opacity=".07"/><text x="${xR + 4}" y="${t - 4}" style="font-size:10.5px">últimos 10 años</text>`;
+    for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) g += `<line x1="${ml}" x2="${W - mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${ml - 6}" y="${Y(v) + 4}" text-anchor="end">${s.fmt === 'doy' ? fdate(v) : fmt(v, step < 1 ? 1 : 0)}</text>`;
+    const z = Y(Math.min(Math.max(0, lo), hi));
+    ok.forEach(p => { const c = col(kind(p.v)); if (s.pt) g += `<circle cx="${cx(p.i)}" cy="${Y(p.v)}" r="3.2" fill="${c}"/>`; else { const a = Y(p.v), y = Math.min(a, z), hh = Math.max(1.5, Math.abs(a - z)); g += `<rect x="${ml + p.i * bw + 2}" y="${y}" width="${bw - 4}" height="${hh}" rx="2" fill="${c}"${kind(p.v) ? '' : ' opacity=".55"'}/>`; } });
+    P.filter(isNeg).forEach(p => { g += `<text x="${cx(p.i)}" y="${inv ? t + h + 4 : t + 8}" text-anchor="middle" style="fill:var(--bad);font-size:13px">×</text>`; });
+    lims.forEach(l => { const y = Y(l[0]), c = l[1] === 'bad' ? 'var(--bad)' : 'var(--warn)'; g += `<line x1="${ml}" x2="${W - mr}" y1="${y}" y2="${y}" stroke="${c}" stroke-dasharray="3 3" opacity=".8"/><text x="${W - mr + 4}" y="${y + 4}" style="font-size:10.5px;fill:${c}">${l[2]}</text>`; });
+    for (let i = 0; i < n; i++) if (i % 5 === 0 || i === n - 1) g += `<text x="${cx(i)}" y="${H - 14}" text-anchor="middle">${y0 + i}</text>`;
+    g += '</svg>';
+    box.innerHTML = `<div class="yyh">${s.u}</div><div class="chart"><div class="ywrap">${g}<div class="yhits">${P.map(p => `<button class="yhit" data-y="${p.y}" style="left:${(ml + p.i * bw) / W * 100}%;width:${bw / W * 100}%" aria-label="Ver ${p.y}"></button>`).join('')}</div></div></div><div class="yyv note" aria-live="polite">Toca un año para ver su dato.</div><p class="note">${s.nota}</p>`;
+    box.querySelectorAll('.yhit').forEach(b => b.onclick = () => { const p = P.find(q => q.y === +b.dataset.y), w = p.v != null && !isNeg(p) ? kind(p.v) : '';
+      box.querySelectorAll('.yhit').forEach(e => e.classList.toggle('on', e === b));
+      box.querySelector('.yyv').innerHTML = `<b>${p.y}</b>: ${isNeg(p) ? s.neg : p.v == null ? 'sin dato' : fv(p.v)}${w ? ` · pasa la raya de ${lims.filter((l, k) => hit(p.v, l, k)).map(l => '«' + l[2] + '»').join(' y ')}` : ''}`; });
+  }
+
   function detail(r, rows) {
     const y0 = current.W[0].y, n = r.l.length;
     const NV = ['Sin limitación', 'Condiciona', 'Excluye'], yr = `${current.yR}–${current.yMax}`;
@@ -98,9 +128,15 @@
     const frost = `<div class="frostbox"><div class="eyebrow">Heladas de primavera · ${r.nm}</div><table class="ft"><thead><tr><th>Periodo</th><th>Años con daño<br><small>pérdida ≥ 10 %</small></th><th>Años con daño grave<br><small>pérdida &gt; 50 %</small></th></tr></thead><tbody>`
       + [[`Todo el registro (${A.y0}–${A.y1})`, A], [`Últimos 10 años (${R.y0}–${R.y1})`, R]].map(([t, o]) => `<tr><td>${t}</td><td><b>${o.d}</b> de ${o.n}<br><small>${o.c10d} de cada 10 años</small></td><td><b>${o.g}</b> de ${o.n}<br><small>${o.c10g} de cada 10 años</small></td></tr>`).join('')
       + `</tbody></table></div>`;
-    const rec = x => { const y = (r.critR || []).find(z => z.id === x.id); return y && y.nivel !== x.nivel ? `<div class="recent ${['ok', 'warn', 'bad'][y.nivel]}">Últimos 10 años (${yr}): <b>${NV[y.nivel].toLowerCase()}</b> · ${y.valor}</div>` : ''; };
-    const head = r.clsR && r.clsR !== r.cls ? `<p class="note">Con toda la serie sale <b>${LBL[r.cls].toLowerCase()}</b>; con solo los últimos 10 años (${yr}) saldría <b>${LBL[r.clsR].toLowerCase()}</b>. El veredicto usa toda la serie; la diferencia indica hacia dónde va el clima.</p>` : r.clsR ? `<p class="note">Con solo los últimos 10 años (${yr}) el veredicto es el mismo.</p>` : '';
-    $('crit').innerHTML = `<h2>${r.nm}: ${LBL[r.cls].toLowerCase()}</h2>${head}${frost}<div class="critlist">` + r.crit.slice().sort((a, b) => b.nivel - a.nivel).map(x => `<div class="crit l${x.nivel}"><span class="chip ${['ok', 'warn', 'bad'][x.nivel]}">${NV[x.nivel]}</span><div><b>${x.nombre}</b><div class="cv">${x.valor}</div>${x.nivel ? `<div class="cm">${x.motivo}</div>` : ''}${rec(x)}</div></div>`).join('') + '</div>';
+    // el resultado que manda (últimos 10 años; sucesos raros con toda la serie) y, debajo, el de toda la serie si cambia el nivel
+    const yA = `${y0}–${current.yMax}`, comb = r.critTodo && r.crit !== r.critTodo;
+    const per = x => comb && !x.soloTodo ? `Últimos 10 años (${yr})` : `Toda la serie (${yA})`;
+    const todo = x => { if (!comb || x.soloTodo) return ''; const t = r.critTodo.find(z => z.id === x.id); return t && (t.nivel !== x.nivel || x.porSerie) ? `<div class="ctodo">Toda la serie (${yA}): <b>${NV[t.nivel].toLowerCase()}</b> · ${t.valor}</div>` : ''; };
+    const head = comb ? `<p class="note">El veredicto se basa en los últimos 10 años; heladas y frío extremo tienen en cuenta toda la serie.${r.clsTodo && r.clsTodo !== r.cls ? ` Con toda la serie (${yA}) saldría <b>${LBL[r.clsTodo].toLowerCase()}</b>.` : ''}</p>` : `<p class="note">No hay suficientes campañas recientes: el veredicto usa toda la serie (${yA}).</p>`;
+    const yy = x => x.serie ? `<details class="yy" data-id="${x.id}"${state.yy.has(x.id) ? ' open' : ''}><summary>Año a año</summary><div class="yyc"></div></details>` : '';
+    $('crit').innerHTML = `<h2>${r.nm}: ${LBL[r.cls].toLowerCase()}</h2>${head}${frost}<div class="critlist">` + r.crit.slice().sort((a, b) => b.nivel - a.nivel).map(x => `<div class="crit l${x.nivel}"><span class="chip ${['ok', 'warn', 'bad'][x.nivel]}">${NV[x.nivel]}</span><div><b>${x.nombre}</b><div class="cper">${per(x)}</div><div class="cv">${x.valor}</div>${x.nivel ? `<div class="cm">${x.motivo}</div>` : ''}${x.porSerie ? '<div class="recent warn">Se mantiene en condiciona por lo ocurrido en la serie completa</div>' : ''}${todo(x)}${yy(x)}</div></div>`).join('') + '</div>';
+    document.querySelectorAll('#crit .yy').forEach(d => { const x = r.crit.find(z => z.id === d.dataset.id), go = () => { if (d.open) { state.yy.add(x.id); yyChart(x.serie, d.querySelector('.yyc')); } else state.yy.delete(x.id); };
+      d.addEventListener('toggle', go); if (d.open) go(); });
     $('detTitle').textContent = `${r.nm}: heladas y floración, año a año`;
     $('detLegend').innerHTML = '<span style="--c:var(--line)">Menos del 10 %</span><span style="--c:var(--warn)">Daño (10–50 %)</span><span style="--c:var(--bad)">Daño grave (&gt; 50 %)</span>';
     const SN = (state.sp === 'p' ? CFG.pist : CFG.alm).stageNames || [];
@@ -131,7 +167,7 @@
     s += `</svg>`;
     // --- panel 3 (pistacho): cosecha ---
     if (state.sp === 'p') { const hv = yrs.map(o => o.q.harv).filter(h => h > 0); if (hv.length) { const hlo = Math.min(...hv, 236) - 3, hhi = Math.max(...hv, 288) + 3, H3 = 112, t3 = 8, h3 = 92, y3 = d => t3 + (d - hlo) / (hhi - hlo) * h3;
-      s += `<svg viewBox="0 0 ${W} ${H3}" width="100%" role="img" aria-label="Fecha de cosecha prevista de ${r.nm} por año"><text x="${ml + 4}" y="${t3 + 8}" style="font-size:10.5px">Cosecha prevista (la línea discontinua es el 15 de octubre)</text>`;
+      s += `<svg viewBox="0 0 ${W} ${H3}" width="100%" role="img" aria-label="Fecha de cosecha prevista de ${r.nm} por año"><text x="${ml + 4}" y="${t3 + 8}" style="font-size:10.5px">Cosecha prevista (la línea discontinua es el 15 de octubre · aspa: no completa el calor)</text>`;
       for (const d of [244, 258, 274, 288]) if (d >= hlo && d <= hhi) s += `<line x1="${ml}" x2="${W - mr}" y1="${y3(d)}" y2="${y3(d)}" stroke="${d === 288 ? 'var(--warn)' : 'var(--line)'}" ${d === 288 ? 'stroke-dasharray="3 3"' : ''}/><text x="${ml - 6}" y="${y3(d) + 4}" text-anchor="end">${fdate(d)}</text>`;
       yrs.forEach(({ q, i }) => { if (q.harv > 0) s += `<circle cx="${cx(i)}" cy="${y3(q.harv)}" r="3" fill="${q.harv > 288 ? 'var(--warn)' : 'var(--pist)'}"/>`; else s += `<text x="${cx(i)}" y="${t3 + h3}" text-anchor="middle" style="fill:var(--bad)">×</text>`; });
       s += `</svg>`; } }
@@ -140,7 +176,7 @@
       const sev = q.loss > 50 ? 'daño grave' : q.loss >= 10 ? 'daño' : 'sin daño apreciable';
       const rel = f ? (f.d === 0 ? 'el mismo día de la plena flor' : f.d < 0 ? `${-f.d} días antes de la plena flor` : `${f.d} días después de la plena flor`) : '';
       const fr = f && f.kill > 0 ? `<b>Peor helada:</b> ${fdate(f.doy)}, ${fmt(f.t, 1)} °C, con el árbol en <b>${SN[f.st] || 'estado ' + f.st}</b> (${rel}).` : f ? `Ninguna helada dañina alrededor de la floración. La mínima más baja fue ${fmt(f.t, 1)} °C el ${fdate(f.doy)}, en ${SN[f.st] || ''}.` : '';
-      const hv = state.sp === 'p' ? ` · <b>Cosecha prevista:</b> ${q.harv > 0 ? fdate(q.harv) : 'no llega a madurar'}` : '';
+      const hv = state.sp === 'p' ? ` · <b>Cosecha prevista:</b> ${q.harv > 0 ? fdate(q.harv) : 'no completa el calor que necesita: cosecha muy tardía y llenado incompleto'}` : '';
       $('yearCard').innerHTML = `<div class="yc-h"><b>${o.y}</b><span class="chip ${q.loss > 50 ? 'bad' : q.loss >= 10 ? 'warn' : 'ok'}">${q.loss} % · ${sev}</span></div><div><b>Plena flor:</b> ${fdate(q.fb)}${hv}</div><div>${fr}</div>`;
       document.querySelectorAll('#yearChart .yhit').forEach(e => e.classList.toggle('on', +e.dataset.i === i)); };
     const blocks = s;

@@ -39,5 +39,5 @@ window.CONFIG = {
     alm: { loss: [10, 25], bad: [3, 6], bee: [25, 10], beeWind: 4.5, moniliaDays: 4, monilia: [0.4, 9], spring: [18, 30],
       harvRainMm: 50, harvRain: [0.4, 9], w15alm: 0.1 }
   },
-  verdict: { okLoss: 10, okBad: 3, warnLoss: 25, warnBad: 6, lateHarvestDoy: 288, lateYears: 3, minOverlap: 0.7 }
+  verdict: { okLoss: 10, okBad: 3, warnLoss: 25, warnBad: 6, lateHarvestDoy: 288, lateYears: 3, minOverlap: 0.7, base: 'ultimos10', rare: ['helada', 'invierno', 'otono'] }
 };

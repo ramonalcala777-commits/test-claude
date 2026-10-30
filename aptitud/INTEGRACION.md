@@ -29,8 +29,10 @@ Un simulador que, para cualquier recinto SIGPAC de Castilla-La Mancha (y bordes)
    // <script src="/test-claude/aptitud/aptitud-core.js"></script>
    const R = await AptitudCore.evaluar(featureGeoJSONdelRecinto, { onStatus: t => mostrarEstado(t) });
    // R.pistacho / R.almendro: una entrada por variedad (machos de pistacho con male: true)
-   //   .nm, .cls ('ok' | 'warn' | 'bad'), .clsR (los mismos criterios con los últimos 10 años)
-   //   .crit / .critR: criterios {nombre, valor, nivel 0 / 1 / 2, motivo}; .vd = {ex: excluyen, co: condicionan}
+   //   .nm, .cls ('ok' | 'warn' | 'bad': el que manda, con los últimos 10 años y, en heladas y frío extremo, toda la serie),
+   //   .clsR (solo los últimos 10 años), .clsTodo (toda la serie)
+   //   .crit: criterios que mandan {id, nombre, valor, nivel 0 / 1 / 2, motivo, porSerie, serie (dato de cada campaña)};
+   //   .critR / .critTodo: los mismos con los últimos 10 años / con toda la serie; .vd = {ex: excluyen, co: condicionan}
    //   .heladas = {todo: {n, dano, grave}, ultimos10: {...}}; .mb = día del año de la plena flor media
    //   .rows: año a año {y, fb, loss, fz: peor helada {doy, t, st, d}, harv (pistacho)}; .ov: coincidencia con cada macho
    // R.relieve: {clase, delta, deltaLow, par, low}; R.campañas: {desde, hasta, ultimos10: [desde, hasta]}

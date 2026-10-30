@@ -11,7 +11,7 @@
   const SRC = (document.currentScript && document.currentScript.src) || location.href;
   const BASE = new URL('.', SRC).href;          // carpeta aptitud/
   const DATA_V = '20260929';                     // cambiar al actualizar los datos (evita la caché)
-  const PARAMS_KEY = 'aptitud-params-v10';       // dónde guarda la web sus «Parámetros»: cambiarla cuando cambie la forma de config.js (la usan app.js y Mapa de Fincas)
+  const PARAMS_KEY = 'aptitud-params-v11';       // dónde guarda la web sus «Parámetros»: cambiarla cuando cambie la forma de config.js (la usan app.js y Mapa de Fincas)
   const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   const fdate = doy => { if (doy == null || doy < 0) return '—'; const d = new Date(Date.UTC(2021, 0, 1) + (Math.round(doy) - 1) * 864e5); return d.getUTCDate() + ' ' + MES[d.getUTCMonth()]; };
   const mean = a => { const v = a.filter(x => x != null && x >= 0); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
@@ -134,29 +134,37 @@
         const l = o.rows.map(r => r ? r.loss : null), h = o.rows.map(r => r ? r.harv : null);
         const ml = mean(l), bad = l.filter(x => x > 50).length, late = h.filter(x => x != null && (x < 0 || x > CFG.verdict.lateHarvestDoy)).length;
         const ov = Object.fromEntries(Object.entries(males).map(([m, mb]) => [m, overlap(fb, mb)]));
+        const ovY = Object.fromEntries(Object.entries(males).map(([m, mb]) => [m, fb.map((f, k) => f == null || mb[k] == null ? null : overlap([f], [mb[k]]))]));
         const best = (o.v.males || []).map(m => [m, ov[m] || 0]).sort((a, b) => b[1] - a[1])[0] || ['—', 0];
         let cls = classify(ml, bad); if (cls === 'ok' && (late > CFG.verdict.lateYears || best[1] < CFG.verdict.minOverlap)) cls = 'warn';
         const chillFail = o.rows.filter(r => r && !r.chillOk).length;
-        out.push({ nm: n, v: o.v, rows: o.rows, fb, l, h, ml, bad, late, ov, best, cls, chillFail, autN: o.rows.filter(r => r && r.autumn).length, mb: mean(fb), p10: pct(fb, .1), p90: pct(fb, .9), mh: pct(h, .5) }); }
+        out.push({ nm: n, v: o.v, rows: o.rows, fb, l, h, ml, bad, late, ov, ovY, best, cls, chillFail, autN: o.rows.filter(r => r && r.autumn).length, mb: mean(fb), p10: pct(fb, .1), p90: pct(fb, .9), mh: pct(h, .5) }); }
       return out; };
     const sumA = R => Object.entries(R.res).map(([n, o]) => { const fb = o.rows.map(r => r ? r.fb : null), l = o.rows.map(r => r ? r.loss : null); const ml = mean(l), bad = l.filter(x => x > 50).length;
       return { nm: n, v: o.v, rows: o.rows, fb, l, ml, bad, total: l.filter(x => x >= 90).length, cls: classify(ml, bad), mb: mean(fb), p10: pct(fb, .1), p90: pct(fb, .9) }; });
     const p = sumP(P), pm = sumP(Pm), pp = sumP(Pp), a = sumA(A), am = sumA(Am), ap = sumA(Ap);
     const robust = (base, m, pl) => base.forEach(r => { if (r.male) return; const c1 = m.find(x => x.nm === r.nm).cls, c2 = pl.find(x => x.nm === r.nm).cls; r.robust = c1 === r.cls && c2 === r.cls; r.alt = [c1, c2]; });
     robust(p, pm, pp); robust(a, am, ap);
-    const ctx = { W: Motor.winterMin(cell, d0) }; ctx.y0 = (P.res.Kerman.rows.find(r => r) || {}).y;
+    const ctx = { W: Motor.winterMin(cell, d0), af: CFG.pist.autumnFrost }; ctx.y0 = (P.res.Kerman.rows.find(r => r) || {}).y;
     for (const r of p) { if (r.male) continue; r.mhTxt = fdate(r.mh); r.crit = Criterios.pist(cell, d0, r, ctx, CFG.crit.pist); const v = Criterios.verdict(r.crit); r.cls = v.cls; r.vd = v; }
     for (const r of a) { r.crit = Criterios.alm(cell, d0, r, ctx, CFG.crit.alm); const v = Criterios.verdict(r.crit); r.cls = v.cls; r.vd = v; }
-    // mismos criterios con las 10 últimas campañas (el veredicto sigue saliendo de toda la serie)
+    // mismos criterios con las 10 últimas campañas
     const yMax = Math.max(...ctx.W.map(x => x.y)), yR = yMax - 9;
     const cut = R => { const o = { res: {}, gpd: R.gpd }; for (const [n, v] of Object.entries(R.res)) o.res[n] = { v: v.v, rows: v.rows.map(x => x && x.y >= yR ? x : null) }; return o; };
-    const ctxR = { W: ctx.W.filter(x => x.y >= yR) };
+    const ctxR = { W: ctx.W.filter(x => x.y >= yR), af: ctx.af };
     const scl = (K, nR, nF) => Object.assign({}, K, { bad: K.bad.map(b => b * nR / nF) });
     const pR = sumP(cut(P)), aR = sumA(cut(A));
     for (const r of p) { if (r.male) continue; const q = pR.find(x => x.nm === r.nm); q.mhTxt = fdate(q.mh); const nR = q.rows.filter(Boolean).length, nF = r.rows.filter(Boolean).length;
       if (nR >= 8) { r.critR = Criterios.pist(cell, d0, q, ctxR, scl(CFG.crit.pist, nR, nF)); r.clsR = Criterios.verdict(r.critR).cls; } }
     for (const r of a) { const q = aR.find(x => x.nm === r.nm); const nR = q.rows.filter(Boolean).length, nF = r.rows.filter(Boolean).length;
       if (nR >= 8) { r.critR = Criterios.alm(cell, d0, q, ctxR, scl(CFG.crit.alm, nR, nF)); r.clsR = Criterios.verdict(r.critR).cls; } }
+    // el veredicto sale de las 10 últimas campañas; en los sucesos raros (CFG.verdict.rare) toda la serie lo deja como mínimo en «condiciona»
+    const RARE = (CFG.verdict && CFG.verdict.rare) || [];
+    for (const r of [...p, ...a]) { if (r.male) continue; r.critTodo = r.crit; r.clsTodo = r.cls;
+      if (!r.critR || (CFG.verdict && CFG.verdict.base === 'todo')) continue;
+      r.crit = r.critTodo.map(t => { const x = r.critR.find(z => z.id === t.id); if (!x) return Object.assign({}, t, { soloTodo: true });
+        const o = Object.assign({}, x, { serie: t.serie }); if (RARE.includes(t.id)) { o.nivel = Math.max(x.nivel, Math.min(t.nivel, 1)); if (o.nivel > x.nivel) o.porSerie = true; } return o; });
+      const v = Criterios.verdict(r.crit); r.cls = v.cls; r.vd = v; }
     // resumen de heladas por variedad (años con daño ≥ 10 % y daño grave > 50 %), toda la serie y últimos 10 años
     const frost = r => { const f = ys => { const v = r.rows.filter(q => q && ys(q.y)); return { n: v.length, dano: v.filter(q => q.loss >= 10).length, grave: v.filter(q => q.loss > 50).length }; };
       return { todo: f(() => true), ultimos10: f(y => y >= yR) }; };
@@ -166,8 +174,9 @@
 
   // ---------- todo en una llamada ----------
   // Devuelve { celda, relieve, pistacho: [...], almendro: [...], campañas: {desde, hasta, ultimos10: [desde, hasta]}, inviernos }
-  //  · cada variedad: nm, cls ('ok' | 'warn' | 'bad'), clsR (últimos 10 años), crit / critR (criterios con nivel 0/1/2, valor y motivo),
-  //    vd (criterios que excluyen / condicionan), heladas (años con daño y daño grave), rows (año a año: y, fb = día del año de plena flor,
+  //  · cada variedad: nm, cls ('ok' | 'warn' | 'bad', el que manda: últimos 10 años con toda la serie en los sucesos raros), clsR (solo últimos 10 años),
+  //    clsTodo (toda la serie), crit (criterios que mandan, con nivel 0/1/2, valor y motivo; porSerie: nivel subido por toda la serie;
+  //    soloTodo: sin datos recientes), critR (últimos 10 años), critTodo (toda la serie), vd (criterios que excluyen / condicionan), heladas (años con daño y daño grave), rows (año a año: y, fb = día del año de plena flor,
   //    loss = % de pérdida, fz = peor helada {doy, t, st = índice de estado, d = días respecto a la flor}, harv = día de cosecha en pistacho), mb (flor media)
   //  · machos de pistacho: male: true, mb, p10, p90; cada hembra trae ov {macho: fracción de su floración cubierta}
   async function evaluar(feature, opts = {}) {
