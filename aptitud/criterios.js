@@ -67,7 +67,7 @@
     const w = all.W.map(x => x.t); const f12 = w.filter(x => x <= -12).length / w.length, f20 = w.filter(x => x <= -20).length / w.length;
     out.push({ id: 'invierno', nombre: 'Frío extremo de invierno', valor: `${w.filter(x => x <= -12).length} de ${w.length} inviernos ≤ −12 °C · mínima ${f1(Math.min(...w))} °C`, nivel: f20 > K.w20 ? 2 : f12 > K.w12 ? 1 : 0, motivo: 'Por debajo de −12 °C sufren los plantones; por debajo de −20 °C también la madera de los adultos.',
       serie: S(all.W.map(x => x.y), w, 'Mínima más baja del invierno (°C)', 'Cada barra: la temperatura más baja de ese invierno.', [[-12, 'warn', '−12 °C'], [-20, 'bad', '−20 °C']], { dir: -1, ge: true, inv: true }) });
-    return out;
+    return out.map(fixMinus);
   }
 
   // ---------- almendro ----------
@@ -90,12 +90,14 @@
     const w = all.W.map(x => x.t); const f15 = w.filter(x => x <= -15).length / w.length;
     out.push({ id: 'invierno', nombre: 'Frío extremo de invierno', valor: `${w.filter(x => x <= -15).length} de ${w.length} inviernos ≤ −15 °C`, nivel: lvl(f15, K.w15alm, 9), motivo: 'Por debajo de −15 °C puede haber daños en madera y yemas.',
       serie: S(all.W.map(x => x.y), w, 'Mínima más baja del invierno (°C)', 'Cada barra: la temperatura más baja de ese invierno.', [[-15, 'warn', '−15 °C']], { dir: -1, ge: true, inv: true }) });
-    return out;
+    return out.map(fixMinus);
   }
 
   function verdict(list) {
     const ex = list.filter(x => x.nivel === 2), co = list.filter(x => x.nivel === 1);
     return { cls: ex.length ? 'bad' : co.length ? 'warn' : 'ok', ex, co };
   }
+  // signo menos tipográfico en los textos (−12 °C, no -12 °C)
+  function fixMinus(o) { if (typeof o.valor === 'string') o.valor = o.valor.replace(/(^|[\s(≤≥<>:])-(?=\d)/g, '$1−'); return o; }
   G.Criterios = { pist, alm, verdict };
 })(window);
