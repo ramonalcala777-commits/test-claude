@@ -134,6 +134,44 @@ window.__DATA__ = {"implantacion_2025": [{"partida": "Preparación suelo", "eur_
   @keyframes lvUp { from { opacity: .001; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 }
 [data-dash-source-state=empty] { color: transparent; }
+
+/* ---------- barra lateral ---------- */
+.lv-body { display: flex; gap: 24px; align-items: flex-start; }
+.lv-side { flex: 0 0 240px; position: sticky; top: 16px; z-index: 5; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.lv-side-h { font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; margin: 2px 10px 6px; }
+.lv-tab { display: flex; align-items: center; gap: 12px; padding: 9px 10px; min-height: 52px; border-radius: 10px; color: var(--ink); text-decoration: none; }
+.lv-tab svg { width: 20px; height: 20px; flex: none; color: var(--ink-soft); }
+.lv-tab .tx { display: flex; flex-direction: column; min-width: 0; }
+.lv-tab .nm { font-size: 14.5px; font-weight: 600; line-height: 1.25; }
+.lv-tab .ds { font-size: 12.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; line-height: 1.3; }
+.lv-tab:hover { background: #F4F6EC; }
+.lv-tab[aria-current="page"] { background: var(--shell); }
+.lv-tab[aria-current="page"] svg { color: var(--leaf); }
+.lv-pdf { margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 14px; border-radius: 10px; background: var(--leaf-deep); color: #F3EFD9; text-decoration: none; font-weight: 600; font-size: 14px; white-space: nowrap; }
+.lv-pdf svg { width: 18px; height: 18px; flex: none; }
+.lv-pdf:hover { background: var(--leaf); color: #FFFFFF; }
+.lv-tab:focus-visible, .lv-pdf:focus-visible { outline: 2px solid var(--leaf); outline-offset: 2px; }
+.lv-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 28px; }
+.lv-page { display: flex; flex-direction: column; gap: 28px; }
+.lv-page[hidden] { display: none; }
+.lv-main .lv-kpi .num { font-size: clamp(28px, 2.6vw, 34px); }
+@media (max-width: 1100px) and (min-width: 861px) { .lv-main .lv-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 860px) {
+  .lv-body { flex-direction: column; align-items: stretch; gap: 18px; }
+  .lv-side { position: static; flex: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 8px; gap: 6px; }
+  .lv-side-h { display: none; }
+  .lv-tab { min-height: 48px; padding: 6px 10px; gap: 8px; }
+  .lv-tab svg { width: 18px; height: 18px; }
+  .lv-tab .nm { font-size: 14px; }
+  .lv-tab .ds { font-size: 12px; }
+  .lv-pdf { grid-column: 1 / -1; margin-top: 2px; }
+}
+@media (max-width: 380px) { .lv-tab .ds { display: none; } }
+@media print {
+  .lv-side { display: none; }
+  .lv-body { display: block; }
+  .lv-page[hidden] { display: flex !important; }
+}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -169,6 +207,17 @@ window.__DATA__ = {"implantacion_2025": [{"partida": "Preparación suelo", "eur_
     </div>
   </header>
 
+  <div class="lv-body">
+  <nav class="lv-side" aria-label="Apartados">
+    <p class="lv-side-h">Ver</p>
+    <a class="lv-tab" href="#/resumen" data-go="resumen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span class="tx"><span class="nm">Resumen</span><span class="ds">Cifras y calendario</span></span></a>
+    <a class="lv-tab" href="#/implantacion" data-go="implantacion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22V12"/><path d="M12 12C12 7 8 4 4 4c0 5 3 8 8 8z"/><path d="M12 14c0-4 3-7 8-7 0 4-3 7-8 7z"/></svg><span class="tx"><span class="nm">Implantación 2025</span><span class="ds" data-source="resumen" data-field="real_2025">—</span></span></a>
+    <a class="lv-tab" href="#/2026" data-go="2026"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6" rx=".8"/><rect x="12.5" y="8" width="3" height="10" rx=".8"/><rect x="18" y="5" width="3" height="13" rx=".8"/></svg><span class="tx"><span class="nm">Año 2026</span><span class="ds"><span data-source="resumen" data-field="real_2026">—</span> hasta hoy</span></span></a>
+    <a class="lv-tab" href="#/facturas" data-go="facturas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg><span class="tx"><span class="nm">Facturas 2026</span><span class="ds"><span data-source="resumen" data-field="facturas_2026">—</span> facturas</span></span></a>
+    <a class="lv-pdf" href="Gastos%20La%20Vega%202025-2026.pdf" download="Gastos La Vega 2025-2026.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar PDF</a>
+  </nav>
+  <div class="lv-main">
+  <div class="lv-page" id="p-resumen">
   <section class="lv-kpis" id="totales" aria-label="Totales">
     <div class="lv-kpi feature">
       <span class="lab">Invertido en total</span>
@@ -202,7 +251,9 @@ window.__DATA__ = {"implantacion_2025": [{"partida": "Preparación suelo", "eur_
       <li class="lv-step"><div class="lv-dot"></div><div class="y" data-source="finca" data-field="anio_recuperacion">—</div><div class="t">Inversión recuperada, según la previsión</div></li>
     </ol>
   </section>
+  </div>
 
+  <div class="lv-page" id="p-implantacion" hidden>
   <section class="lv-sec" id="implantacion">
     <div class="lv-sechead">
       <div class="row"><span class="yr">2025</span><h2>Implantación de la plantación</h2></div>
@@ -214,7 +265,9 @@ window.__DATA__ = {"implantacion_2025": [{"partida": "Preparación suelo", "eur_
       <div class="lv-chart" id="chart-impl" data-source="implantacion_2025 finca"></div>
     </div>
   </section>
+  </div>
 
+  <div class="lv-page" id="p-2026" hidden>
   <section class="lv-sec" id="anio-2026">
     <div class="lv-sechead">
       <div class="row"><span class="yr">2026</span><h2>Mantenimiento del año 1</h2></div>
@@ -256,8 +309,17 @@ window.__DATA__ = {"implantacion_2025": [{"partida": "Preparación suelo", "eur_
         <div class="lv-chart lv-short" id="chart-meses-ha" data-source="meses_2026 finca"></div>
       </div>
     </div>
+  </section>
+  </div>
+
+  <div class="lv-page" id="p-facturas" hidden>
+  <section class="lv-sec" id="facturas">
+    <div class="lv-sechead">
+      <div class="row"><span class="yr">2026</span><h2>Facturas registradas</h2></div>
+      <p>Todas las facturas apuntadas este año, sin IVA. La última es del <span data-source="resumen" data-field="ultima_factura">—</span>.</p>
+    </div>
     <div class="lv-card" id="facturas-2026">
-      <h3>Facturas registradas en 2026</h3>
+      <h3>Lista de facturas</h3>
       <div class="lv-tablewrap">
         <table class="lv-table" id="tabla-facturas" data-source="facturas" data-row-key="factura">
           <thead>
@@ -278,6 +340,9 @@ window.__DATA__ = {"implantacion_2025": [{"partida": "Preparación suelo", "eur_
       </div>
     </div>
   </section>
+  </div>
+  </div>
+  </div>
 
   <footer class="lv-foot">
     <span>Finca Casa de Arriba «La Vega» · Sirora sobre UCB-1 · Balazote (Albacete)</span>
@@ -525,4 +590,19 @@ dash.calc('meses_2026', {
   dash.onData(() => { drawFiguras(); drawImpl(); drawPartidas('chart-partidas', 't-partidas', false); drawMeses('chart-meses', 't-meses', false); drawPartidas('chart-partidas-ha', 't-partidas-ha', true); drawMeses('chart-meses-ha', 't-meses-ha', true); drawTabla(); });
 })();
 </script>
-</div><script>document.fonts.ready.then(()=>dash._run()); let __t; window.addEventListener("resize", () => { clearTimeout(__t); __t = setTimeout(() => dash._run(), 150); });</script></body></html>
+</div><script>document.fonts.ready.then(()=>dash._run()); let __t; window.addEventListener("resize", () => { clearTimeout(__t); __t = setTimeout(() => dash._run(), 150); });</script><script>
+(() => {
+  const pages = { resumen: 'p-resumen', implantacion: 'p-implantacion', '2026': 'p-2026', facturas: 'p-facturas' };
+  const tabs = Array.from(document.querySelectorAll('.lv-tab'));
+  const fromHash = () => (location.hash.match(/^#\/(.+)$/) || [])[1];
+  function show(k, scroll) {
+    if (!(k in pages)) k = 'resumen';
+    Object.entries(pages).forEach(([key, id]) => { document.getElementById(id).hidden = key !== k; });
+    tabs.forEach((t) => { if (t.dataset.go === k) { t.setAttribute('aria-current', 'page'); } else { t.removeAttribute('aria-current'); } });
+    if (window.dash && dash._run) dash._run();
+    if (scroll) { const b = document.querySelector('.lv-body'); if (b && b.getBoundingClientRect().top < 0) b.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  }
+  window.addEventListener('hashchange', () => show(fromHash(), true));
+  show(fromHash(), false);
+})();
+</script></body></html>
