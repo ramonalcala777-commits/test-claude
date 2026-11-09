@@ -206,7 +206,7 @@ body.vmode #miniWrap{display:none}
     <h3>Ratón</h3><ul><li><b>Arrastrar</b> con el botón izquierdo: girar alrededor del punto que miras</li><li><b>Botón derecho</b> o <b>Mayús + arrastrar</b>: desplazarse sobre el suelo</li><li><b>Rueda</b>: acercar o alejar hacia donde apunta el ratón</li><li><b>Doble clic</b>: volar a ese punto</li><li><b>Clic en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: andar a la altura de los ojos; arrastrar para mirar</li></ul>
     <h3>Teclado</h3><ul><li><b>W A S D</b> o <b>flechas</b>: andar</li><li><b>Q / E</b>: girar a izquierda / derecha</li><li><b>R / F</b>: subir / bajar</li><li><b>Mayús</b>: más rápido</li><li><b>?</b>: esta ayuda</li></ul>
     <h3>Móvil</h3><ul><li><b>Un dedo</b>: girar alrededor del punto que miras</li><li><b>Dos dedos</b>: moverlos juntos para desplazarse; abrirlos o cerrarlos para acercar o alejar hacia ese punto</li><li><b>Doble toque</b>: volar a ese punto</li><li><b>Toque en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: el joystick para andar y un dedo para mirar</li></ul>
-    <h3>Vídeo del año</h3><ul><li><b>Toca la pantalla</b> para ver la barra: pausa, 10 s atrás o adelante, avance y salir</li><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v33.5 · 24 oct 2026</p></div>
+    <h3>Vídeo del año</h3><ul><li><b>Toca la pantalla</b> para ver la barra: pausa, 10 s atrás o adelante, avance y salir</li><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v34 · 10 nov 2026</p></div>
   <button class="btn" id="toggle" type="button" aria-expanded="true" aria-controls="panel">Ocultar ajustes</button>
 
   <aside id="panel" aria-label="Ajustes de la escena">
@@ -291,7 +291,7 @@ body.vmode #miniWrap{display:none}
       <div class="sl"><span>Campo visión</span><input type="range" id="fov" min="30" max="80" step="1" value="55" aria-label="Campo de visión"><output id="fovOut">55°</output></div>
       <p class="note">Si va a tirones en el móvil, baja la calidad.</p>
     </section>
-    <p class="ver">Versión v33.5 · 24 oct 2026</p>
+    <p class="ver">Versión v34 · 10 nov 2026</p>
   </aside>
 
   <div id="miniWrap"><canvas id="mini" aria-label="Minimapa de la finca: toca para ir a ese punto"></canvas></div>
@@ -963,9 +963,10 @@ function tube(gb,pts,rads,sides,colAt,M){
 }
 // ramillete: un brote con 6 hojas compuestas, sacadas de la celda de 5 foliolos (pecíolo a la izquierda, como las demás)
 function composeCluster(ctx,W,src){ctx.save();ctx.beginPath();ctx.rect(3*W,0,W,W);ctx.clip();ctx.clearRect(3*W,0,W,W);
-  const ox=3*W,y0=W/2,len=W*0.8;ctx.strokeStyle='#a98f70';ctx.lineCap='round';ctx.lineWidth=10;ctx.beginPath();ctx.moveTo(ox+4,y0);ctx.quadraticCurveTo(ox+len*0.5,y0-14,ox+len,y0-6);ctx.stroke();
-  const L=[[0.16,-1.05,0.46],[0.3,1.0,0.5],[0.46,-0.85,0.5],[0.6,0.8,0.46],[0.74,-0.6,0.42],[0.84,0.55,0.38],[0.96,-0.08,0.44]];
-  for(const [t,ang,sc] of L){const x=ox+len*t,y=y0-14*4*t*(1-t)-6*t;ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.scale(sc,sc);ctx.drawImage(src,2*W,0,W,W,-6,-W/2,W,W);ctx.restore();}
+  const ox=3*W,y0=W/2,hx=ox+W*0.19,hy=y0-3;ctx.strokeStyle='#a98f70';ctx.lineCap='round';ctx.lineWidth=11;ctx.beginPath();ctx.moveTo(ox+4,y0);ctx.lineTo(hx,hy);ctx.stroke();
+  // v34: roseta del final del brote, 4-5 hojas de 3 y 5 foliolos anchos (como la Sirora adulta)
+  const L=[[-0.8,0.5,1],[0.78,0.5,1],[0.02,0.62,2]];
+  for(const [ang,sc,c] of L){ctx.save();ctx.translate(hx,hy);ctx.rotate(ang);ctx.scale(sc,sc);ctx.drawImage(src,c*W,0,W,W,-6,-W/2,W,W);ctx.restore();}
   ctx.restore();}
 function makeLeafTex(){
   const W=512,cvs=document.createElement('canvas');cvs.width=W*4;cvs.height=W;const ctx=cvs.getContext('2d');const r=rng(4242);
@@ -1005,15 +1006,15 @@ function clusterGeo(kind,lod){
   const gb=new GB(),r=rng(kind==='fruit'?5:kind==='fem'?6:7);let ip;
   if(kind==='fruit'&&lod>0){ip=[];const e=[];for(let i=0;i<6;i++){const a=i/6*6.283+0.26;e.push([Math.cos(a),0,Math.sin(a)]);}for(let i=0;i<6;i++){const p=e[i],q=e[(i+1)%6];ip.push(0,1,0,...q,...p,0,-1,0,...p,...q);}}
   else ip=new THREE.IcosahedronGeometry(1,0).attributes.position.array;
-  const len=kind==='fruit'?0.15:kind==='fem'?0.07:0.13,nd=kind==='fruit'?(lod===2?5:lod===1?9:20):kind==='fem'?22:40;
+  const len=kind==='fruit'?0.165:kind==='fem'?0.07:0.13,nd=kind==='fruit'?(lod===2?8:lod===1?16:36):kind==='fem'?22:40;
   const stem=kind==='fruit'?{r:0.3,g:0.3,b:0.17}:{r:0.28,g:0.36,b:0.1};
   const axis=[];for(let i=0;i<=5;i++){const t=i/5;axis.push(new THREE.Vector3(Math.sin(t*2)*0.006,-len*t,Math.cos(t*1.7)*0.004));}
   if(lod>0)axis.splice(1,4,axis[3]);
   tube(gb,axis,axis.map((p,i)=>0.0018*(1-i/7)),lod>0?3:4,()=>stem,null);
-  for(let d=0;d<nd;d++){const t=0.1+0.9*r(),a=r()*6.283,rad=kind==='fruit'?(0.008+0.026*Math.pow(1-t,0.7))*(0.6+0.5*r()):0.01*(0.5+0.8*(1-t*0.6));
+  for(let d=0;d<nd;d++){const t=kind==='fruit'?0.06+0.94*Math.pow(r(),1.25):0.1+0.9*r(),a=r()*6.283,rad=kind==='fruit'?(0.010+0.040*Math.pow(1-t,0.8))*(0.55+0.55*r()):0.01*(0.5+0.8*(1-t*0.6));
     const cx=Math.cos(a)*rad,cz=Math.sin(a)*rad,cy=-len*t;
     const split=open&&r()<0.35;const sz=split?[0.0078*LS,0.0118*LS,0.0072*LS]:kind==='fruit'?[0.0085*LS,0.0125*LS,0.0085*LS]:kind==='fem'?[0.0042,0.005,0.0042]:[0.0065,0.0065,0.0065];
-    const mt=r(),col=open?(split?{r:0.86,g:0.76,b:0.55}:{r:0.62+0.12*mt,g:0.33+0.05*mt,b:0.30}):kind==='fruit'?{r:0.86+0.3*mt,g:1.12-0.3*mt,b:0.95+0.12*r()}:kind==='fem'?(r()<0.55?{r:0.42,g:0.05,b:0.07}:{r:0.28,g:0.34,b:0.08}):{r:1,g:1,b:1};
+    const mt=r(),ty=kind==='fruit'?r():0,col=open?(split?{r:0.86,g:0.76,b:0.55}:{r:0.62+0.12*mt,g:0.33+0.05*mt,b:0.30}):kind==='fruit'?(ty<0.6?{r:0.86+0.3*mt,g:1.12-0.3*mt,b:0.95+0.12*r()}:ty<0.86?{r:1.02+0.08*mt,g:1.32+0.12*mt,b:1.05}:{r:0.98,g:1.58+0.14*mt,b:1.28}):kind==='fem'?(r()<0.55?{r:0.42,g:0.05,b:0.07}:{r:0.28,g:0.34,b:0.08}):{r:1,g:1,b:1};
     const tilt=kind==='fruit'?0.35:0;
     if(kind==='fruit'&&lod===0&&rad>0.022){const ax0=new THREE.Vector3(axis[Math.min(5,Math.round(t*5))].x,cy+0.004,axis[Math.min(5,Math.round(t*5))].z),tip=new THREE.Vector3(cx*0.8,cy+sz[1]*0.8,cz*0.8);tube(gb,[ax0,tip],[0.0011,0.0008],3,()=>stem,null);}
     for(let j=0;j<ip.length;j+=9){const vs=[];for(let q=0;q<3;q++){let x=ip[j+q*3]*sz[0],y=ip[j+q*3+1]*sz[1],z=ip[j+q*3+2]*sz[2];y-=tilt*(x*Math.cos(a)+z*Math.sin(a))*0;vs.push([cx+x,cy+y,cz+z]);}
@@ -1043,7 +1044,7 @@ function genTree(seed,A,opt){
   const hc=1.02+r0()*0.16;
   const tp=[],trr=[];for(let i=0;i<=6;i++){const t=i/6;tp.push(new THREE.Vector3(lean.x*hc*t+Math.sin(t*3+seed)*0.01,hc*t,lean.z*hc*t+Math.cos(t*2.3+seed)*0.008));trr.push(G.trunkR*(1.08-0.3*t));}
   branches.push({pts:tp,rad:trr,depth:0});
-  const t0Blend=smooth(1.8,3.0,G.age),ramF=smooth(3.4,5.6,G.age),FRM=smooth(2.75,5.75,G.age),DOME=smooth(1.5,3.6,G.age),FR2=Math.max(FRM,0.75*DOME); // ramF: árbol formado, más ramas de 2.º y 3.er orden
+  const ADL=smooth(4.4,6.2,G.age),t0Blend=smooth(1.8,3.0,G.age),ramF=smooth(3.4,5.6,G.age),FRM=smooth(2.75,5.75,G.age),DOME=smooth(1.5,3.6,G.age),FR2=Math.max(FRM,0.75*DOME); // ramF: árbol formado, más ramas de 2.º y 3.er orden
   function grow(id,p0,dir,len,rad,depth){
     const r=rng(hashI(seed,id));
     const nSeg=depth===1?(opt.seg1||14):depth<=3?(opt.seg2||7):Math.max(2,(opt.seg2||7)-3);const sl=len/nSeg;
@@ -1051,7 +1052,7 @@ function genTree(seed,A,opt){
     const open=smooth(1.8,3.4,G.age),trop=depth===1?0.09*(1-0.7*open):0.045*(1-0.45*open),droop=(depth===1&&r()<0.55)?0.2*(1-smooth(2.5,3.5,G.age))*smooth(0.7,1.0,len):0;
     const jit=[];for(let s=0;s<nSeg;s++)jit.push([r()-0.5,r()-0.5,r()-0.5]);
     for(let s=1;s<=nSeg;s++){const t=s/nSeg,j=jit[s-1];const js=Math.min(1,len/0.6);d.x+=j[0]*0.2*js;d.z+=j[1]*0.2*js;d.y+=j[2]*0.1*js;d.addScaledVector(UP,trop*(14/nSeg));
-      if(droop&&t>0.62)d.y-=droop*(t-0.62)*4.5*(14/nSeg);if(open>0.01){const w=(depth===1?0.035:0.11)*open*(14/nSeg)*t;d.y-=w;}d.normalize();p.addScaledVector(d,sl);pts.push(p.clone());tans.push(d.clone());rads.push(rad*(1-(0.72-(depth<=2?0.22*FRM:0.1*FRM))*t)+0.0015);}
+      if(droop&&t>0.62)d.y-=droop*(t-0.62)*4.5*(14/nSeg);if(open>0.01){const w=(depth===1?0.035:0.11)*open*(14/nSeg)*t;d.y-=w;}if(ADL>0.01&&depth>=3&&t>0.4)d.y-=0.07*ADL*(14/nSeg);d.normalize();p.addScaledVector(d,sl);pts.push(p.clone());tans.push(d.clone());rads.push(rad*(1-(0.72-(depth<=2?0.22*FRM:0.1*FRM))*t)+0.0015);}
     branches.push({pts,rad:rads,depth});
     const childR=ramp(depth+1);
     if(depth<5&&childR>0.001&&!(opt.maxD&&depth>=opt.maxD)){
@@ -1107,19 +1108,19 @@ function genTree(seed,A,opt){
         nodes.push({q,td,phi:rf()*6.283,tip:rf()<0.08,f:0.3+0.7*rf(),seed:hashI(seed,7000+k),fill:1});
         if(q.y<hc+Ry*1.3&&rf()<0.09)sites.push({q:q.clone().addScaledVector(out,0.12),td,phi:rf()*6.283,r:rf(),r2:rf(),fill:1});}
       // cúpula: semiejes ~0,9 del tope de copa, base algo por encima de la cruz; borde con lóbulos para que no sea una bola perfecta
-      if(nD>0){const y0=hc*0.85,cy=(y0+Ht)/2,ry=(Ht-y0)/2,rx=Rt*0.92;CROWN.v={cx:ax,cy,cz:az,rx,ry,k:smooth(3.8,5.2,G.age)};const _u0=0,lob=[rf()*6.283,rf()*6.283,rf()*6.283];
+      if(nD>0){const y0=hc*0.85,cy=(y0+Ht)/2,ry=(Ht-y0)/2,rx=Rt*0.92;CROWN.v={cx:ax,cy,cz:az,rx,ry,k:smooth(3.8,5.2,G.age)};const _u0=0,lob=[rf()*6.283,rf()*6.283,rf()*6.283];const rb=rng(hashI(seed,41)),bd=[];for(let i=0;i<10;i++){const yy=rb()*1.5-0.55,hz=Math.sqrt(1-yy*yy),aa=rb()*6.283;bd.push([Math.cos(aa)*hz,yy,Math.sin(aa)*hz,(rb()<0.6?1:-0.9)*(0.15+0.15*rb())]);}const BMP=(x,y,z)=>{if(ADL<0.01)return 1;let s=0;for(const b of bd){const dd=1-(x*b[0]+y*b[1]+z*b[2]);s+=b[3]*Math.exp(-dd/0.09);}if(s>0)s*=1-0.75*smooth(0.45,0.9,y);const w=0.3*smooth(0.55,0.95,Math.abs(x))*(1-0.7*Math.abs(y));return Math.max(0.6,1+ADL*(s-w));};
         for(let k=0;k<nD;k++){let x,y,z;do{x=rf()*2-1;y=rf()*2-1;z=rf()*2-1;}while(x*x+y*y+z*z>1);
           const L=Math.hypot(x,y,z)||1,sh=0.62+0.38*Math.pow(rf(),0.35);x/=L;y/=L;z/=L;
           const az0=Math.atan2(z,x),lb=1+0.09*Math.sin(3*az0+lob[0])+0.06*Math.sin(5*az0+lob[1])+0.05*Math.sin(2*y*3+lob[2]);
-          const rr=sh*lb;const q=new THREE.Vector3(ax+x*rx*rr,cy+y*ry*rr*(y<0?0.85:1),az+z*rx*rr);
+          const rr=sh*lb*BMP(x,y,z);const q=new THREE.Vector3(ax+x*rx*rr,cy+y*ry*rr*(y<0?0.85:1),az+z*rx*rr);
           if(q.y<y0+0.05)continue;if(HOLE>0.01&&y>-0.1&&Math.hypot(x,z)*rr<0.5*HOLE)continue;
           const td=new THREE.Vector3(x*0.75,0.35+y*0.5,z*0.75).addScaledVector(rv.set(rf()-0.5,rf()-0.5,rf()-0.5),0.5).normalize();
           nodes.push({q,td,phi:rf()*6.283,tip:rf()<0.07,f:0.3+0.7*rf(),seed:hashI(seed,9000+k),fill:1});
           if(sh>0.8&&q.y<cy+ry*0.6&&rf()<0.05)sites.push({q:q.clone(),td,phi:rf()*6.283,r:0.3+0.7*rf(),r2:rf(),fill:1});}
         const nS=Math.round(520*FRM);for(let k=0;k<nS;k++){const az1=rf()*6.283,yy=-0.5+1.42*Math.pow(rf(),0.85),hz=Math.sqrt(Math.max(0,1-yy*yy));
-          const lb=1+0.09*Math.sin(3*az1+lob[0])+0.06*Math.sin(5*az1+lob[1]),rr=(1.04+0.08*rf())*lb,x=Math.cos(az1)*hz,z=Math.sin(az1)*hz;
+          const lb=1+0.09*Math.sin(3*az1+lob[0])+0.06*Math.sin(5*az1+lob[1]),x=Math.cos(az1)*hz,z=Math.sin(az1)*hz,rr=(1.04+0.08*rf())*lb*BMP(x,yy,z);
           const q=new THREE.Vector3(ax+x*rx*rr,cy+yy*ry*rr*(yy<0?0.85:1),az+z*rx*rr);if(q.y<y0+0.25)continue;
-          sites.push({q,td:new THREE.Vector3(x,0.2,z).normalize(),phi:rf()*6.283,r:0.3*rf(),r2:rf(),ext:true});}}}}
+          sites.push({q,td:new THREE.Vector3(x,0.2,z).normalize(),phi:rf()*6.283,r:0.3*rf(),r2:rf(),ext:true});}if(ADL>0.05){const nUp=Math.round((3+rb()*4)*ADL);for(let k=0;k<nUp;k++){const aa=rb()*6.283,yy=0.55+0.35*rb(),hz=Math.sqrt(1-yy*yy),x=Math.cos(aa)*hz,z=Math.sin(aa)*hz;const b0=new THREE.Vector3(ax+x*rx*0.8,cy+yy*ry*0.8,az+z*rx*0.8),top=Math.min(CROWN_H,cy+ry+0.25+0.3*rb()),ln=top-b0.y;if(ln<0.25)continue;const m=b0.clone().add(new THREE.Vector3(x*0.08,ln*0.55,z*0.08)),e=b0.clone().add(new THREE.Vector3(x*(0.12+0.1*rb()),ln,z*(0.12+0.1*rb())));branches.push({pts:[b0,m,e],rad:[0.009,0.006,0.0025],depth:3,up:1});const sd=hashI(seed,12000+k*40);for(let n=0;n<7;n++){const f=0.45+0.55*n/6,q=b0.clone().lerp(m,Math.min(1,f*2)).lerp(e,Math.max(0,f*2-1));nodes.push({q,td:e.clone().sub(b0).normalize(),phi:n*2.4,tip:n>=5,f,seed:sd+n,dp:3});}}}}}}
   // v32: copa ovalada (el eje z local va a lo ancho de la calle; los árboles solo giran 0° o 180°) y falda despejada para vibrador y paraguas
   let kz=1;{const ax0=tp[6].x,az0=tp[6].z,HZ=(CROWN_Z-0.42)/1.1;let mz=0;const zs=[];nodes.forEach(L=>zs.push(Math.abs(L.q.z-az0)));branches.forEach(b=>{if(b.depth>=1)b.pts.forEach(q=>zs.push(Math.abs(q.z-az0)));});
     zs.sort((x,y)=>x-y);mz=zs.length?zs[Math.floor(zs.length*0.97)]:0;if(mz>HZ)kz=HZ/mz;
@@ -1178,6 +1179,7 @@ function barkColor(depth,t,G){
   const old=smooth(1.5,6,G.age)*(depth===1?1:0.5),FRMc=smooth(2.75,5.75,G.age);
   let base=mixC(depth===1?C('#ada395'):COL.twig,mixC(C('#b9b1a6'),COL.trunk,smooth(4,10,G.age)),Math.max(old*0.8,depth===1?0.55:0));
   if(FRMc>0.01){if(depth===1)base=mixC(base,C('#c2bbb0'),0.5*FRMc);else if(depth===2)base=mixC(base,C('#948a7d'),0.6*FRMc);else base=mixC(base,C('#8a5a3e'),(depth>=4?0.8:0.5)*FRMc);}
+  {const AD=smooth(4.4,6.2,G.age);if(AD>0.01&&depth>=2)base=mixC(base,depth===2?C('#8b8276'):C('#7c7064'),0.6*AD);}
   return mixC(base,COL.shootTip,0.6*smooth(0.82,1,t)*(1-old*0.7*(depth>=3?0.4:1)));
 }
 
@@ -1801,9 +1803,9 @@ function applyChunkDate(ch){if(ch.lg)ch.lg.visible=U.uLG.value>0.01;if(ch.cover)
   ch.leaf.visible=P.leafOut>0.001&&P.fall<0.999;ch.bud.visible=P.bud>0.01;ch.litter.visible=P.litter>0.001;if(ch.poppy)ch.poppy.visible=P.poppy>0.02;
   const M=new THREE.Matrix4(),Qt=new THREE.Quaternion(),Q2=new THREE.Quaternion(),Sc=new THREE.Vector3(),d=new THREE.Vector3(),col=new THREE.Color();
   const place=(mesh,list,scale,dirFn,colFn,big,lvO)=>{if(!mesh)return;if(big){if(ch.fk<1)list=list.slice(0,Math.round(list.length*ch.fk));const lv=lvO!==undefined?lvO:ch.fk>=1?'':ch.fk>0.6?'1':'2',gk=(mesh===ch.cm.open||mesh===ch.cm.openB?'open':'fruit')+lv;if(mesh.geometry!==GEO[gk])mesh.geometry=GEO[gk];}mesh.visible=scale>0.01&&list.length>0;if(!mesh.visible)return;mesh.count=list.length;
-    list.forEach((c,i)=>{dirFn(c,d);Qt.setFromUnitVectors(UP,d);Q2.setFromAxisAngle(d,c.r*6.283);Qt.premultiply(Q2);const s=scale*(0.85+0.3*c.r)*(big?(c.ext?1.9:1.35):1);M.compose(c.p,Qt,Sc.set(s,s,s));mesh.setMatrixAt(i,M);mesh.setColorAt(i,colFn(c,col));});
+    list.forEach((c,i)=>{dirFn(c,d);Qt.setFromUnitVectors(UP,d);Q2.setFromAxisAngle(d,c.r*6.283);Qt.premultiply(Q2);const s=scale*(0.85+0.3*c.r)*(big?(c.ext?1.55:1.25):1);M.compose(c.p,Qt,Sc.set(s,s,s));mesh.setMatrixAt(i,M);mesh.setColorAt(i,colFn(c,col));});
     mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;};
-  const hang=(c,o)=>o.set(-c.out.x*0.45,1,-c.out.z*0.45).normalize();
+  const hang=(c,o)=>{const k=c.ext?0.95:0.6;return o.set(-c.out.x*k,1,-c.out.z*k).normalize();};
   const erect=(c,o)=>o.set(-c.out.x*0.9,-0.55,-c.out.z*0.9).normalize();
   place(ch.cm.fem,ch.fruit,P.femFl,erect,(c,o)=>o.setRGB(1,1,1));
   const hc0=hullAt(S.doy),spl=0.14*smooth(238,254,S.doy),fr=spl>0?ch.fruit.filter(c=>c.k>=spl):ch.fruit,op=spl>0?ch.fruit.filter(c=>c.k<spl):[];
