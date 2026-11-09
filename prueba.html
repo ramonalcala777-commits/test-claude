@@ -1120,12 +1120,14 @@ function genTree(seed,A,opt){
         const nS=Math.round(520*FRM);for(let k=0;k<nS;k++){const az1=rf()*6.283,yy=-0.5+1.42*Math.pow(rf(),0.85),hz=Math.sqrt(Math.max(0,1-yy*yy));
           const lb=1+0.09*Math.sin(3*az1+lob[0])+0.06*Math.sin(5*az1+lob[1]),x=Math.cos(az1)*hz,z=Math.sin(az1)*hz,rr=(1.04+0.08*rf())*lb*BMP(x,yy,z);
           const q=new THREE.Vector3(ax+x*rx*rr,cy+yy*ry*rr*(yy<0?0.85:1),az+z*rx*rr);if(q.y<y0+0.25)continue;
-          sites.push({q,td:new THREE.Vector3(x,0.2,z).normalize(),phi:rf()*6.283,r:0.3*rf(),r2:rf(),ext:true});}if(ADL>0.05){const nUp=Math.round((3+rb()*4)*ADL);for(let k=0;k<nUp;k++){const aa=rb()*6.283,yy=0.55+0.35*rb(),hz=Math.sqrt(1-yy*yy),x=Math.cos(aa)*hz,z=Math.sin(aa)*hz;const b0=new THREE.Vector3(ax+x*rx*0.8,cy+yy*ry*0.8,az+z*rx*0.8),top=Math.min(CROWN_H,cy+ry+0.25+0.3*rb()),ln=top-b0.y;if(ln<0.25)continue;const m=b0.clone().add(new THREE.Vector3(x*0.08,ln*0.55,z*0.08)),e=b0.clone().add(new THREE.Vector3(x*(0.12+0.1*rb()),ln,z*(0.12+0.1*rb())));branches.push({pts:[b0,m,e],rad:[0.009,0.006,0.0025],depth:3,up:1});const sd=hashI(seed,12000+k*40);for(let n=0;n<7;n++){const f=0.45+0.55*n/6,q=b0.clone().lerp(m,Math.min(1,f*2)).lerp(e,Math.max(0,f*2-1));nodes.push({q,td:e.clone().sub(b0).normalize(),phi:n*2.4,tip:n>=5,f,seed:sd+n,dp:3});}}}}}}
+          sites.push({q,td:new THREE.Vector3(x,0.2,z).normalize(),phi:rf()*6.283,r:0.3*rf(),r2:rf(),ext:true});}if(ADL>0.05){const nUp=Math.round((3+rb()*4)*ADL);for(let k=0;k<nUp;k++){const aa=rb()*6.283,yy=0.55+0.35*rb(),hz=Math.sqrt(1-yy*yy),x=Math.cos(aa)*hz,z=Math.sin(aa)*hz;const b0=new THREE.Vector3(ax+x*rx*0.8,cy+yy*ry*0.8,az+z*rx*0.8),top=Math.min(CROWN_H,cy+ry+0.25+0.3*rb()),ln=top-b0.y;if(ln<0.25)continue;const m=b0.clone().add(new THREE.Vector3(x*0.08,ln*0.55,z*0.08)),e=b0.clone().add(new THREE.Vector3(x*(0.12+0.1*rb()),ln,z*(0.12+0.1*rb())));branches.push({pts:[b0,m,e],rad:[0.009,0.006,0.0025],depth:3,up:1});const sd=hashI(seed,12000+k*40);for(let n=0;n<10;n++){const f=0.3+0.7*n/9,q=f<0.5?b0.clone().lerp(m,f*2):m.clone().lerp(e,f*2-1);nodes.push({q,td:e.clone().sub(b0).normalize(),phi:n*2.4,tip:n>=8,f,seed:sd+n,dp:3,up:1});}}}}}}
   // v32: copa ovalada (el eje z local va a lo ancho de la calle; los árboles solo giran 0° o 180°) y falda despejada para vibrador y paraguas
   let kz=1;{const ax0=tp[6].x,az0=tp[6].z,HZ=(CROWN_Z-0.42)/1.1;let mz=0;const zs=[];nodes.forEach(L=>zs.push(Math.abs(L.q.z-az0)));branches.forEach(b=>{if(b.depth>=1)b.pts.forEach(q=>zs.push(Math.abs(q.z-az0)));});
     zs.sort((x,y)=>x-y);mz=zs.length?zs[Math.floor(zs.length*0.97)]:0;if(mz>HZ)kz=HZ/mz;
     const cz=q=>{let z=(q.z-az0)*kz;if(Math.abs(z)>HZ)z=Math.sign(z)*(HZ+(Math.abs(z)-HZ)*0.25);q.z=az0+z;};
     const sk=G.age>=1.75?SKIRT/0.9:0;
+    const cv=CROWN.v,pxr=(ADL>0.01&&cv)?q=>{const yn=clamp((q.y-cv.cy)/cv.ry,-1,1);q.x=ax0+(q.x-ax0)*(1-ADL*(0.05+0.27*Math.pow(Math.abs(yn),1.4)));}:null;
+    if(pxr){branches.forEach(b=>{if(b.depth>=1)b.pts.forEach(pxr);});nodes.forEach(L=>pxr(L.q));sites.forEach(S2=>pxr(S2.q));}
     branches.forEach(b=>{if(b.depth<1)return;b.pts.forEach((q,i)=>{cz(q);if(sk&&i>0&&q.y<sk)q.y=sk+(q.y-sk)*0.15;});});
     nodes.forEach(L=>{cz(L.q);if(kz<1){L.td.z*=kz;L.td.normalize();}});sites.forEach(S2=>{cz(S2.q);});
     if(sk){for(let i=nodes.length-1;i>=0;i--)if(nodes[i].q.y<sk+0.04)nodes.splice(i,1);for(let i=sites.length-1;i>=0;i--)if(sites[i].q.y<sk+0.02)sites.splice(i,1);}
@@ -1153,7 +1155,7 @@ function genTree(seed,A,opt){
       branches.push({pts:[p.clone(),M,E],rad:[0.0045,0.0035,0.0022],depth:2,twig:1});for(let k=1;k<=4;k++){const P=p.clone().lerp(E,k/4);P.y+=0.04*L2*4*(k/4)*(1-k/4);SHOOT.add(P);}
       g.forEach(L=>{const t=clamp(Pj.subVectors(L.q,p).dot(D),0.15*L2,L2);Pj.copy(p).addScaledVector(D,t);Pj.y+=0.04*L2*4*(t/L2)*(1-t/L2);const off=L.q.clone().sub(Pj);const dl=off.length();if(dl>0.05)off.multiplyScalar(0.05/dl);L.q.copy(Pj).add(off);});}}
   for(const L of nodes){
-    if(!L.budOnly&&keepQ<1&&(hashI(L.seed,7)&65535)/65536>=keepQ)continue;
+    if(!L.budOnly&&!L.up&&keepQ<1&&(hashI(L.seed,7)&65535)/65536>=keepQ)continue;
     const r=rng(L.seed);
     perp(L.td,L.phi,pd);
     {const fb=G.age>=3.6&&(L.dp||0)>=2&&!L.budOnly&&r()<0.55*smooth(3.6,5,G.age);if(L.budOnly||fb||r()<0.35)if(L.dp!==undefined)buds.push({p:L.q.clone().addScaledVector(pd,fb?0.008:0.006),s:L.budOnly?1.35:fb?1.75+0.4*r():1,d:L.td.clone(),dp:L.dp});}
