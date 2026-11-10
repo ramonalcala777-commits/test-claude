@@ -1068,8 +1068,8 @@ function genTree(seed,A,opt){
     const term=depth>=5||childR<0.001||(opt.maxD&&depth>=opt.maxD);
     const leafy=depth>=1;
     if(leafy){
-      const t0=((1-t0Blend)*0.04+t0Blend*(depth===1?0.55:depth===2?0.3-0.14*ramF:0.06))*(1-0.8*FR2)+0.04*FR2,sp=0.05*(0.85+0.3*r())*(depth>=2?1+1.3*ramF:1);let phi=r()*6.28,ni=0;
-      for(let a=t0*len;a<len;a+=sp,ni++){const f=a/len,fi=f*nSeg,ix=Math.min(nSeg-1,Math.floor(fi)),fr=fi-ix;phi+=2.4;
+      const t0=((1-t0Blend)*0.04+t0Blend*(depth===1?0.55:depth===2?0.3-0.14*ramF:0.06))*(1-0.8*FR2)+0.04*FR2,sp=0.05*(0.85+0.3*r())*(depth>=2?1+1.3*ramF:1);let phi=r()*6.28,ni=0;const t0x=ADL>0.01?t0+((depth<=2?1.2:depth===3?0.55:0.4)-t0)*ADL:t0;
+      for(let a=t0x*len;a<len;a+=sp,ni++){const f=a/len,fi=f*nSeg,ix=Math.min(nSeg-1,Math.floor(fi)),fr=fi-ix;phi+=2.4;
         nodes.push({q:pts[ix].clone().lerp(pts[ix+1],fr),td:tans[ix+1].clone(),phi,tip:(len-a)<0.11,f,seed:hashI(id,ni+500),dp:depth});}
       nodes.push({q:pts[nSeg].clone(),td:tans[nSeg].clone(),phi:0,tip:true,f:1,seed:hashI(id,499),budOnly:true,dp:depth});
     }
@@ -1109,9 +1109,9 @@ function genTree(seed,A,opt){
         if(q.y<hc+Ry*1.3&&rf()<0.09)sites.push({q:q.clone().addScaledVector(out,0.12),td,phi:rf()*6.283,r:rf(),r2:rf(),fill:1});}
       if(ADL>0.01){const rt=rng(hashI(seed,57)),y0v=hc*0.92,Hv=Ht-0.05,nT=Math.round((120+50*rt())*ADL*Math.min(1.1,Rt/2.5));
         // perfil de vaso: estrecho en la cruz, ancho hacia los 2/3 de la altura y remate redondeado
-        const prof=h=>h<0.68?0.3+0.7*Math.sin(Math.PI/2*h/0.68):Math.sqrt(Math.max(0,1-Math.pow((h-0.68)/0.34,2)));
-        const lobT=[rt()*6.283,rt()*6.283];
-        for(let k=0;k<nT;k++){const h=Math.min(0.99,0.08+0.92*Math.pow(rt(),0.72)),azk=rt()*6.283,lobe=1+0.12*Math.sin(3*azk+lobT[0])+0.08*Math.sin(5*azk+lobT[1]);
+        const prof=h=>h<0.55?0.3+0.7*Math.sin(Math.PI/2*h/0.55):Math.sqrt(Math.max(0,1-Math.pow((h-0.55)/0.47,2)));CROWN.v={cx:ax,cy:(y0v+Hv)/2,cz:az,rx:Rt*0.92,ry:(Hv-y0v)/2,k:0};
+        const lobT=[rt()*6.283,rt()*6.283,rt()*6.283];
+        for(let k=0;k<nT;k++){const h=Math.min(0.99,0.08+0.92*Math.pow(rt(),0.85)),azk=rt()*6.283,lobe=1+0.12*Math.sin(3*azk+lobT[0])+0.08*Math.sin(5*azk+lobT[1]);if(rt()>0.62+0.38*Math.sin(2*azk+lobT[2]))continue;
           const Rh=Rt*prof(h)*lobe,oc=0.5+0.5*Math.pow(rt(),0.45),rr=Rh*oc,cxk=Math.cos(azk),czk=Math.sin(azk);
           let cyk=y0v+h*(Hv-y0v);const edge=oc>0.82&&h<0.62;if(edge)cyk-=0.25*rt()*(1-h); // puntas de la falda colgando
           if(cyk<SKIRT+0.12)cyk=SKIRT+0.12+0.15*rt();
@@ -1121,7 +1121,10 @@ function genTree(seed,A,opt){
             const td=o.clone().multiplyScalar(0.8).addScaledVector(rv,0.55).normalize();
             nodes.push({q,td,phi:rt()*6.283,tip:j>=nl-2,f:0.35+0.65*rt(),seed:hashI(seed,15000+k*24+j),fill:1});}
           if(h>0.2&&rt()<0.9){const nc=1+(rt()<0.5?1:0)+(oc>0.85&&rt()<0.35?1:0);for(let j=0;j<nc;j++){const q=ck.clone().addScaledVector(o,0.04).add(new THREE.Vector3((rt()-0.5)*0.12,-0.05-0.06*rt(),(rt()-0.5)*0.12));
-            sites.push({q,td:o.clone(),phi:rt()*6.283,r:oc>0.8?0.3*rt():0.3+0.7*rt(),r2:rt(),fill:1,ext:oc>0.8});}}}}
+            sites.push({q,td:o.clone(),phi:rt()*6.283,r:oc>0.8?0.3*rt():0.3+0.7*rt(),r2:rt(),fill:1,ext:oc>0.8});}}}
+        const nUp=Math.round((6+rt()*6)*ADL);for(let k=0;k<nUp;k++){const aa=rt()*6.283,h=0.62+0.3*rt(),Rh=Rt*prof(h)*(0.35+0.5*rt()),b0=new THREE.Vector3(ax+Math.cos(aa)*Rh,y0v+h*(Hv-y0v)-0.2,az+Math.sin(aa)*Rh),top=Math.min(CROWN_H,Hv+0.15+0.45*rt()),ln=top-b0.y;if(ln<0.3)continue;
+          const m=b0.clone().add(new THREE.Vector3(Math.cos(aa)*0.06,ln*0.55,Math.sin(aa)*0.06)),e=b0.clone().add(new THREE.Vector3(Math.cos(aa)*(0.1+0.12*rt()),ln,Math.sin(aa)*(0.1+0.12*rt())));branches.push({pts:[b0,m,e],rad:[0.01,0.007,0.003],depth:3,up:1});
+          for(let n=0;n<9;n++){const f=0.45+0.55*n/8,q=f<0.5?b0.clone().lerp(m,f*2):m.clone().lerp(e,f*2-1);nodes.push({q,td:e.clone().sub(b0).normalize(),phi:n*2.4,tip:n>=7,f,seed:hashI(seed,14000+k*12+n),dp:3,up:1});}}}
       // cúpula: semiejes ~0,9 del tope de copa, base algo por encima de la cruz; borde con lóbulos para que no sea una bola perfecta
       if(nD>0){const y0=hc*0.85,cy=(y0+Ht)/2,ry=(Ht-y0)/2,rx=Rt*0.92;CROWN.v={cx:ax,cy,cz:az,rx,ry,k:smooth(3.8,5.2,G.age)*(1-ADL)};const _u0=0,lob=[rf()*6.283,rf()*6.283,rf()*6.283];const rb=rng(hashI(seed,41)),bd=[];for(let i=0;i<10;i++){const yy=rb()*1.5-0.55,hz=Math.sqrt(1-yy*yy),aa=rb()*6.283;bd.push([Math.cos(aa)*hz,yy,Math.sin(aa)*hz,(rb()<0.6?1:-0.9)*(0.15+0.15*rb())]);}const BMP=(x,y,z)=>{if(ADL<0.01)return 1;let s=0;for(const b of bd){const dd=1-(x*b[0]+y*b[1]+z*b[2]);s+=b[3]*Math.exp(-dd/0.09);}if(s>0)s*=1-0.75*smooth(0.45,0.9,y);const w=0.3*smooth(0.55,0.95,Math.abs(x))*(1-0.7*Math.abs(y));return Math.max(0.6,1+ADL*(s-w));};
         for(let k=0;k<nD;k++){let x,y,z;do{x=rf()*2-1;y=rf()*2-1;z=rf()*2-1;}while(x*x+y*y+z*z>1);
