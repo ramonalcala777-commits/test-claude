@@ -4602,7 +4602,9 @@ function loadTex(){if(!window.TEX)return;const T=window.TEX;
   L(T.wet,img=>{const t=makeWet(img),o=MAT.wet.map;MAT.wet.map=t;MAT.wet.needsUpdate=true;if(o&&o!==t)o.dispose();});
 }
 function frame(now){try{frameIn(now);}catch(err){console.error(err);if(window.__fatal)window.__fatal('Error al dibujar: '+(err&&err.message||err));requestAnimationFrame(frame);}}
+const PRF={on:false,n:0,t:{}};function PF(k,f){if(!PRF.on)return f();const t=performance.now();const r=f();PRF.t[k]=(PRF.t[k]||0)+performance.now()-t;return r;}
 function frameIn(now){
+  if(PRF.on)PRF.n++;
   if(VM&&VM.paused){last=now;renderer.render(scene,camera);requestAnimationFrame(frame);return;}
   const dt=Math.min(0.05,(now-last)/1000);last=now;
   U.uTime.value+=dt;U.uWind.value+=((reduceMotion?0:(S.wind+(wxOn()?(S.wx==='storm'?6:S.wx==='rain'?1.5:0)*S.wxI:0))/5*(XR.on?0.15:1))-U.uWind.value)*Math.min(1,dt*2);
@@ -4622,7 +4624,7 @@ function frameIn(now){
   controls.update();
   if(camera.position.y<0.15)camera.position.y=0.15;
   sky.position.copy(camera.position);
-  updateStreaming();
+  PF('stream',updateStreaming);
   {const hy=Math.max(0,camera.position.y-3);scene.fog.density=Math.min(FOGD/(1+Math.min(hy,260)/25),0.45/Math.max(60,camera.position.distanceTo(controls.target)));const nr=clamp(camera.position.y*0.01,0.1,4);if(Math.abs(camera.near-nr)>0.05){camera.near=nr;camera.updateProjectionMatrix();}
    SF.set(Math.round(_f.x/4)*4,0,Math.round(_f.z/4)*4);sun.target.position.copy(SF);sun.position.copy(SF).addScaledVector(SUNDIR,120);}
   if(MAT.farLine){MAT.farLine.opacity=clamp(1.15-camera.position.y/90,0.1,1);MAT.farLine.userData.r0.value=0;}
@@ -4630,17 +4632,17 @@ function frameIn(now){
   if(VM&&VM.endF)scene.fog.density*=1-0.65*VM.endF;
   {const f=wxFogAmt(),wi=wxI(),wf=wi*(S.wx==='snow'||S.wx==='storm'?0.012:S.wx==='rain'?0.007:0.004);if(f>0.005||wf>0)scene.fog.density=Math.max(scene.fog.density,0.004+wf+0.09*f*f);}
   xrFrame(dt);
-  updateShade();
-  drawMini();
-  updateParticles(dt);
+  PF('shade',updateShade);
+  PF('mini',drawMini);
+  PF('part',()=>updateParticles(dt));
   camera.getWorldDirection(fwd);fwd.y=0;fwd.normalize();right.set(-fwd.z,0,fwd.x);
   const ang=Math.atan2(NORTH.x*right.x+NORTH.y*right.z,NORTH.x*fwd.x+NORTH.y*fwd.z)/DEG;TC.ang=ang;needle.setAttribute('transform','rotate('+ang.toFixed(1)+' 23 23)');
-  if(!TC.nr)renderer.render(scene,camera);
-  updateLabels();
+  if(!TC.nr)PF('render',()=>renderer.render(scene,camera));
+  PF('labels',updateLabels);
   if(!started){started=true;setTimeout(()=>$('loading').classList.add('done'),60);}
   requestAnimationFrame(frame);
 }
-window.__tramo={gsz:(A,male,n)=>{const o=[];for(let i=0;i<(n||6);i++){const T=genTree(1000+i*17,A,Object.assign(treeOpt(),{male:male?1:0}));let h=0,x=0,z=0;T.leaves.forEach(l=>{h=Math.max(h,l.p.y);x=Math.max(x,Math.abs(l.p.x));z=Math.max(z,Math.abs(l.p.z));});o.push([+h.toFixed(2),+x.toFixed(2),+z.toFixed(2),T.leaves.length]);}return JSON.stringify(o);},tri:()=>{const o={},km=new Map();for(const k in MAT)km.set(MAT[k],k);scene.traverseVisible(m=>{if(!m.isMesh||!m.geometry)return;const g=m.geometry,n=(g.index?g.index.count:g.attributes.position.count)/3*(m.isInstancedMesh?m.count:1);const k=(Array.isArray(m.material)?'multi':km.get(m.material)||m.material.type)+(m.isInstancedMesh?'':'');o[k]=(o[k]||0)+n;});for(const k in o)o[k]=Math.round(o[k]/1000);return JSON.stringify(o);},tr:i=>({u:TREES[i].u,v:TREES[i].v}),gt:(A,n,cap)=>{const t=performance.now();for(let i=0;i<n;i++)genTree(1000+i*17,A,{cap:cap||1200,seg1:14,seg2:7,kmax:1.8});return Math.round(performance.now()-t);},fade:()=>({ok:!!FADE.ok,n:FADE.list.length,v:FADE.list.map(c=>c.fading?+c.fading.t.toFixed(2):-1)}),cutPng:()=>CUT.cv?CUT.cv.toDataURL():null,setCut,startVideo,endVideo,goTo:(k)=>goPlace(k,true),look:(p,t)=>{S.cam='libre';tween=null;camera.position.set(...p);controls.target.set(...t);controls.update();},S,setDoy,applyTime,buildField,info:()=>JSON.stringify(renderer.info.render),stats:()=>JSON.stringify({active:CH.active.size,cache:CH.cache.size,near:NEAR.length,far:CH.cur&&CH.cur.far.count}),time:(fn)=>{const t=performance.now();fn();return Math.round(performance.now()-t);},selectTree:i=>showCard(TREES[i])};
+window.__tramo={prof:async(ms)=>{PRF.t={};PRF.n=0;PRF.on=true;const t0=performance.now();await new Promise(r=>setTimeout(r,ms||3000));PRF.on=false;const el=performance.now()-t0,o={frames:PRF.n,msPerFrame:+(el/PRF.n).toFixed(1),calls:renderer.info.render.calls,tris:renderer.info.render.triangles};for(const k in PRF.t)o[k]=+(PRF.t[k]/PRF.n).toFixed(2);return JSON.stringify(o);},gsz:(A,male,n)=>{const o=[];for(let i=0;i<(n||6);i++){const T=genTree(1000+i*17,A,Object.assign(treeOpt(),{male:male?1:0}));let h=0,x=0,z=0;T.leaves.forEach(l=>{h=Math.max(h,l.p.y);x=Math.max(x,Math.abs(l.p.x));z=Math.max(z,Math.abs(l.p.z));});o.push([+h.toFixed(2),+x.toFixed(2),+z.toFixed(2),T.leaves.length]);}return JSON.stringify(o);},tri:()=>{const o={},km=new Map();for(const k in MAT)km.set(MAT[k],k);scene.traverseVisible(m=>{if(!m.isMesh||!m.geometry)return;const g=m.geometry,n=(g.index?g.index.count:g.attributes.position.count)/3*(m.isInstancedMesh?m.count:1);const k=(Array.isArray(m.material)?'multi':km.get(m.material)||m.material.type)+(m.isInstancedMesh?'':'');o[k]=(o[k]||0)+n;});for(const k in o)o[k]=Math.round(o[k]/1000);return JSON.stringify(o);},tr:i=>({u:TREES[i].u,v:TREES[i].v}),gt:(A,n,cap)=>{const t=performance.now();for(let i=0;i<n;i++)genTree(1000+i*17,A,{cap:cap||1200,seg1:14,seg2:7,kmax:1.8});return Math.round(performance.now()-t);},fade:()=>({ok:!!FADE.ok,n:FADE.list.length,v:FADE.list.map(c=>c.fading?+c.fading.t.toFixed(2):-1)}),cutPng:()=>CUT.cv?CUT.cv.toDataURL():null,setCut,startVideo,endVideo,goTo:(k)=>goPlace(k,true),look:(p,t)=>{S.cam='libre';tween=null;camera.position.set(...p);controls.target.set(...t);controls.update();},S,setDoy,applyTime,buildField,info:()=>JSON.stringify(renderer.info.render),stats:()=>JSON.stringify({active:CH.active.size,cache:CH.cache.size,near:NEAR.length,far:CH.cur&&CH.cur.far.count}),time:(fn)=>{const t=performance.now();fn();return Math.round(performance.now()-t);},selectTree:i=>showCard(TREES[i])};
 setTimeout(()=>{
   try{
     {const hb=[...document.querySelectorAll('.seg[data-k="season"] button')].find(b=>b.textContent.trim()==='Hoy');if(hb){hb.dataset.v=String(TODAY.doy);hb.title='Hoy: '+dateLong(TODAY.doy);}}presetFor(S.doy);
