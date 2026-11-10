@@ -1056,7 +1056,7 @@ function genTree(seed,A,opt){
       if(droop&&t>0.62)d.y-=droop*(t-0.62)*4.5*(14/nSeg);if(open>0.01){const w=(depth===1?0.035:0.11)*open*(14/nSeg)*t;d.y-=w;}if(ADL>0.01&&ADL<0.99&&depth>=3&&t>0.4)d.y-=0.28*ADL*(1-ADL)*(14/nSeg);if(ADL>0.01&&depth>=2)d.y-=0.02*ADL*(depth-1)*(14/nSeg)*t;d.normalize();p.addScaledVector(d,sl);pts.push(p.clone());tans.push(d.clone());rads.push(rad*(1-(0.72-(depth<=2?0.22*FRM:0.1*FRM))*t)+0.0015);}
     branches.push({pts,rad:rads,depth});
     const childR=ramp(depth+1);
-    if(depth<(ADL>0.5?3:5)&&childR>0.001&&!(opt.maxD&&depth>=opt.maxD)){
+    if(depth<(ADL>0.5?4:5)&&childR>0.001&&!(opt.maxD&&depth>=opt.maxD)){
       const dens=(depth===1?(G.age<2?4.2:3.1+0.5*ramF):depth===2?1.45+0.95*ramF:depth===3?0.92+0.5*ramF:0.55*ramF)*(depth===1?1+0.45*FRM:depth===2?1+0.15*FRM:1);
       const nC=Math.floor(len*dens*(0.7+r()*0.6)+0.5);
       for(let c=0;c<nC;c++){const rc=rng(hashI(hashI(seed,id),c+11));const t=(0.16-0.1*FRM)+(0.8+0.1*FRM)*rc(),fi=t*nSeg,ix=Math.min(nSeg-1,Math.floor(fi)),fr=fi-ix;
@@ -1138,10 +1138,10 @@ function genTree(seed,A,opt){
         // 3-6 brotes con hoja que suben 30-60 cm por encima de las masas de arriba
         const ups=lobes.slice().sort((p,q)=>q.c.y+q.rv-p.c.y-p.rv),nUp=Math.round((3+rt()*3)*ADL);
         for(let k=0;k<nUp;k++){const L=ups[k%ups.length],aa=rt()*6.283,b0=L.c.clone().add(new THREE.Vector3(Math.cos(aa)*L.rl*0.35,L.rv*0.75,Math.sin(aa)*L.rl*0.35));
-          const tl=0.3+0.3*rt(),tipY=Math.min(CROWN_H,L.c.y+L.rv+tl),ln=tipY-b0.y,tilt=0.35*rt();
+          const tl=0.22+0.25*rt(),tipY=Math.min(CROWN_H,L.c.y+L.rv+tl),ln=tipY-b0.y,tilt=0.35*rt();
           const e=b0.clone().add(new THREE.Vector3(Math.cos(aa)*ln*tilt,ln,Math.sin(aa)*ln*tilt)),m=b0.clone().lerp(e,0.5);m.x+=Math.cos(aa)*0.05;m.z+=Math.sin(aa)*0.05;
           branches.push({pts:[b0,m,e],rad:[0.011,0.007,0.003],depth:3,up:1});
-          for(let n=0;n<8;n++){const f=0.35+0.65*n/7,q=f<0.5?b0.clone().lerp(m,f*2):m.clone().lerp(e,f*2-1);nodes.push({q,td:e.clone().sub(b0).normalize(),phi:n*2.4,tip:n>=6,f,seed:hashI(seed,19000+k*10+n),dp:3,up:1,tf:1});}
+          for(let n=0;n<11;n++){const f=0.2+0.8*n/10,q=f<0.5?b0.clone().lerp(m,f*2):m.clone().lerp(e,f*2-1);nodes.push({q,td:e.clone().sub(b0).normalize(),phi:n*2.4,tip:n>=9,f,seed:hashI(seed,19000+k*12+n),dp:3,up:1,tf:1,ros:n===10});}
           if(rt()<0.4)sites.push({q:e.clone().add(new THREE.Vector3(0,-0.12,0)),td:new THREE.Vector3(0,1,0),ax:new THREE.Vector3(Math.cos(aa)*0.5,0.4,Math.sin(aa)*0.5).normalize(),phi:rt()*6.283,r:0.3*rt(),r2:rt(),sz:rt(),fill:1,ext:true});}}
       // cúpula: semiejes ~0,9 del tope de copa, base algo por encima de la cruz; borde con lóbulos para que no sea una bola perfecta
       if(nD>0){const y0=hc*0.85,cy=(y0+Ht)/2,ry=(Ht-y0)/2,rx=Rt*0.92;const env0=CROWN.v&&CROWN.v.env;CROWN.v={cx:ax,cy,cz:az,rx,ry,k:smooth(3.8,5.2,G.age)*(1-ADL)};if(env0)CROWN.v.env=env0;const _u0=0,lob=[rf()*6.283,rf()*6.283,rf()*6.283];const rb=rng(hashI(seed,41)),bd=[];for(let i=0;i<10;i++){const yy=rb()*1.5-0.55,hz=Math.sqrt(1-yy*yy),aa=rb()*6.283;bd.push([Math.cos(aa)*hz,yy,Math.sin(aa)*hz,(rb()<0.6?1:-0.9)*(0.15+0.15*rb())]);}const BMP=(x,y,z)=>{if(ADL<0.01)return 1;let s=0;for(const b of bd){const dd=1-(x*b[0]+y*b[1]+z*b[2]);s+=b[3]*Math.exp(-dd/0.09);}if(s>0)s*=1-0.75*smooth(0.45,0.9,y);const w=0.3*smooth(0.55,0.95,Math.abs(x))*(1-0.7*Math.abs(y));return Math.max(0.6,1+ADL*(s-w));};
@@ -1188,14 +1188,14 @@ function genTree(seed,A,opt){
     const C=new THREE.Vector3(),D=new THREE.Vector3(),Pj=new THREE.Vector3();
     const GL=[...grp.values()].map(g=>{const c=new THREE.Vector3();g.forEach(L=>c.add(L.q));c.multiplyScalar(1/g.length);const p=near(c);return {g,c,d:p?p.distanceTo(c):1e9};}).sort((a,b)=>a.d-b.d);
     for(const {g,c} of GL){C.copy(c);const p0=near(C);if(!p0)continue;const p=p0.clone();SHOOT.del(p0);const len=p.distanceTo(C);if(len<0.07)continue;
-      if(g[0].tuft!==undefined){D.subVectors(C,p).normalize();const E=C.clone().addScaledVector(D,0.12),L2=len+0.12,M1=p.clone().lerp(E,0.36),M2=p.clone().lerp(E,0.72);M1.y+=0.1*L2;M2.y+=0.08*L2;const r0=0.005+0.008*Math.min(1,L2/1.1);
+      if(g[0].tuft!==undefined){D.subVectors(C,p).normalize();const E=C.clone().addScaledVector(D,0.12),L2=len+0.12,M1=p.clone().lerp(E,0.36),M2=p.clone().lerp(E,0.72);M1.y+=0.1*L2;M2.y+=0.08*L2;const r0=0.0038+0.0055*Math.min(1,L2/1.2);
         branches.push({pts:[p.clone(),M1,M2,E],rad:[r0,r0*0.8,r0*0.6,0.0025],depth:3,twig:1});for(let k=1;k<=5;k++){const P=k<=2?p.clone().lerp(M1,k/2):M1.clone().lerp(M2,(k-2)/3);SHOOT.add(P);}continue;}
       D.subVectors(C,p).normalize();const E=C.clone().addScaledVector(D,0.1),L2=len+0.1,M=p.clone().lerp(E,0.5);M.y+=0.04*L2;
       branches.push({pts:[p.clone(),M,E],rad:[0.0045,0.0035,0.0022],depth:2,twig:1});for(let k=1;k<=4;k++){const P=p.clone().lerp(E,k/4);P.y+=0.04*L2*4*(k/4)*(1-k/4);SHOOT.add(P);}
       g.forEach(L=>{const t=clamp(Pj.subVectors(L.q,p).dot(D),0.15*L2,L2);Pj.copy(p).addScaledVector(D,t);Pj.y+=0.04*L2*4*(t/L2)*(1-t/L2);const off=L.q.clone().sub(Pj);const dl=off.length();if(dl>0.05)off.multiplyScalar(0.05/dl);L.q.copy(Pj).add(off);});}}
   const ENVn=crownEnv();
   for(const L of nodes){
-    if(!L.budOnly&&!(L.up&&!L.tf)&&keepQ<1&&(hashI(L.seed,7)&65535)/65536>=keepQ)continue;
+    if(!L.budOnly&&!L.up&&keepQ<1&&(hashI(L.seed,7)&65535)/65536>=keepQ)continue;
     if(ENVn&&!L.fill&&!L.budOnly&&!L.up&&(()=>{const n=ENVn(L.q);return n<0.7||n>1.08;})()&&(hashI(L.seed,9)&65535)/65536<ADL)continue;
     const r=rng(L.seed);
     perp(L.td,L.phi,pd);
