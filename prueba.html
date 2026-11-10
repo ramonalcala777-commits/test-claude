@@ -1078,7 +1078,7 @@ function genTree(seed,A,opt){
       if(ADL<0.02||rs()>ADL)sites.push({q:pts[ix].clone().lerp(pts[ix+1],fr),td:tans[ix+1].clone(),phi:rs()*6.283,r:rs(),r2:rs()});}}
   }
   const nSmax=3+(r0()<0.4?1:0),az0=r0()*6.283;
-  for(let i=0;i<nSmax;i++){const rs=rng(hashI(seed,200+i));const az=az0+i*6.283/nSmax+(rs()-0.5)*0.9,el=(G.scaffEl+(rs()-0.5)*22)*DEG;
+  for(let i=0;i<nSmax;i++){const rs=rng(hashI(seed,200+i));const az=az0+i*6.283/nSmax+(rs()-0.5)*0.9,el=(G.scaffEl+(rs()-0.5)*22)*DEG*(opt.male?0.72:1);
     const mul=i<2?1:i===2?smooth(0.3,1.2,G.age):smooth(0.9,1.6,G.age);if(mul<0.02)continue;
     const dir=new THREE.Vector3(Math.sin(el)*Math.cos(az),Math.cos(el),Math.sin(el)*Math.sin(az));
     const f=1-rs()*0.16,st=tp[5].clone().lerp(tp[6],f>0.92?1:0.5);st.y=hc*f;
@@ -1087,7 +1087,7 @@ function genTree(seed,A,opt){
   {const vr=rng(hashI(seed,9)),vh=0.9+0.2*vr(),vw=0.89+0.22*vr();let Hn=hc+0.05,En=0.05;
     const tipsR=[];branches.forEach(b=>{if(b.depth<1)return;b.pts.forEach(p=>{Hn=Math.max(Hn,p.y);});const e=b.pts[b.pts.length-1];tipsR.push(Math.hypot(e.x,e.z));});tipsR.sort((x,y)=>x-y);En=Math.max(0.05,tipsR.length?tipsR[Math.floor(tipsR.length*0.85)]:0.05);
     const VG=VGF(G.age),UNP=G.age<1.2&&unprunedNow();let Ht=Math.min(CROWN_H*vh,hc+(G.sz[0]*vh-0.1-hc)*VG),Rt=Math.min(CROWN_R*Math.min(vw,1.03)-0.15,(G.sz[1]/2*vw-0.15)*VG);
-    if(UNP){Ht=hc+(2.0*vh-hc)*1.0;Rt=0.75*vw;}if(opt.male&&!UNP){Ht=Math.min(CROWN_H,hc+(Ht-hc)*1.3);Rt=Math.min(CROWN_R-0.05,Rt*1.15);}if(ADL>0.01){const Ha=Math.min(Ht,(3.4+0.5*vr())*(opt.male?1.3:1));Ht=Ht+(Ha-Ht)*ADL;} // sin podar (nov. 2025): puntas a ~2 m y copa de ~1,5 m
+    if(UNP){Ht=hc+(2.0*vh-hc)*1.0;Rt=0.75*vw;}if(opt.male&&!UNP){Ht=Math.min(CROWN_H,hc+(Ht-hc)*1.3);Rt=Math.min(CROWN_R-0.05,Rt*1.15);}if(ADL>0.01){const Ha=opt.male?Math.min(Ht,4.4+0.25*vr()):Math.min(Ht,3.4+0.5*vr());Ht=Ht+(Ha-Ht)*ADL;} // sin podar (nov. 2025): puntas a ~2 m y copa de ~1,5 m
     const sx=clamp(Rt/En,0.25,4-2.5*FR2),sy=clamp((Ht-hc)/Math.max(0.05,Hn-hc),0.25,3),ax=tp[6].x,az=tp[6].z;
     const tf=p=>{p.x=ax+(p.x-ax)*sx;p.z=az+(p.z-az)*sx;if(p.y>hc)p.y=hc+(p.y-hc)*sy;};
     const tv=d=>{d.x*=sx;d.z*=sx;d.y*=sy;d.normalize();};
@@ -1112,14 +1112,14 @@ function genTree(seed,A,opt){
         // v34: copa adulta = 4-6 masas grandes (una por brazo) + una arriba, con entrantes y ventanas de cielo entre ellas
         const exl=Math.min(Rt,(2.2+0.3*rt())*(opt.male?1.15:1)),ezl=Rt,ox=(rt()-0.5)*0.5,oz=(rt()-0.5)*0.4,nL=4+Math.floor(rt()*3),lobes=[],a0=rt()*6.283;
         for(let i=0;i<nL;i++){const aa=a0+i*6.283/nL+(rt()-0.5)*0.4,rl=0.85+0.3*rt(),rv=0.6+0.3*rt(),rho=1.1+0.4*rt();
-          const c=new THREE.Vector3(ax+ox+Math.cos(aa)*Math.min(rho,exl-rl*0.8),0,az+oz+Math.sin(aa)*Math.min(rho,ezl-rl*0.8));c.y=Ht-rv-0.4-0.25*rt();
-          const ybl=SKIRT+0.02+0.5*rt();lobes.push({c,rl,rv,rvd:Math.max(0.35,c.y-ybl),load:0.3+1.2*rt()});}
+          const c=new THREE.Vector3(ax+ox+Math.cos(aa)*Math.min(rho,exl-rl*0.8),0,az+oz+Math.sin(aa)*Math.min(rho,ezl-rl*0.8));c.y=Ht-rv-(opt.male?0.75+0.2*rt():0.4+0.25*rt());
+          const ybl=SKIRT+0.02+(opt.male?0.2:0.5)*rt();lobes.push({c,rl,rv,rvd:Math.max(0.35,c.y-ybl),load:0.3+1.2*rt()});}
         lobes.push({c:new THREE.Vector3(ax+ox*0.5,Ht-0.62,az+oz*0.5),rl:1.0+0.15*rt(),rv:0.6,rvd:0.65,load:1.1,cen:1});{const C0=lobes[lobes.length-1];lobes.push({c:C0.c.clone(),rl:C0.rl,rv:C0.rv,rvd:C0.rvd,load:0.5,cap:1});}{const yc0=SKIRT+0.5*(Ht-SKIRT);lobes.push({c:new THREE.Vector3(ax+ox,yc0,az+oz),rl:exl*0.95,rv:Ht-0.1-yc0,rvd:Math.max(0.3,yc0-SKIRT-0.25),load:0.6,base:1});}
         const nd=(L,q)=>{const dx=(q.x-L.c.x)/L.rl,dz=(q.z-L.c.z)/L.rl,dy=q.y-L.c.y,yy=dy/(dy>0?L.rv:L.rvd);return Math.sqrt(dx*dx+dy*0+yy*yy+dz*dz);};
         const en=q=>{let m=9,mi=-1;for(let i=0;i<lobes.length;i++){const v=nd(lobes[i],q);if(v<m){m=v;mi=i;}}en.i=mi;return m;};
         CROWN.v={cx:ax,cy:Ht-1.1,cz:az,rx:exl*0.8,ry:1.0,k:0,env:{lobes,en,ax,az}};
         let aT=0;const wl=lobes.map(L=>{const w=L.rl*(L.rl+L.rv+L.rvd)*(L.cen?0.6:L.base?1.0:L.cap?0.35:1);aT+=w;return w;});
-        const nT=Math.round(aT*3.2/0.085*ADL*(opt.male?1.12:1)),cen=[],md2=0.235*0.235,hN=q=>(q.y-SKIRT)/Math.max(0.5,Ht-SKIRT);
+        const nT=Math.round(aT*3.2/0.085*ADL*(opt.male?1.25:1)),cen=[],md2=0.235*0.235,hN=q=>(q.y-SKIRT)/Math.max(0.5,Ht-SKIRT);
         let tries=0;for(let k=0;k<nT&&tries<nT*8;tries++){let u=rt()*aT,li=0;while(li<lobes.length-1&&u>wl[li]){u-=wl[li];li++;}const L=lobes[li];
           const y=L.cap?0.2+0.8*rt():rt()*2-1,hz=Math.sqrt(Math.max(0,1-y*y)),aa=rt()*6.283,x=Math.cos(aa)*hz,z=Math.sin(aa)*hz,sc=L.cap?0.55+0.2*rt():L.base?0.86+0.08*rt():0.88+0.1*rt();
           const ck=new THREE.Vector3(L.c.x+x*L.rl*sc,L.c.y+y*(y>0?L.rv:L.rvd)*sc,L.c.z+z*L.rl*sc);if(ck.y<SKIRT+0.1)continue;
@@ -1138,7 +1138,7 @@ function genTree(seed,A,opt){
         // 3-6 brotes con hoja que suben 30-60 cm por encima de las masas de arriba
         const ups=lobes.slice().sort((p,q)=>q.c.y+q.rv-p.c.y-p.rv),nUp=Math.round(((opt.male?6:3)+rt()*3)*ADL);
         for(let k=0;k<nUp;k++){const L=ups[k%ups.length],aa=rt()*6.283,b0=L.c.clone().add(new THREE.Vector3(Math.cos(aa)*L.rl*0.35,L.rv*0.75,Math.sin(aa)*L.rl*0.35));
-          const tl=0.22+0.25*rt(),tipY=Math.min(CROWN_H,L.c.y+L.rv+tl),ln=tipY-b0.y,tilt=0.35*rt();
+          const tl=opt.male?0.4+0.2*rt():0.22+0.25*rt(),tipY=Math.min(CROWN_H,L.c.y+L.rv+tl),ln=tipY-b0.y,tilt=0.35*rt();
           const e=b0.clone().add(new THREE.Vector3(Math.cos(aa)*ln*tilt,ln,Math.sin(aa)*ln*tilt)),m=b0.clone().lerp(e,0.5);m.x+=Math.cos(aa)*0.05;m.z+=Math.sin(aa)*0.05;
           branches.push({pts:[b0,m,e],rad:[0.011,0.007,0.003],depth:3,up:1});
           for(let n=0;n<11;n++){const f=0.2+0.8*n/10,q=f<0.5?b0.clone().lerp(m,f*2):m.clone().lerp(e,f*2-1);nodes.push({q,td:e.clone().sub(b0).normalize(),phi:n*2.4,tip:n>=9,f,seed:hashI(seed,19000+k*12+n),dp:3,up:1,tf:1,ros:n===10});}
@@ -1183,7 +1183,7 @@ function genTree(seed,A,opt){
   // nodos -> foliolos (hoja compuesta de 1, 3 o 5)
   const leaves=[],buds=[];const pd=new THREE.Vector3(),a=new THREE.Vector3(),n0=new THREE.Vector3(),side=new THREE.Vector3(),a1=new THREE.Vector3();
   // árboles formados: se reparte el tope de hojas entre todos los nudos antes de crearlas (y las yemas igual)
-  const cap=Math.round(opt.cap*(1+0.6*ramF)*(1+0.3*FRM+0.5*Math.max(0,DOME*0.85-FRM))*(opt.cap>=600?1+0.9*ADL:1));let nn=0;for(const L of nodes)if(!L.budOnly)nn++;const keepQ=Math.min(1,cap/Math.max(1,nn));
+  const cap=Math.round(opt.cap*(1+0.6*ramF)*(1+0.3*FRM+0.5*Math.max(0,DOME*0.85-FRM))*(opt.cap>=600?1+0.9*ADL:1)*(opt.male?1.2:1));let nn=0;for(const L of nodes)if(!L.budOnly)nn++;const keepQ=Math.min(1,cap/Math.max(1,nn));
   if(SHOOT.near){const near=SHOOT.near,cs=0.3,grp=new Map();
     for(const L of nodes){if(!L.fill||L.budOnly)continue;if(keepQ<1&&(hashI(L.seed,7)&65535)/65536>=keepQ)continue;const k=L.tuft!==undefined?'T'+L.tuft:Math.floor(L.q.x/cs)+','+Math.floor(L.q.y/cs)+','+Math.floor(L.q.z/cs);let g=grp.get(k);if(!g)grp.set(k,g=[]);g.push(L);}
     const C=new THREE.Vector3(),D=new THREE.Vector3(),Pj=new THREE.Vector3();
@@ -1205,13 +1205,14 @@ function genTree(seed,A,opt){
     a.copy(L.td).multiplyScalar(0.5).addScaledVector(pd,0.86);a.y-=0.2+0.28*smooth(2,5,G.age);a.normalize();
     const sl=(L.tip?0.075+0.04*r():0.15+0.06*r())*(1+0.3*ramF);
     n0.copy(UP).multiplyScalar(0.85).addScaledVector(pd,0.5);n0.x+=(r()-0.5)*0.5;n0.z+=(r()-0.5)*0.5;n0.normalize();
-    let at=L.tip?(r()<0.5?0:1):(r()<0.08?0:r()<0.78?1:2);let slc=sl;if(L.tf){at=L.ros?3:(r()<0.5?1:2);slc=L.ros?0.22+0.05*r():sl*0.72;}else if(L.fill&&r()<0.7*smooth(3.3,4.8,G.age)){at=3;slc=sl*1.85;}
-    const crx=L.tf?0.45+0.1*r():r();let dk=1;if(L.tf&&ENVn){const nn=ENVn(L.q);dk=0.9+0.12*clamp((nn-0.7)/0.25,0,1);}
+    let at=L.tip?(r()<0.5?0:1):(r()<0.08?0:r()<0.78?1:2);let slc=sl;if(L.tf){at=L.ros?3:(r()<0.5?1:2);slc=(L.ros?0.22+0.05*r():sl*0.72)*(opt.male?1.1:1);}else if(L.fill&&r()<0.7*smooth(3.3,4.8,G.age)){at=3;slc=sl*1.85;}
+    const crx=L.tf?0.45+0.1*r():r();let dk=1;if(L.tf&&ENVn){const nn=ENVn(L.q);dk=(0.9+0.12*clamp((nn-0.7)/0.25,0,1))*(opt.male?0.92:1);}
     leaves.push({p:L.q.clone(),d:a.clone(),n:n0.clone(),s:slc,young:L.tip&&!L.tf?1:0,cr:crx,dk,emerge:clamp(0.7*L.f+0.3*r(),0,1),fall:r(),keep:r(),w:r(),at,tf:L.tf?1:0});
   }
   let out=leaves;if(keepQ<1){const k=Math.min(opt.kmax?1.55+(opt.kmax-1.55)*FRM:1.55,Math.sqrt(1/keepQ));out.forEach(l=>{l.s*=l.tf&&keepQ>0.45?Math.min(k,1.12):k;});}
   {const az0=tp[6].z,LZ=CROWN_Z/1.1;out.forEach(l=>{const tip=l.p.z-az0+l.d.z*l.s;if(Math.abs(tip)>LZ){l.d.z=-l.d.z*0.6;l.d.normalize();const t2=l.p.z-az0+l.d.z*l.s;if(Math.abs(t2)>LZ)l.s*=Math.max(0.5,(LZ-Math.abs(l.p.z-az0))/Math.max(0.05,Math.abs(l.d.z*l.s)));}});}
   let ext=0.3;branches.forEach(b=>b.pts.forEach(p=>{ext=Math.max(ext,Math.hypot(p.x,p.z));}));
+  if(opt.male)branches.forEach(b=>{if(b.depth<=1)b.rad=b.rad.map(x=>x*1.22);});
   const crown=CROWN.v;CROWN.v=null;let extZ=0.3;{const az0=tp[6].z;out.forEach(l=>{extZ=Math.max(extZ,Math.abs(l.p.z-az0));});}return {branches,leaves:out,buds,sites,G,hc,ext,extZ,crown};
 }
 function leafColor(l,y){
@@ -1839,7 +1840,7 @@ function rebuildRings(f){
   const g=new THREE.Group();
   mid.forEach((pair,v)=>pair.forEach((list,w)=>{if(!list.length)return;const im=new THREE.InstancedMesh(w===2?as.lite[v]:as.variants[v],MAT.variant,list.length);im.customDepthMaterial=MAT.variantD;
     list.forEach((t,i)=>im.setMatrixAt(i,treeMatrix(t)));im.castShadow=w===0;im.receiveShadow=true;im.instanceMatrix.needsUpdate=true;g.add(im);
-    const fgeo=(w===2?as.lfr:as.vfr)[v];if(fgeo){const fm=new THREE.InstancedMesh(fgeo,MAT.cl_ring,list.length);list.forEach((t,i)=>fm.setMatrixAt(i,treeMatrix(t)));fm.instanceMatrix.needsUpdate=true;fm.receiveShadow=true;fm.userData.rf=true;fm.visible=!!(P_&&P_.fruit>0.25);g.add(fm);}}));
+    const fgeo=(w===2?as.lfr:as.vfr)[v],fl=list.filter(t=>t.t===0);if(fgeo&&fl.length){const fm=new THREE.InstancedMesh(fgeo,MAT.cl_ring,fl.length);fl.forEach((t,i)=>fm.setMatrixAt(i,treeMatrix(t)));fm.instanceMatrix.needsUpdate=true;fm.receiveShadow=true;fm.userData.rf=true;fm.visible=!!(P_&&P_.fruit>0.25);g.add(fm);}}));
   as.far.userData.far=true;g.add(as.far);RING.group=g;world.add(g);
 }
 function applyChunkDate(ch){if(ch.lg)ch.lg.visible=U.uLG.value>0.01;if(ch.cover)ch.cover.visible=ch.cvOn&&U.uCovH.value>0.1;
