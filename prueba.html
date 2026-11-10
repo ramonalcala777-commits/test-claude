@@ -1131,7 +1131,7 @@ function genTree(seed,A,opt){
           for(let j=0;j<nl+2;j++){const ros=j<2,t=ros?0.04*rt():0.06+0.26*rt();rv.set(rt()*2-1,rt()*2-1,rt()*2-1);if(rv.lengthSq()>1)rv.multiplyScalar(0.6);
             const q=ck.clone().addScaledVector(o,-t).addScaledVector(rv,0.07);const td=o.clone().addScaledVector(rv,0.6).normalize();
             nodes.push({q,td,phi:rt()*6.283,tip:false,f:0.35+0.65*rt(),seed:hashI(seed,15000+k*16+j),fill:1,tuft:k,tf:1,ros});}
-          const hn=hN(ck),pc=0.62*L.load*(hn>0.6?1.6:hn>0.33?0.6:0.2);
+          const hn=hN(ck),pc=0.52*L.load*(hn>0.6?1.6:hn>0.33?0.6:0.2);
           if(rt()<pc){const nc=1+(rt()<(hn>0.6?0.45:0.2)?1:0);for(let j=0;j<nc;j++){const q=ck.clone().addScaledVector(o,-0.08+0.1*rt()).add(new THREE.Vector3((rt()-0.5)*0.1,-0.04,(rt()-0.5)*0.1));
             const hd=new THREE.Vector3(ck.x-ax,0,ck.z-az);if(hd.lengthSq()<1e-4)hd.set(Math.cos(aa),0,Math.sin(aa));hd.normalize();const th=(hn>0.6?40+30*rt():hn>0.33?100+25*rt():135+25*rt())*DEG;const axd=hd.clone().multiplyScalar(Math.sin(th)).add(new THREE.Vector3(0,Math.cos(th),0)).normalize();sites.push({q,td:o.clone(),ax:axd,phi:rt()*6.283,r:0.3*(1-0.7*hn)*rt(),r2:rt(),sz:rt(),fill:1,ext:true});}}
           k++;}
