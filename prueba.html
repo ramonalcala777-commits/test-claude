@@ -1053,7 +1053,7 @@ function genTree(seed,A,opt){
     const open=smooth(1.8,3.4,G.age),trop=depth===1?0.09*(1-0.7*open):0.045*(1-0.45*open),droop=(depth===1&&r()<0.55)?0.2*(1-smooth(2.5,3.5,G.age))*smooth(0.7,1.0,len):0;
     const jit=[];for(let s=0;s<nSeg;s++)jit.push([r()-0.5,r()-0.5,r()-0.5]);
     for(let s=1;s<=nSeg;s++){const t=s/nSeg,j=jit[s-1];const js=Math.min(1,len/0.6);d.x+=j[0]*0.2*js;d.z+=j[1]*0.2*js;d.y+=j[2]*0.1*js;d.addScaledVector(UP,trop*(14/nSeg));
-      if(droop&&t>0.62)d.y-=droop*(t-0.62)*4.5*(14/nSeg);if(open>0.01){const w=(depth===1?0.035:0.11)*open*(14/nSeg)*t;d.y-=w;}if(ADL>0.01&&depth>=3&&t>0.4)d.y-=0.07*ADL*(14/nSeg);if(ADL>0.01&&depth>=2)d.y-=0.02*ADL*(depth-1)*(14/nSeg)*t;d.normalize();p.addScaledVector(d,sl);pts.push(p.clone());tans.push(d.clone());rads.push(rad*(1-(0.72-(depth<=2?0.22*FRM:0.1*FRM))*t)+0.0015);}
+      if(droop&&t>0.62)d.y-=droop*(t-0.62)*4.5*(14/nSeg);if(open>0.01){const w=(depth===1?0.035:0.11)*open*(14/nSeg)*t;d.y-=w;}if(ADL>0.01&&ADL<0.99&&depth>=3&&t>0.4)d.y-=0.28*ADL*(1-ADL)*(14/nSeg);if(ADL>0.01&&depth>=2)d.y-=0.02*ADL*(depth-1)*(14/nSeg)*t;d.normalize();p.addScaledVector(d,sl);pts.push(p.clone());tans.push(d.clone());rads.push(rad*(1-(0.72-(depth<=2?0.22*FRM:0.1*FRM))*t)+0.0015);}
     branches.push({pts,rad:rads,depth});
     const childR=ramp(depth+1);
     if(depth<(ADL>0.5?3:5)&&childR>0.001&&!(opt.maxD&&depth>=opt.maxD)){
@@ -1111,15 +1111,15 @@ function genTree(seed,A,opt){
       if(ADL>0.01){const rt=rng(hashI(seed,57));
         // v34: copa adulta = 4-6 masas grandes (una por brazo) + una arriba, con entrantes y ventanas de cielo entre ellas
         const exl=Math.min(Rt,2.2+0.3*rt()),ezl=Rt,ox=(rt()-0.5)*0.5,oz=(rt()-0.5)*0.4,nL=4+Math.floor(rt()*3),lobes=[],a0=rt()*6.283;
-        for(let i=0;i<nL;i++){const aa=a0+i*6.283/nL+(rt()-0.5)*0.7,rl=0.6+0.3*rt(),rv=0.5+0.3*rt(),rho=1.0+0.5*rt();
-          const c=new THREE.Vector3(ax+ox+Math.cos(aa)*Math.min(rho,exl-rl),0,az+oz+Math.sin(aa)*Math.min(rho,ezl-rl));c.y=Ht-rv-0.45*rt();
+        for(let i=0;i<nL;i++){const aa=a0+i*6.283/nL+(rt()-0.5)*0.7,rl=0.8+0.3*rt(),rv=0.6+0.3*rt(),rho=1.1+0.45*rt();
+          const c=new THREE.Vector3(ax+ox+Math.cos(aa)*Math.min(rho,exl-rl*0.8),0,az+oz+Math.sin(aa)*Math.min(rho,ezl-rl*0.8));c.y=Ht-rv-0.45*rt();
           const ybl=SKIRT+0.02+0.5*rt();lobes.push({c,rl,rv,rvd:Math.max(0.35,c.y-ybl),load:0.3+1.2*rt()});}
-        lobes.push({c:new THREE.Vector3(ax+ox*0.5,Ht-0.55,az+oz*0.5),rl:0.75+0.2*rt(),rv:0.5,rvd:0.55,load:0.9,cen:1});
+        lobes.push({c:new THREE.Vector3(ax+ox*0.5,Ht-0.6,az+oz*0.5),rl:0.95+0.2*rt(),rv:0.55,rvd:0.6,load:0.9,cen:1});
         const nd=(L,q)=>{const dx=(q.x-L.c.x)/L.rl,dz=(q.z-L.c.z)/L.rl,dy=q.y-L.c.y,yy=dy/(dy>0?L.rv:L.rvd);return Math.sqrt(dx*dx+dy*0+yy*yy+dz*dz);};
         const en=q=>{let m=9,mi=-1;for(let i=0;i<lobes.length;i++){const v=nd(lobes[i],q);if(v<m){m=v;mi=i;}}en.i=mi;return m;};
         CROWN.v={cx:ax,cy:Ht-1.1,cz:az,rx:exl*0.8,ry:1.0,k:0,env:{lobes,en,ax,az}};
         let aT=0;const wl=lobes.map(L=>{const w=L.rl*(L.rl+L.rv+L.rvd)*(L.cen?0.6:1);aT+=w;return w;});
-        const nT=Math.round(aT*3.2/0.11*ADL),cen=[],md2=0.27*0.27,hN=q=>(q.y-SKIRT)/Math.max(0.5,Ht-SKIRT);
+        const nT=Math.round(aT*3.6/0.085*ADL),cen=[],md2=0.235*0.235,hN=q=>(q.y-SKIRT)/Math.max(0.5,Ht-SKIRT);
         let tries=0;for(let k=0;k<nT&&tries<nT*8;tries++){let u=rt()*aT,li=0;while(li<lobes.length-1&&u>wl[li]){u-=wl[li];li++;}const L=lobes[li];
           const y=rt()*2-1,hz=Math.sqrt(Math.max(0,1-y*y)),aa=rt()*6.283,x=Math.cos(aa)*hz,z=Math.sin(aa)*hz,sc=0.88+0.1*rt();
           const ck=new THREE.Vector3(L.c.x+x*L.rl*sc,L.c.y+y*(y>0?L.rv:L.rvd)*sc,L.c.z+z*L.rl*sc);if(ck.y<SKIRT+0.1)continue;
@@ -1131,7 +1131,7 @@ function genTree(seed,A,opt){
           for(let j=0;j<nl+2;j++){const ros=j<2,t=ros?0.04*rt():0.06+0.26*rt();rv.set(rt()*2-1,rt()*2-1,rt()*2-1);if(rv.lengthSq()>1)rv.multiplyScalar(0.6);
             const q=ck.clone().addScaledVector(o,-t).addScaledVector(rv,0.07);const td=o.clone().addScaledVector(rv,0.6).normalize();
             nodes.push({q,td,phi:rt()*6.283,tip:false,f:0.35+0.65*rt(),seed:hashI(seed,15000+k*16+j),fill:1,tuft:k,tf:1,ros});}
-          const hn=hN(ck),pc=0.5*L.load*(hn>0.66?1:hn>0.33?0.6:0.2);
+          const hn=hN(ck),pc=0.62*L.load*(hn>0.66?1:hn>0.33?0.6:0.2);
           if(rt()<pc){const nc=1+(rt()<0.3?1:0);for(let j=0;j<nc;j++){const q=ck.clone().addScaledVector(o,-(0.06+0.1*rt())).add(new THREE.Vector3((rt()-0.5)*0.1,-0.04,(rt()-0.5)*0.1));
             const axd=new THREE.Vector3(o.x,o.y-0.6-0.45*(1-Math.abs(o.y)),o.z).normalize();sites.push({q,td:o.clone(),ax:axd,phi:rt()*6.283,r:0.3*rt(),r2:rt(),sz:rt(),fill:1,ext:true});}}
           k++;}
@@ -1162,7 +1162,7 @@ function genTree(seed,A,opt){
     zs.sort((x,y)=>x-y);mz=zs.length?zs[Math.floor(zs.length*0.97)]:0;if(mz>HZ)kz=HZ/mz;
     const cz=q=>{let z=(q.z-az0)*kz;if(Math.abs(z)>HZ)z=Math.sign(z)*(HZ+(Math.abs(z)-HZ)*0.25);q.z=az0+z;};
     const sk=G.age>=1.75?SKIRT/0.9:0;
-    if(CROWN.v&&CROWN.v.env){const E=CROWN.v.env;      if(E.lobes)branches.forEach(b=>{if(b.depth<1||b.up)return;b.pts.forEach(q=>{const n=E.en(q);if(n>0.92){const c=E.lobes[E.en.i].c,hq=Math.hypot(q.x-E.ax,q.z-E.az),hc2=Math.hypot(c.x-E.ax,c.z-E.az);if(hq>hc2*0.9||q.y>c.y){const f=0.92/n;q.x=c.x+(q.x-c.x)*f;q.z=c.z+(q.z-c.z)*f;q.y=c.y+(q.y-c.y)*f;}}});});}
+    if(CROWN.v&&CROWN.v.env){const E=CROWN.v.env;      if(E.lobes)branches.forEach(b=>{if(b.depth<1||b.up)return;b.pts.forEach(q=>{const n=E.en(q);if(n>0.92){const c=E.lobes[E.en.i].c,hq=Math.hypot(q.x-E.ax,q.z-E.az),hc2=Math.hypot(c.x-E.ax,c.z-E.az);if(b.depth>=3||hq>hc2*0.9||q.y>c.y){const f=0.92/n;q.x=c.x+(q.x-c.x)*f;q.z=c.z+(q.z-c.z)*f;q.y=c.y+(q.y-c.y)*f;}}});});}
     const cv=CROWN.v,pxr=(ADL>0.01&&cv&&!cv.env)?q=>{const yn=clamp((q.y-cv.cy)/cv.ry,-1,1);q.x=ax0+(q.x-ax0)*(1-ADL*(1-ADL)*4*(0.05+0.27*Math.pow(Math.abs(yn),1.4)));}:null;
     if(pxr){branches.forEach(b=>{if(b.depth>=1)b.pts.forEach(pxr);});nodes.forEach(L=>pxr(L.q));sites.forEach(S2=>pxr(S2.q));}
     branches.forEach(b=>{if(b.depth<1)return;b.pts.forEach((q,i)=>{cz(q);if(sk&&i>0&&q.y<sk)q.y=sk+(q.y-sk)*0.15;});});
