@@ -1118,10 +1118,10 @@ function genTree(seed,A,opt){
         const nd=(L,q)=>{const dx=(q.x-L.c.x)/L.rl,dz=(q.z-L.c.z)/L.rl,dy=q.y-L.c.y,yy=dy/(dy>0?L.rv:L.rvd);return Math.sqrt(dx*dx+dy*0+yy*yy+dz*dz);};
         const en=q=>{let m=9,mi=-1;for(let i=0;i<lobes.length;i++){const v=nd(lobes[i],q);if(v<m){m=v;mi=i;}}en.i=mi;return m;};
         CROWN.v={cx:ax,cy:Ht-1.1,cz:az,rx:exl*0.8,ry:1.0,k:0,env:{lobes,en,ax,az}};
-        let aT=0;const wl=lobes.map(L=>{const w=L.rl*(L.rl+L.rv+L.rvd)*(L.cen?0.6:L.base?0.8:L.cap?0.35:1);aT+=w;return w;});
+        let aT=0;const wl=lobes.map(L=>{const w=L.rl*(L.rl+L.rv+L.rvd)*(L.cen?0.6:L.base?1.0:L.cap?0.35:1);aT+=w;return w;});
         const nT=Math.round(aT*3.2/0.085*ADL),cen=[],md2=0.235*0.235,hN=q=>(q.y-SKIRT)/Math.max(0.5,Ht-SKIRT);
         let tries=0;for(let k=0;k<nT&&tries<nT*8;tries++){let u=rt()*aT,li=0;while(li<lobes.length-1&&u>wl[li]){u-=wl[li];li++;}const L=lobes[li];
-          const y=L.cap?0.2+0.8*rt():rt()*2-1,hz=Math.sqrt(Math.max(0,1-y*y)),aa=rt()*6.283,x=Math.cos(aa)*hz,z=Math.sin(aa)*hz,sc=L.cap?0.55+0.2*rt():L.base?0.8+0.06*rt():0.88+0.1*rt();
+          const y=L.cap?0.2+0.8*rt():rt()*2-1,hz=Math.sqrt(Math.max(0,1-y*y)),aa=rt()*6.283,x=Math.cos(aa)*hz,z=Math.sin(aa)*hz,sc=L.cap?0.55+0.2*rt():L.base?0.86+0.08*rt():0.88+0.1*rt();
           const ck=new THREE.Vector3(L.c.x+x*L.rl*sc,L.c.y+y*(y>0?L.rv:L.rvd)*sc,L.c.z+z*L.rl*sc);if(ck.y<SKIRT+0.1)continue;
           let hid=false;for(const M2 of lobes){if(M2!==L&&!M2.cap&&!(L.cap&&(M2.cen||M2.base))&&nd(M2,ck)<0.97){hid=true;break;}}if(hid)continue;
           const ow=new THREE.Vector3(L.c.x-ax,0,L.c.z-az);if(ow.lengthSq()>1e-4)ow.normalize();if(y<-0.2&&!L.cen&&!L.cap&&x*ow.x+z*ow.z<0.1)continue; // sin hoja en el hueco de abajo
