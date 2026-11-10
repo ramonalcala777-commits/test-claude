@@ -206,7 +206,7 @@ body.vmode #miniWrap{display:none}
     <h3>Ratón</h3><ul><li><b>Arrastrar</b> con el botón izquierdo: girar alrededor del punto que miras</li><li><b>Botón derecho</b> o <b>Mayús + arrastrar</b>: desplazarse sobre el suelo</li><li><b>Rueda</b>: acercar o alejar hacia donde apunta el ratón</li><li><b>Doble clic</b>: volar a ese punto</li><li><b>Clic en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: andar a la altura de los ojos; arrastrar para mirar</li></ul>
     <h3>Teclado</h3><ul><li><b>W A S D</b> o <b>flechas</b>: andar</li><li><b>Q / E</b>: girar a izquierda / derecha</li><li><b>R / F</b>: subir / bajar</li><li><b>Mayús</b>: más rápido</li><li><b>?</b>: esta ayuda</li></ul>
     <h3>Móvil</h3><ul><li><b>Un dedo</b>: girar alrededor del punto que miras</li><li><b>Dos dedos</b>: moverlos juntos para desplazarse; abrirlos o cerrarlos para acercar o alejar hacia ese punto</li><li><b>Doble toque</b>: volar a ese punto</li><li><b>Toque en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: el joystick para andar y un dedo para mirar</li></ul>
-    <h3>Vídeo del año</h3><ul><li><b>Toca la pantalla</b> para ver la barra: pausa, 10 s atrás o adelante, avance y salir</li><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v34.1 · 10 nov 2026</p></div>
+    <h3>Vídeo del año</h3><ul><li><b>Toca la pantalla</b> para ver la barra: pausa, 10 s atrás o adelante, avance y salir</li><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v34.2 · 10 nov 2026</p></div>
   <button class="btn" id="toggle" type="button" aria-expanded="true" aria-controls="panel">Ocultar ajustes</button>
 
   <aside id="panel" aria-label="Ajustes de la escena">
@@ -291,7 +291,7 @@ body.vmode #miniWrap{display:none}
       <div class="sl"><span>Campo visión</span><input type="range" id="fov" min="30" max="80" step="1" value="55" aria-label="Campo de visión"><output id="fovOut">55°</output></div>
       <p class="note">Si va a tirones en el móvil, baja la calidad.</p>
     </section>
-    <p class="ver">Versión v34.1 · 10 nov 2026</p>
+    <p class="ver">Versión v34.2 · 10 nov 2026</p>
   </aside>
 
   <div id="miniWrap"><canvas id="mini" aria-label="Minimapa de la finca: toca para ir a ese punto"></canvas></div>
@@ -1087,7 +1087,7 @@ function genTree(seed,A,opt){
   {const vr=rng(hashI(seed,9)),vh=0.9+0.2*vr(),vw=0.89+0.22*vr();let Hn=hc+0.05,En=0.05;
     const tipsR=[];branches.forEach(b=>{if(b.depth<1)return;b.pts.forEach(p=>{Hn=Math.max(Hn,p.y);});const e=b.pts[b.pts.length-1];tipsR.push(Math.hypot(e.x,e.z));});tipsR.sort((x,y)=>x-y);En=Math.max(0.05,tipsR.length?tipsR[Math.floor(tipsR.length*0.85)]:0.05);
     const VG=VGF(G.age),UNP=G.age<1.2&&unprunedNow();let Ht=Math.min(CROWN_H*vh,hc+(G.sz[0]*vh-0.1-hc)*VG),Rt=Math.min(CROWN_R*Math.min(vw,1.03)-0.15,(G.sz[1]/2*vw-0.15)*VG);
-    if(UNP){Ht=hc+(2.0*vh-hc)*1.0;Rt=0.75*vw;}if(ADL>0.01){const Ha=Math.min(Ht,3.4+0.5*vr());Ht=Ht+(Ha-Ht)*ADL;} // sin podar (nov. 2025): puntas a ~2 m y copa de ~1,5 m
+    if(UNP){Ht=hc+(2.0*vh-hc)*1.0;Rt=0.75*vw;}if(opt.male&&!UNP){Ht=Math.min(CROWN_H,hc+(Ht-hc)*1.18);Rt=Math.min(CROWN_R-0.12,Rt*1.1);}if(ADL>0.01){const Ha=Math.min(Ht,(3.4+0.5*vr())*(opt.male?1.2:1));Ht=Ht+(Ha-Ht)*ADL;} // sin podar (nov. 2025): puntas a ~2 m y copa de ~1,5 m
     const sx=clamp(Rt/En,0.25,4-2.5*FR2),sy=clamp((Ht-hc)/Math.max(0.05,Hn-hc),0.25,3),ax=tp[6].x,az=tp[6].z;
     const tf=p=>{p.x=ax+(p.x-ax)*sx;p.z=az+(p.z-az)*sx;if(p.y>hc)p.y=hc+(p.y-hc)*sy;};
     const tv=d=>{d.x*=sx;d.z*=sx;d.y*=sy;d.normalize();};
@@ -1110,7 +1110,7 @@ function genTree(seed,A,opt){
         if(q.y<hc+Ry*1.3&&rf()<0.09)sites.push({q:q.clone().addScaledVector(out,0.12),td,phi:rf()*6.283,r:rf(),r2:rf(),fill:1});}
       if(ADL>0.01){const rt=rng(hashI(seed,57));
         // v34: copa adulta = 4-6 masas grandes (una por brazo) + una arriba, con entrantes y ventanas de cielo entre ellas
-        const exl=Math.min(Rt,2.2+0.3*rt()),ezl=Rt,ox=(rt()-0.5)*0.5,oz=(rt()-0.5)*0.4,nL=4+Math.floor(rt()*3),lobes=[],a0=rt()*6.283;
+        const exl=Math.min(Rt,(2.2+0.3*rt())*(opt.male?1.1:1)),ezl=Rt,ox=(rt()-0.5)*0.5,oz=(rt()-0.5)*0.4,nL=4+Math.floor(rt()*3),lobes=[],a0=rt()*6.283;
         for(let i=0;i<nL;i++){const aa=a0+i*6.283/nL+(rt()-0.5)*0.4,rl=0.85+0.3*rt(),rv=0.6+0.3*rt(),rho=1.1+0.4*rt();
           const c=new THREE.Vector3(ax+ox+Math.cos(aa)*Math.min(rho,exl-rl*0.8),0,az+oz+Math.sin(aa)*Math.min(rho,ezl-rl*0.8));c.y=Ht-rv-0.4-0.25*rt();
           const ybl=SKIRT+0.02+0.5*rt();lobes.push({c,rl,rv,rvd:Math.max(0.35,c.y-ybl),load:0.3+1.2*rt()});}
@@ -1119,7 +1119,7 @@ function genTree(seed,A,opt){
         const en=q=>{let m=9,mi=-1;for(let i=0;i<lobes.length;i++){const v=nd(lobes[i],q);if(v<m){m=v;mi=i;}}en.i=mi;return m;};
         CROWN.v={cx:ax,cy:Ht-1.1,cz:az,rx:exl*0.8,ry:1.0,k:0,env:{lobes,en,ax,az}};
         let aT=0;const wl=lobes.map(L=>{const w=L.rl*(L.rl+L.rv+L.rvd)*(L.cen?0.6:L.base?1.0:L.cap?0.35:1);aT+=w;return w;});
-        const nT=Math.round(aT*3.2/0.085*ADL),cen=[],md2=0.235*0.235,hN=q=>(q.y-SKIRT)/Math.max(0.5,Ht-SKIRT);
+        const nT=Math.round(aT*3.2/0.085*ADL*(opt.male?1.12:1)),cen=[],md2=0.235*0.235,hN=q=>(q.y-SKIRT)/Math.max(0.5,Ht-SKIRT);
         let tries=0;for(let k=0;k<nT&&tries<nT*8;tries++){let u=rt()*aT,li=0;while(li<lobes.length-1&&u>wl[li]){u-=wl[li];li++;}const L=lobes[li];
           const y=L.cap?0.2+0.8*rt():rt()*2-1,hz=Math.sqrt(Math.max(0,1-y*y)),aa=rt()*6.283,x=Math.cos(aa)*hz,z=Math.sin(aa)*hz,sc=L.cap?0.55+0.2*rt():L.base?0.86+0.08*rt():0.88+0.1*rt();
           const ck=new THREE.Vector3(L.c.x+x*L.rl*sc,L.c.y+y*(y>0?L.rv:L.rvd)*sc,L.c.z+z*L.rl*sc);if(ck.y<SKIRT+0.1)continue;
@@ -1136,7 +1136,7 @@ function genTree(seed,A,opt){
             const hd=new THREE.Vector3(ck.x-ax,0,ck.z-az);if(hd.lengthSq()<1e-4)hd.set(Math.cos(aa),0,Math.sin(aa));hd.normalize();const th=(hn>0.6?40+30*rt():hn>0.33?100+25*rt():135+25*rt())*DEG;const axd=hd.clone().multiplyScalar(Math.sin(th)).add(new THREE.Vector3(0,Math.cos(th),0)).normalize();sites.push({q,td:o.clone(),ax:axd,phi:rt()*6.283,r:0.3*(1-0.7*hn)*rt(),r2:rt(),sz:rt(),fill:1,ext:true});}}
           k++;}
         // 3-6 brotes con hoja que suben 30-60 cm por encima de las masas de arriba
-        const ups=lobes.slice().sort((p,q)=>q.c.y+q.rv-p.c.y-p.rv),nUp=Math.round((3+rt()*3)*ADL);
+        const ups=lobes.slice().sort((p,q)=>q.c.y+q.rv-p.c.y-p.rv),nUp=Math.round(((opt.male?6:3)+rt()*3)*ADL);
         for(let k=0;k<nUp;k++){const L=ups[k%ups.length],aa=rt()*6.283,b0=L.c.clone().add(new THREE.Vector3(Math.cos(aa)*L.rl*0.35,L.rv*0.75,Math.sin(aa)*L.rl*0.35));
           const tl=0.22+0.25*rt(),tipY=Math.min(CROWN_H,L.c.y+L.rv+tl),ln=tipY-b0.y,tilt=0.35*rt();
           const e=b0.clone().add(new THREE.Vector3(Math.cos(aa)*ln*tilt,ln,Math.sin(aa)*ln*tilt)),m=b0.clone().lerp(e,0.5);m.x+=Math.cos(aa)*0.05;m.z+=Math.sin(aa)*0.05;
@@ -1646,8 +1646,8 @@ const sigOf=A=>A.toFixed(2)+'|'+S.year+'|'+S.quality+(unprunedNow()?'|np':'');
 const TGEN={m:new Map()};
 const tgKey=(t,A)=>t.sid+'|'+sigOf(A);
 function treeOpt(){const q=Q[S.quality];return {cap:q.leafCap,seg1:q.sides===0?10:14,seg2:q.sides===0?5:7,kmax:q.sides===0?2.2:1.8};}
-function treeFor(t,A){const k=tgKey(t,A);let T=TGEN.m.get(k);if(T){TGEN.m.delete(k);return T;}return genTree(1000+t.sid*17,A,treeOpt());}
-function pregen(cell,A,until){const sg=sigOf(A);if(TGEN.sig!==sg){TGEN.m.clear();TGEN.sig=sg;}const o=treeOpt();for(const t of cell.trees){const k=tgKey(t,A);if(TGEN.m.has(k))continue;if(performance.now()>until)return false;TGEN.m.set(k,genTree(1000+t.sid*17,A,o));}return true;}
+function treeFor(t,A){const k=tgKey(t,A);let T=TGEN.m.get(k);if(T){TGEN.m.delete(k);return T;}return genTree(1000+t.sid*17,A,Object.assign(treeOpt(),{male:t.t>0}));}
+function pregen(cell,A,until){const sg=sigOf(A);if(TGEN.sig!==sg){TGEN.m.clear();TGEN.sig=sg;}const o=treeOpt();for(const t of cell.trees){const k=tgKey(t,A);if(TGEN.m.has(k))continue;if(performance.now()>until)return false;TGEN.m.set(k,genTree(1000+t.sid*17,A,t.t>0?Object.assign({},o,{male:1}):o));}return true;}
 function buildChunk(cell,A){const g=buildChunkGen(cell,A);let r;do{r=g.next();}while(!r.done);return r.value;}
 function* buildChunkGen(cell,A){
   const q=Q[S.quality],G=growth(A),prod=prodOf(S.year),tutor=S.year<=2029,two=S.year>=2027,grp=new THREE.Group();
@@ -1827,7 +1827,7 @@ function updateShade(){
   SHADE.u.uD.value=SHADE.dB*clamp(sun.intensity/1.5,0,1)*(1-0.5*S.clouds);SHADE.u.uSun.value.copy(SUNDIR);SHADE.u.uCam.value.copy(camera.position);SHADE.u.uNear.value=Q[S.quality].shadowR;
   LFX.sunV.value.copy(SUNDIR).transformDirection(camera.matrixWorldInverse);LFX.sunC.value.copy(sun.color).multiplyScalar(sun.intensity*0.55);}
 const _m4=new THREE.Matrix4(),_q4=new THREE.Quaternion(),_s4=new THREE.Vector3(),_p4=new THREE.Vector3(),_yax=new THREE.Vector3(0,1,0);
-function treeMatrix(t){const h=hashI(t.sid,11);_q4.setFromAxisAngle(_yax,((h&1)?Math.PI:0)+(t.rr||0));const s=0.9+((h>>>13)%200)/1000;return _m4.compose(_p4.set(t.u,0,t.v),_q4,_s4.set(s,s,s));}
+function treeMatrix(t){const h=hashI(t.sid,11);_q4.setFromAxisAngle(_yax,((h&1)?Math.PI:0)+(t.rr||0));const s=0.9+((h>>>13)%200)/1000,mh=t.t>0?1.18:1,mw=t.t>0?1.08:1;return _m4.compose(_p4.set(t.u,0,t.v),_q4,_s4.set(s*mw,s*mh,s));}
 function rebuildRings(f){
   const as=CH.cur;if(!as)return;CH.ringFocus.copy(f);CH.dirtyRings=false;
   const q=Q[S.quality],Rm2=q.mid*q.mid,Rl2=Math.pow(Math.min(q.mid*0.5,55),2),Rs2=Math.pow(q.shadowR+8,2),mid=[];for(let v=0;v<NV;v++)mid.push([[],[],[]]);
@@ -4228,7 +4228,7 @@ function xrBuild(){
     else if(o.material===MAT.prot||o.material===MAT.stake||o.material===MAT.tie){o.material=XMAT.prot;o.castShadow=false;}
     else if(o.material===MAT.stick)o.visible=false;});
   grp.add(ch.group);applyChunkDate(ch);
-  const T=genTree(1000+t.sid*17,A,{cap:q.leafCap,seg1:q.sides===0?10:14,seg2:q.sides===0?5:7,kmax:q.sides===0?2.2:1.8});
+  const T=genTree(1000+t.sid*17,A,{cap:q.leafCap,seg1:q.sides===0?10:14,seg2:q.sides===0?5:7,kmax:q.sides===0?2.2:1.8,male:t.t>0});
   const M=new THREE.Matrix4().makeRotationY(t.rot).scale(new THREE.Vector3(t.vg,t.vg,t.vg)).setPosition(t.u,0,t.v);
   XR.topo=xrTopo(T,M,t.vg);XR.hc=T.hc*t.vg;
   const roots=xrRoots(t,G,XR.topo,S.year>=2027);XR.soilR=Math.max(1.3,Math.min(3.4,roots.spread+0.35));XR.depth=roots.depth;
