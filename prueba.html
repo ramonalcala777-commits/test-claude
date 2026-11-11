@@ -759,7 +759,7 @@ const TODAY=(()=>{const d=new Date(),y=d.getFullYear(),j=Math.round((Date.UTC(y,
 const S={hour:11.5,doy:TODAY.doy,year:TODAY.y,riego:'humedo',clouds:0.18,wind:3,wx:'clear',wxI:0.5,fogI:0,labels:'on',quality:coarse?'baja':'media',expo:0,fov:55,cam:'libre',shot:0,dayPlay:false,yearPlay:false,season:String(TODAY.doy)};
 try{const q=localStorage.getItem('tramo-q');if(q&&['baja','media','alta'].includes(q))S.quality=q;}catch(e){}
 const Q={baja:{cache:24,pr:1,shadow:2048,shadowR:20,leafCap:600,field:[95,10],far:false,tufts:1400,sides:0,clusters:75,near:18,mid:85,coverR:0,vcap:300,lcap:110,liteR:38,far1:true,reedK:0.4},
-         media:{cache:36,pr:1.5,shadow:2048,shadowR:26,leafCap:1500,field:[140,16],far:true,tufts:3600,sides:1,clusters:210,near:28,mid:135,coverR:30,vcap:360,lcap:140,liteR:50,far1:true,reedK:0.7},
+         media:{cache:36,pr:1.5,shadow:2048,shadowR:26,leafCap:1500,field:[140,16],far:true,tufts:3600,sides:1,clusters:180,near:28,mid:135,coverR:30,vcap:360,lcap:140,liteR:50,far1:true,reedK:0.7},
          alta:{cache:48,pr:2,shadow:4096,shadowR:32,leafCap:2600,field:[170,20],far:true,tufts:6500,sides:2,clusters:420,near:42,mid:230,coverR:42,vcap:520,lcap:180,liteR:55,far1:false,reedK:1}};
 
 /* ---------- Motor ---------- */
