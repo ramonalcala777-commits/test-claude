@@ -1878,9 +1878,12 @@ function rebuildRings(f){
   as.far.count=nf;as.far.instanceMatrix.needsUpdate=true;
   const old=RING.group;world.remove(old);old.children.forEach(o=>{if(o.isInstancedMesh&&o!==as.far&&!(o.userData.far)&&o.dispose)o.dispose();});
   const g=new THREE.Group();
-  mid.forEach((pair,v)=>pair.forEach((list,w)=>{if(!list.length)return;const im=new THREE.InstancedMesh(w===2?as.lite[v]:as.variants[v],MAT.variant,list.length);im.customDepthMaterial=MAT.variantD;
+  const parts=[];mid.forEach((pair,v)=>pair.forEach((list,w)=>{if(!list.length)return;if(w===0){parts.push([v,w,list]);return;}const sc=[[],[],[],[],[],[],[],[]];
+    list.forEach(t=>{sc[Math.floor((Math.atan2(t.v-f.z,t.u-f.x)+Math.PI)/(Math.PI/4))&7].push(t);});sc.forEach(l=>{if(l.length)parts.push([v,w,l]);});}));
+  const sphOf=list=>{let cx=0,cz=0;list.forEach(t=>{cx+=t.u;cz+=t.v;});cx/=list.length;cz/=list.length;let r=0;list.forEach(t=>{r=Math.max(r,(t.u-cx)**2+(t.v-cz)**2);});return new THREE.Sphere(new THREE.Vector3(cx,2,cz),Math.sqrt(r)+5);};
+  parts.forEach(([v,w,list])=>{const im=new THREE.InstancedMesh(w===2?as.lite[v]:as.variants[v],MAT.variant,list.length);im.customDepthMaterial=MAT.variantD;im.frustumCulled=false;im.userData.sph=sphOf(list);
     list.forEach((t,i)=>{im.setMatrixAt(i,treeMatrix(t));im.setColorAt(i,t.t>0?_mcol:_fcol);});if(im.instanceColor)im.instanceColor.needsUpdate=true;im.castShadow=w===0;im.receiveShadow=true;im.instanceMatrix.needsUpdate=true;g.add(im);
-    const fgeo=(w===2?as.lfr:as.vfr)[v],fl=list.filter(t=>t.t===0);if(fgeo&&fl.length){const fm=new THREE.InstancedMesh(fgeo,MAT.cl_ring,fl.length);fl.forEach((t,i)=>fm.setMatrixAt(i,treeMatrix(t)));fm.instanceMatrix.needsUpdate=true;fm.receiveShadow=true;fm.userData.rf=true;fm.visible=!!(P_&&P_.fruit>0.25);g.add(fm);}}));
+    const fgeo=(w===2?as.lfr:as.vfr)[v],fl=list.filter(t=>t.t===0);if(fgeo&&fl.length){const fm=new THREE.InstancedMesh(fgeo,MAT.cl_ring,fl.length);fl.forEach((t,i)=>fm.setMatrixAt(i,treeMatrix(t)));fm.instanceMatrix.needsUpdate=true;fm.receiveShadow=true;fm.userData.rf=true;fm.frustumCulled=false;fm.userData.sph=im.userData.sph;fm.userData.want=!!(P_&&P_.fruit>0.25&&S.doy<252);fm.visible=fm.userData.want;g.add(fm);}});
   as.far.userData.far=true;g.add(as.far);RING.group=g;world.add(g);
 }
 function applyChunkDate(ch){if(ch.lg)ch.lg.visible=U.uLG.value>0.01&&!ch.lgFar;if(ch.cover)ch.cover.visible=ch.cvOn&&U.uCovH.value>0.1;
@@ -1932,7 +1935,7 @@ function updateStreaming(){
         let r;do{r=pb.gen.next();}while(!r.done&&performance.now()<t0+7);if(!r.done)break;CH.pb=null;ch=r.value;ch.sig=sg;CH.cache.set(ck,ch);built++;}
       else ch=buildChunk(xs?{key:c.key,gx:c.gx,gz:c.gz,trees:c.trees.filter(t=>t!==XR.t)}:c,A);ch.sig=sg;CH.cache.set(ck,ch);built++;}
     applyChunkDate(ch);applyChunkRiego(ch);ch.used=performance.now();
-    if(cur){world.remove(cur.group);fadeEnd(cur);}world.add(ch.group);CH.active.set(c.key,ch);changed=true;if(!cur&&FADE.ok)fadeStart(ch);}
+    if(cur){world.remove(cur.group);fadeEnd(cur);}world.add(ch.group);(ch.sph||(ch.sph=(()=>{const tr=ch.trees||[];if(!tr.length)return null;let cx=0,cz=0;tr.forEach(t=>{cx+=t.u;cz+=t.v;});cx/=tr.length;cz/=tr.length;let r=0;tr.forEach(t=>{r=Math.max(r,(t.u-cx)**2+(t.v-cz)**2);});return new THREE.Sphere(new THREE.Vector3(cx,2,cz),Math.sqrt(r)+6);})()),CH.active.set(c.key,ch));changed=true;if(!cur&&FADE.ok)fadeStart(ch);}
   {let rk=0;for(const [d,c] of need){const ch=CH.active.get(c.key);if(!ch)continue;const fk=d<1.5&&rk++<2?1:d<3?0.85:d<12?0.7:d<24?0.4:0.2;{const ud=ch.group.userData,bf=ud.bf,sh=d<14;if(bf)bf.visible=d<12;if(ud.bk)ud.bk.castShadow=sh;if(ch.leaf)ch.leaf.castShadow=sh;ch.nutFar=d>=6;if(ch.nuts){const nv=S.doy>=252&&S.doy<352&&!ch.nutFar;if(ch.nuts.visible!==nv)ch.nuts.visible=nv;}if(ch.lg){ch.lgFar=d>=14;const v=U.uLG.value>0.01&&d<14;if(ch.lg.visible!==v)ch.lg.visible=v;}}if(ch.leaf&&ch.leaf.userData.g2){const g=fk>=1?ch.leaf.userData.g8:ch.leaf.userData.g2;if(ch.leaf.geometry!==g)ch.leaf.geometry=g;}if(ch.fk!==fk){ch.fk=fk;if(ch.fruit&&ch.fruit.length)applyChunkDate(ch);}else if(fk>=1&&ch.fruit&&ch.fruit.length&&ch.cm&&(ch.cm.fruit.visible||ch.cm.fruitB&&ch.cm.fruitB.visible)&&ch.splitF&&ch.splitF.distanceTo(_f)>4)applyChunkDate(ch);}}
   {const cr=q.coverR;for(const [d,c] of need){const ch=CH.active.get(c.key);if(!ch||!ch.cover)continue;const on=d<=cr;if(on!==ch.cvOn){ch.cvOn=on;ch.cover.visible=on&&U.uCovH.value>0.1;}}}
   if(changed){CH.dirtyRings=true;refreshNear();trimCache();updLineMask();tgenTrim();}
@@ -1980,7 +1983,7 @@ function lineGrass(d){if(d<RIEGO0+4)return [0,0];
 function applyDate(){if(typeof frostUpd==='function')frostUpd();
   const P=phen(S.doy,S.year);P_=P;{const lg=lineGrass(S.doy);U.uLG.value=lg[0];U.uLD.value=lg[1];}
   U.uDull.value=smooth(195,235,S.doy)*(1-smooth(285,300,S.doy));U.uLeafOut.value=P.leafOut;U.uYoung.value=P.young;U.uYellow.value=P.yellow;if(MAT.vol)MAT.vol.color.copy(C('#33512a')).lerp(C('#7a5a1e'),Math.min(1,P.yellow*0.9));U.uFall.value=P.fall;
-  U.uGreen.value=P.green;U.uGrassH.value=P.grassH;U.uCovH.value=P.covH;U.uGW.value=P.gw;ORU.uGWo.value=P.gw;MAT.cl_ring.color.copy(hullAt(S.doy)).multiplyScalar(0.95);{const hc=hullAt(S.doy),am=P.fruit*prodOf(S.year)*(0.35+0.65*smooth(214,234,S.doy))*(1-smooth(250,256,S.doy));U.uFrPk.value.set(hc.r,hc.g,hc.b,am);}if(RING.group)RING.group.children.forEach(o=>{if(o.userData.rf)o.visible=P.fruit>0.25&&S.doy<252;});U.uPop.value=P.poppy;U.uAb.value=smooth(47,106,S.doy);U.uBud.value=P.bud;U.uLitter.value=P.litter;U.uLitterBrown.value=P.litterBrown;U.uSoilWet.value=P.soilWet;
+  U.uGreen.value=P.green;U.uGrassH.value=P.grassH;U.uCovH.value=P.covH;U.uGW.value=P.gw;ORU.uGWo.value=P.gw;MAT.cl_ring.color.copy(hullAt(S.doy)).multiplyScalar(0.95);{const hc=hullAt(S.doy),am=P.fruit*prodOf(S.year)*(0.35+0.65*smooth(214,234,S.doy))*(1-smooth(250,256,S.doy));U.uFrPk.value.set(hc.r,hc.g,hc.b,am);}if(RING.group)RING.group.children.forEach(o=>{if(o.userData.rf){o.userData.want=P.fruit>0.25&&S.doy<252;o.visible=o.userData.want;}});U.uPop.value=P.poppy;U.uAb.value=smooth(47,106,S.doy);U.uBud.value=P.bud;U.uLitter.value=P.litter;U.uLitterBrown.value=P.litterBrown;U.uSoilWet.value=P.soilWet;
   for(const ch of CH.active.values())applyChunkDate(ch);if(XR.ch)applyChunkDate(XR.ch);
   pollenPts.visible=P.pollen>0.01;fallMesh.visible=P.falling>0.01&&!reduceMotion;
   // textos
@@ -4661,6 +4664,11 @@ function loadTex(){if(!window.TEX)return;const T=window.TEX;
 }
 function frame(now){try{frameIn(now);}catch(err){console.error(err);if(window.__fatal)window.__fatal('Error al dibujar: '+(err&&err.message||err));requestAnimationFrame(frame);}}
 const PRF={on:false,n:0,t:{}};function PF(k,f){if(!PRF.on)return f();const t=performance.now();const r=f();PRF.t[k]=(PRF.t[k]||0)+performance.now()-t;return r;}
+// v35: lo que queda detrás de la cámara no se dibuja (antes se dibujaban todos los árboles cercanos y medianos, se vieran o no)
+const _frus=new THREE.Frustum(),_pmx=new THREE.Matrix4();
+function cullTick(){camera.updateMatrixWorld();_pmx.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);_frus.setFromProjectionMatrix(_pmx);
+  for(const ch of CH.active.values()){if(!ch.sph||!ch.group)continue;const v=_frus.intersectsSphere(ch.sph);if(ch.group.visible!==v)ch.group.visible=v;}
+  if(RING.group)for(const o of RING.group.children){const sp=o.userData.sph;if(!sp)continue;const v=(o.userData.rf?o.userData.want:true)&&_frus.intersectsSphere(sp);if(o.visible!==v)o.visible=v;}}
 function frameIn(now){
   if(PRF.on)PRF.n++;
   if(VM&&VM.paused){last=now;renderer.render(scene,camera);requestAnimationFrame(frame);return;}
@@ -4696,7 +4704,7 @@ function frameIn(now){
   PF('part',()=>updateParticles(dt));
   camera.getWorldDirection(fwd);fwd.y=0;fwd.normalize();right.set(-fwd.z,0,fwd.x);
   const ang=Math.atan2(NORTH.x*right.x+NORTH.y*right.z,NORTH.x*fwd.x+NORTH.y*fwd.z)/DEG;TC.ang=ang;needle.setAttribute('transform','rotate('+ang.toFixed(1)+' 23 23)');
-  if(!TC.nr)PF('render',()=>renderer.render(scene,camera));
+  cullTick();if(!TC.nr)PF('render',()=>renderer.render(scene,camera));
   PF('labels',updateLabels);
   if(!started){started=true;setTimeout(()=>$('loading').classList.add('done'),60);}
   requestAnimationFrame(frame);
