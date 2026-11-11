@@ -1678,7 +1678,8 @@ const LM=(()=>{let a=1e9,b=-1e9,c=1e9,d=-1e9;for(const k of CH.cells.values()){a
   return {a,c,nx,nz,data,tex,off:{value:new THREE.Vector4(a,c,nx,nz)}};})();
 function updLineMask(){LM.data.fill(0);for(const ch of CH.active.values()){const c=CH.cells.get(ch.key);if(!c)continue;const i=((c.gz-LM.c)*LM.nx+(c.gx-LM.a))*4;if(i>=0&&i<LM.data.length)LM.data[i]=255;}LM.tex.needsUpdate=true;}
 const quantA=A=>Math.round(A*100)/100;
-function aqNow(){if(VM){const VS=vstepsOf(S.year);let si=0;for(let i=0;i<VS.length;i++)if(S.doy>=VS[i])si=i;return quantA(ageOf(S.year,VS[si]));}const st=S.yearPlay?0.1:0.02;return quantA(Math.round(ageOf(S.year,S.doy)/st)*st);}
+function aqNow(){if(VM){const VS=vstepsOf(S.year);let si=0;for(let i=0;i<VS.length;i++)if(S.doy>=VS[i])si=i;return quantA(ageOf(S.year,VS[si]));}const aY=ageOf(S.year,258);if(aY>=6.5)return quantA(aY); // v35: árbol adulto: misma forma todo el año (cambiar de fase no rehace los árboles)
+  const st=S.yearPlay?0.1:0.02;return quantA(Math.round(ageOf(S.year,S.doy)/st)*st);}
 const sigOf=A=>A.toFixed(2)+'|'+S.year+'|'+S.quality+(unprunedNow()?'|np':'');
 // v31: los árboles de un trozo nuevo se fabrican poco a poco (unos ms por fotograma) y se guardan aquí hasta montarlo
 const TGEN={m:new Map()};
@@ -1850,7 +1851,7 @@ function* buildAssetsGen(A){
   return {A,variants,lite,vfr,lfr,farGeo,far,fx:FX};
 }
 function ensureAssets(A){const k=A.toFixed(2)+'|'+S.year;let a=CH.assets.get(k);
-  if(!a&&CH.cur&&!VM&&!window.__syncBuild){if(!CH.ab||CH.ab.q!==S.quality)CH.ab={k,q:S.quality,gen:buildAssetsGen(A)};const t0=performance.now();let r;do{r=CH.ab.gen.next();}while(!r.done&&performance.now()-t0<6);
+  if(!a&&CH.cur&&!VM&&!window.__syncBuild){if(!CH.ab||CH.ab.q!==S.quality)CH.ab={k,q:S.quality,gen:buildAssetsGen(A)};const t0=performance.now();let r;do{r=CH.ab.gen.next();}while(!r.done&&performance.now()-t0<6);CH.abBusy=performance.now()-t0>5;
     if(!r.done)return CH.cur;const kb=CH.ab.k;CH.ab=null;a=r.value;CH.assets.set(kb,a);a.fresh=true;if(kb!==k){CH.cur=a;CH.dirtyRings=true;return a;}}
   if(!a){CH.ab=null;a=buildAssets(A);CH.assets.set(k,a);a.fresh=true;}
   if(a.fresh){a.fresh=false;
@@ -1948,7 +1949,7 @@ function updateStreaming(){
   const t0=performance.now();let built=0;const dk=S.doy+'|'+S.year;
   for(const [d,c] of need){const xs=XR.on&&XR.t&&XR.t.ck===c.key?'|x'+XR.t.sid:'',sg=sig+xs,cur=CH.active.get(c.key);if(cur&&cur.sig===sg){if(cur.dateKey!==dk&&(performance.now()-t0<6||d<3))applyChunkDate(cur);continue;}
     const ck=c.key+'|'+sg;let ch=CH.cache.get(ck);
-    if(!ch){if(tween&&tween.arc)break;if(built>0&&performance.now()-t0>14)break;
+    if(!ch){if(tween&&tween.arc)break;if(CH.abBusy&&CH.warm&&!VM){CH.abBusy=false;break;}if(built>0&&performance.now()-t0>14)break;
       if(!VM&&CH.warm&&!window.__syncBuild){if(built>0)break;let pb=CH.pb;if(!pb||pb.ck!==ck)pb=CH.pb={ck,gen:buildChunkGen(xs?{key:c.key,gx:c.gx,gz:c.gz,trees:c.trees.filter(t=>t!==XR.t)}:c,A)};
         let r;do{r=pb.gen.next();}while(!r.done&&performance.now()<t0+(UPD.on?11:8));if(!r.done)break;CH.pb=null;ch=r.value;ch.sig=sg;CH.cache.set(ck,ch);built++;}
       else ch=buildChunk(xs?{key:c.key,gx:c.gx,gz:c.gz,trees:c.trees.filter(t=>t!==XR.t)}:c,A);ch.sig=sg;CH.cache.set(ck,ch);built++;}
