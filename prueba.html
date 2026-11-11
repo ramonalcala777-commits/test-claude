@@ -1234,6 +1234,17 @@ function genTree(seed,A,opt){
   }
   let out=leaves;if(keepQ<1){const k=Math.min(opt.kmax?1.55+(opt.kmax-1.55)*FRM:1.55,Math.sqrt(1/keepQ));out.forEach(l=>{l.s*=l.tf&&keepQ>0.45?Math.min(k,1.12):k;});}
   {const az0=tp[6].z,LZ=CROWN_Z/1.1;out.forEach(l=>{const tip=l.p.z-az0+l.d.z*l.s;if(Math.abs(tip)>LZ){l.d.z=-l.d.z*0.6;l.d.normalize();const t2=l.p.z-az0+l.d.z*l.s;if(Math.abs(t2)>LZ)l.s*=Math.max(0.5,(LZ-Math.abs(l.p.z-az0))/Math.max(0.05,Math.abs(l.d.z*l.s)));}});}
+  // v35: la cara de la copa que da a la calle (la que se ve al pasear) se rellena donde quedaba hueca y se veía la madera de dentro
+  if(ADL>0.2&&out.length>40){const az0=tp[6].z,cs=0.32,occ=new Map(),face=[new Map(),new Map()];let zmax=[0.3,0.3];
+    out.forEach(l=>{const dz=l.p.z-az0;if(dz>0)zmax[0]=Math.max(zmax[0],dz);else zmax[1]=Math.max(zmax[1],-dz);});
+    out.forEach(l=>{const k=Math.floor(l.p.x/cs)+','+Math.floor(l.p.y/cs),dz=l.p.z-az0,sd=dz>0?0:1;occ.set(k,(occ.get(k)||0)+1);if(Math.abs(dz)>zmax[sd]*0.55){face[sd].set(k,(face[sd].get(k)||0)+1);}});
+    const tf=out.filter(l=>l.tf);const tpl=tf.length?tf:out;const add=[];const rf=rng(seed*7+13);
+    for(const [k,c] of occ){if(c<3)continue;const [ix,iy]=k.split(',').map(Number);const y=(iy+0.5)*cs;if(y<hc+0.35)continue;
+      for(let sd=0;sd<2;sd++){const f=face[sd].get(k)||0;if(f>=2)continue;const need=Math.round((2-f)*ADL*(1+rf()));
+        for(let j=0;j<need;j++){const T0=tpl[Math.floor(rf()*tpl.length)],sg=sd===0?1:-1,px=(ix+rf())*cs,py=(iy+rf())*cs,pz=az0+sg*zmax[sd]*(0.72+0.22*rf());
+          const d=new THREE.Vector3((rf()-0.5)*0.8,-0.25-0.3*rf(),sg*(0.7+0.3*rf())).normalize(),n=new THREE.Vector3((rf()-0.5)*0.3,1,sg*0.4).normalize();
+          add.push(Object.assign({},T0,{p:new THREE.Vector3(px,py,pz),d,n,s:T0.s*(0.95+0.2*rf()),cr:rf(),w:rf(),fall:rf(),keep:rf()}));}}}
+    out.push(...add);}
   // v35: copa más estrecha de 2028 a 2031 (crecimiento más lento a lo ancho; se tocan con la vecina hacia 2032); la altura no cambia
   {const wk=WKof(G.age);if(wk<0.999){const cx=tp[6].x,cz=tp[6].z,wz=1-(1-wk)*0.6,seen=new Set();
     const sq=p=>{if(!p||seen.has(p))return;seen.add(p);const f=smooth(hc*0.7,hc*1.15,p.y);p.x=cx+(p.x-cx)*(1+(wk-1)*f);p.z=cz+(p.z-cz)*(1+(wz-1)*f);};
