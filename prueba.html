@@ -1892,7 +1892,7 @@ function applyChunkDate(ch){if(ch.lg)ch.lg.visible=U.uLG.value>0.01;if(ch.cover)
   place(ch.cm.fem,ch.fruit,P.femFl,erect,(c,o)=>o.setRGB(1,1,1));
   const hc0=hullAt(S.doy),spl=0.14*smooth(238,254,S.doy),fr=spl>0?ch.fruit.filter(c=>c.k>=spl):ch.fruit,op=spl>0?ch.fruit.filter(c=>c.k<spl):[];
   // v31: en el trozo más cercano, detalle completo solo cerca del punto que miras (v34: 6 m, racimo de 46 drupas); el resto, racimo sencillo
-  const split=(A0,B0,list,colF)=>{if(ch.fk>=1&&B0){const nr=[],fa=[];const r2=S.quality==='baja'?6.25:S.quality==='media'?16:36;list.forEach(c=>((c.p.x-_f.x)**2+(c.p.z-_f.z)**2<r2?nr:fa).push(c));place(A0,nr,P.fruit,hang,colF,true);place(B0,fa,P.fruit,hang,colF,true,'1');}
+  const split=(A0,B0,list,colF)=>{if(ch.fk>=1&&B0){const nr=[],fa=[];const r2=S.quality==='baja'?4:S.quality==='media'?9:25;list.forEach(c=>((c.p.x-_f.x)**2+(c.p.z-_f.z)**2<r2?nr:fa).push(c));place(A0,nr,P.fruit,hang,colF,true);place(B0,fa,P.fruit,hang,colF,true,'1');}
     else{place(A0,list,P.fruit,hang,colF,true);if(B0)B0.visible=false;}};
   split(ch.cm.fruit,ch.cm.fruitB,fr,(c,o)=>{o.copy(hc0);o.multiplyScalar(0.9+0.16*c.r);return o;});
   split(ch.cm.open,ch.cm.openB,op,(c,o)=>o.setScalar(0.9+0.2*c.r));ch.splitF=_f.clone();
