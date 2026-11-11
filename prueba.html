@@ -1910,7 +1910,7 @@ function applyChunkDate(ch){if(ch.lg)ch.lg.visible=U.uLG.value>0.01&&!ch.lgFar;i
   const P=P_||phen(S.doy,S.year);
   ch.leaf.visible=P.leafOut>0.001&&P.fall<0.999;ch.bud.visible=P.bud>0.01&&(!ch.group.userData.bf||ch.group.userData.bf.visible);ch.litter.visible=P.litter>0.001;if(ch.poppy)ch.poppy.visible=P.poppy>0.02;
   const M=new THREE.Matrix4(),Qt=new THREE.Quaternion(),Q2=new THREE.Quaternion(),Sc=new THREE.Vector3(),d=new THREE.Vector3(),col=new THREE.Color();
-  const place=(mesh,list,scale,dirFn,colFn,big,lvO)=>{if(!mesh)return;if(big){if(ch.fk<1)list=list.slice(0,Math.round(list.length*ch.fk));const lb=S.quality==='baja',lv=lvO!==undefined?(lb&&lvO==='1'?'2':lvO):ch.fk>=1?'':ch.fk>0.6&&!lb?'1':'2',gk=(mesh===ch.cm.open||mesh===ch.cm.openB?'open':'fruit')+lv;if(mesh.geometry!==GEO[gk])mesh.geometry=GEO[gk];}mesh.visible=scale>0.01&&list.length>0;if(!mesh.visible)return;mesh.count=list.length;
+  const place=(mesh,list,scale,dirFn,colFn,big,lvO)=>{if(!mesh)return;if(big){if(ch.fk<1)list=list.slice(0,Math.round(list.length*ch.fk*(S.quality==='alta'?1:ch.fk)));const lb=S.quality==='baja',lv=lvO!==undefined?(lb&&lvO==='1'?'2':lvO):ch.fk>=1?'':ch.fk>0.6&&S.quality==='alta'?'1':'2',gk=(mesh===ch.cm.open||mesh===ch.cm.openB?'open':'fruit')+lv;if(mesh.geometry!==GEO[gk])mesh.geometry=GEO[gk];}mesh.visible=scale>0.01&&list.length>0;if(!mesh.visible)return;mesh.count=list.length;
     list.forEach((c,i)=>{dirFn(c,d);Qt.setFromUnitVectors(UP,d);Q2.setFromAxisAngle(d,c.r*6.283);Qt.premultiply(Q2);const s=scale*(0.85+0.3*c.r)*(big?(c.sz!==undefined?0.95*(0.6+0.7*c.sz):c.ext?1.35:1.15):1);M.compose(c.p,Qt,Sc.set(s,s,s));mesh.setMatrixAt(i,M);mesh.setColorAt(i,colFn(c,col));});
     mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;};
   const hang=(c,o)=>{if(c.ax)return o.copy(c.ax).negate();const k=c.ext?0.95:0.6;return o.set(-c.out.x*k,1,-c.out.z*k).normalize();};
@@ -1918,7 +1918,7 @@ function applyChunkDate(ch){if(ch.lg)ch.lg.visible=U.uLG.value>0.01&&!ch.lgFar;i
   place(ch.cm.fem,ch.fruit,P.femFl,erect,(c,o)=>o.setRGB(1,1,1));
   const hc0=hullAt(S.doy),spl=0.14*smooth(238,254,S.doy),fr=spl>0?ch.fruit.filter(c=>c.k>=spl):ch.fruit,op=spl>0?ch.fruit.filter(c=>c.k<spl):[];
   // v31: en el trozo más cercano, detalle completo solo cerca del punto que miras (v34: 6 m, racimo de 46 drupas); el resto, racimo sencillo
-  const split=(A0,B0,list,colF)=>{if(ch.fk>=1&&B0){const nr=[],fa=[];const r2=S.quality==='baja'?4:S.quality==='media'?9:25;const cq=camera.position;list.forEach(c=>(Math.min((c.p.x-_f.x)**2+(c.p.z-_f.z)**2,(c.p.x-cq.x)**2+(c.p.z-cq.z)**2+Math.max(0,cq.y-c.p.y-1)**2)<r2?nr:fa).push(c));place(A0,nr,P.fruit,hang,colF,true);place(B0,fa,P.fruit,hang,colF,true,'1');}
+  const split=(A0,B0,list,colF)=>{if(ch.fk>=1&&B0){const nr=[],fa=[];const r2=S.quality==='baja'?2.25:S.quality==='media'?4:16;const cq=camera.position;list.forEach(c=>(Math.min((c.p.x-_f.x)**2+(c.p.z-_f.z)**2,(c.p.x-cq.x)**2+(c.p.z-cq.z)**2+Math.max(0,cq.y-c.p.y-1)**2)<r2?nr:fa).push(c));place(A0,nr,P.fruit,hang,colF,true);place(B0,fa,P.fruit,hang,colF,true,'1');}
     else{place(A0,list,P.fruit,hang,colF,true);if(B0)B0.visible=false;}};
   split(ch.cm.fruit,ch.cm.fruitB,fr,(c,o)=>{o.copy(hc0);o.multiplyScalar(0.9+0.16*c.r);return o;});
   split(ch.cm.open,ch.cm.openB,op,(c,o)=>o.setScalar(0.9+0.2*c.r));ch.splitF=_f.clone(),ch.splitC=camera.position.clone();
