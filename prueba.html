@@ -1321,7 +1321,7 @@ MAT.plain=new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.9,metaln
 MAT.sel=new THREE.MeshBasicMaterial({color:0xf4e27a,transparent:true,opacity:0.9,depthWrite:false});
 MAT.pollen=new THREE.PointsMaterial({color:C('#f3d54a'),size:0.06,map:dot,transparent:true,depthWrite:false,opacity:0.8,sizeAttenuation:true});
 
-const LEAF_GEO2=(()=>{const gb=new GB(false,true),w={r:1,g:1,b:1};const id=[];for(const [x,y] of [[0,-0.5],[1,-0.5],[0,0.5],[1,0.5]]){gb.cu=[x,y+0.5];id.push(gb.v(x,y,0,0,0,1,w));}gb.tri(id[0],id[1],id[2]);gb.tri(id[2],id[1],id[3]);const g=gb.build();g.computeVertexNormals();return g;})(),LEAF_GEO=cardGeo(),CARD0=cardGeo(0),CARD1=cardGeo(1),GEO={fruit:clusterGeo('fruit'),open:clusterGeo('open'),fruit1:clusterGeo('fruit',1),open1:clusterGeo('open',1),fruit2:clusterGeo('fruit',2),open2:clusterGeo('open',2),nut:new THREE.IcosahedronGeometry(1,1),fem:clusterGeo('fem'),male:clusterGeo('male'),bud:new THREE.IcosahedronGeometry(1,0)};
+const LEAF_GEO2=(()=>{const gb=new GB(false,true),w={r:1,g:1,b:1};const id=[];for(const [x,y] of [[0,-0.5],[1,-0.5],[0,0.5],[1,0.5]]){gb.cu=[x,y+0.5];id.push(gb.v(x,y,0,0,0,1,w));}gb.tri(id[0],id[1],id[2]);gb.tri(id[2],id[1],id[3]);const g=gb.build();g.computeVertexNormals();return g;})(),LEAF_GEO=cardGeo(),CARD0=cardGeo(0),CARD1=cardGeo(1),GEO={fruit:clusterGeo('fruit'),open:clusterGeo('open'),fruit1:clusterGeo('fruit',1),open1:clusterGeo('open',1),fruit2:clusterGeo('fruit',2),open2:clusterGeo('open',2),nut:new THREE.IcosahedronGeometry(1,0),fem:clusterGeo('fem'),male:clusterGeo('male'),bud:new THREE.IcosahedronGeometry(1,0)};
 
 /* río: cauce hundido de poco caudal (sección transversal a lo largo del eje) */
 const RIV=(()=>{const pts=FD.river,n=pts.length,rn=tileNoise(4096,64,17),S=[0],T=[],N=[];
@@ -1678,7 +1678,7 @@ function buildChunk(cell,A){const g=buildChunkGen(cell,A);let r;do{r=g.next();}w
 function* buildChunkGen(cell,A){
   const q=Q[S.quality],G=growth(A),prod=prodOf(S.year),tutor=S.year<=2029,two=S.year>=2027,grp=new THREE.Group();
   const M=new THREE.Matrix4(),Sc=new THREE.Vector3(),P=new THREE.Vector3(),X=new THREE.Vector3(),Y=new THREE.Vector3(),Z=new THREE.Vector3(),B=new THREE.Matrix4(),W=new THREE.Matrix4(),Qt=new THREE.Quaternion();
-  const bark=new GB(),barkF=new GB();const volList=[],leafList=[],budList=[],litterList=[],fruit=[],male=[],nutList=[],cutList=[];const lab26=S.year===LAB_YEAR;const sidesBy=[8,5,4,3,3];
+  const bark=new GB(),barkF=new GB(),barkI=new GB();const volList=[],leafList=[],budList=[],litterList=[],fruit=[],male=[],nutList=[],cutList=[];const lab26=S.year===LAB_YEAR;const sidesBy=[8,5,4,3,3];
   for(const t of cell.trees){
     const T=treeFor(t,A);
     t.h=T.branches.reduce((m,b)=>Math.max(m,b.pts[b.pts.length-1].y),1.3);t.hc=T.hc;t.ext=T.ext;t.extZ=T.extZ;
@@ -1688,7 +1688,7 @@ function* buildChunkGen(cell,A){
     M.makeRotationY(rot).scale(Sc.set(vg,vg,vg)).setPosition(t.u,0,t.v);
     T.branches.forEach(b=>{if(q.sides===0&&b.depth>=3||q.sides===1&&b.depth>=5)return;const fine=b.twig||b.depth>=3||b.rad[0]<0.009,inner=!fine&&b.depth>=2&&T.G.age>=3.6;
       let pts=b.pts,rad=b.rad;if(fine&&pts.length>4){const keep=pts.map((_,i)=>i).filter(i=>i%2===0||i===pts.length-1);pts=keep.map(i=>b.pts[i]);rad=keep.map(i=>b.rad[i]);}
-      const sd=fine?3:Math.max(3,sidesBy[Math.min(4,b.depth)]-(q.sides===0?1:0));tube(fine||inner?barkF:bark,pts,rad,sd,f=>barkColor(b.depth,f,T.G),M);});
+      const sd=fine?3:Math.max(3,sidesBy[Math.min(4,b.depth)]-(q.sides===0?1:0));tube(fine?barkF:inner?barkI:bark,pts,rad,sd,f=>barkColor(b.depth,f,T.G),M);});
     const Mc=M.clone();T.leaves.forEach(l=>leafList.push({l,M:Mc,tint}));
     if(T.crown&&T.crown.k>0.15){const c=T.crown,Mv=new THREE.Matrix4().makeTranslation(c.cx,c.cy+c.ry*0.04,c.cz).multiply(new THREE.Matrix4().makeScale(c.rx*0.66*c.k+0.05,c.ry*0.64*c.k+0.05,c.rx*0.66*c.k*(c.kz||1)+0.05));volList.push(M.clone().multiply(Mv));}
     if(lab26&&G.age<1.2)T.branches.forEach(b=>{if(b.depth!==1)return;const n=b.pts.length,e=b.pts[n-1].clone().applyMatrix4(M),d=b.pts[n-1].clone().sub(b.pts[n-2]).transformDirection(M);cutList.push([e,d,b.rad[n-1]*vg*1.15]);});
@@ -1702,7 +1702,8 @@ function* buildChunkGen(cell,A){
   yield;}
   yield;
   const barkMesh=new THREE.Mesh(bark.build(),MAT.bark);barkMesh.castShadow=true;barkMesh.receiveShadow=true;barkMesh.customDepthMaterial=MAT.barkD;grp.add(barkMesh);grp.userData.bk=barkMesh;
-  {const gF=barkF.build();if(gF.attributes.position.count){const bf=new THREE.Mesh(gF,MAT.bark);bf.castShadow=false;bf.receiveShadow=true;grp.add(bf);grp.userData.bf=bf;}}
+  {const gF=barkF.build();if(gF.attributes.position.count){const bf=new THREE.Mesh(gF,MAT.bark);bf.castShadow=false;bf.receiveShadow=true;grp.add(bf);grp.userData.bf=bf;}
+   const gI=barkI.build();if(gI.attributes.position.count){const bi=new THREE.Mesh(gI,MAT.bark);bi.castShadow=false;bi.receiveShadow=true;grp.add(bi);grp.userData.bi=bi;}}
   yield;
   const lm=new THREE.InstancedMesh(LEAF_GEO,MAT.leaf,Math.max(1,leafList.length));lm.castShadow=true;lm.receiveShadow=true;lm.customDepthMaterial=MAT.leafD;
   const aS=new Float32Array(Math.max(1,leafList.length)*4);
@@ -1936,7 +1937,7 @@ function updateStreaming(){
       else ch=buildChunk(xs?{key:c.key,gx:c.gx,gz:c.gz,trees:c.trees.filter(t=>t!==XR.t)}:c,A);ch.sig=sg;CH.cache.set(ck,ch);built++;}
     applyChunkDate(ch);applyChunkRiego(ch);ch.used=performance.now();
     if(cur){world.remove(cur.group);fadeEnd(cur);}world.add(ch.group);(ch.sph||(ch.sph=(()=>{const tr=ch.trees||[];if(!tr.length)return null;let cx=0,cz=0;tr.forEach(t=>{cx+=t.u;cz+=t.v;});cx/=tr.length;cz/=tr.length;let r=0;tr.forEach(t=>{r=Math.max(r,(t.u-cx)**2+(t.v-cz)**2);});return new THREE.Sphere(new THREE.Vector3(cx,2,cz),Math.sqrt(r)+6);})()),CH.active.set(c.key,ch));changed=true;if(!cur&&FADE.ok)fadeStart(ch);}
-  {let rk=0;for(const [d,c] of need){const ch=CH.active.get(c.key);if(!ch)continue;const fk=d<1.5&&rk++<2?1:d<3?0.85:d<12?0.7:d<24?0.4:0.2;{const ud=ch.group.userData,bf=ud.bf,sh=d<14;if(bf)bf.visible=d<12;if(ud.bk)ud.bk.castShadow=sh;if(ch.leaf)ch.leaf.castShadow=sh;ch.nutFar=d>=6;if(ch.nuts){const nv=S.doy>=252&&S.doy<352&&!ch.nutFar;if(ch.nuts.visible!==nv)ch.nuts.visible=nv;}if(ch.lg){ch.lgFar=d>=14;const v=U.uLG.value>0.01&&d<14;if(ch.lg.visible!==v)ch.lg.visible=v;}}if(ch.leaf&&ch.leaf.userData.g2){const g=fk>=1?ch.leaf.userData.g8:ch.leaf.userData.g2;if(ch.leaf.geometry!==g)ch.leaf.geometry=g;}if(ch.fk!==fk){ch.fk=fk;if(ch.fruit&&ch.fruit.length)applyChunkDate(ch);}else if(fk>=1&&ch.fruit&&ch.fruit.length&&ch.cm&&(ch.cm.fruit.visible||ch.cm.fruitB&&ch.cm.fruitB.visible)&&ch.splitF&&ch.splitF.distanceTo(_f)>4)applyChunkDate(ch);}}
+  {let rk=0;for(const [d,c] of need){const ch=CH.active.get(c.key);if(!ch)continue;const fk=d<1.5&&rk++<2?1:d<3?0.85:d<12?0.7:d<24?0.4:0.2;{const ud=ch.group.userData,bf=ud.bf,sh=d<14;if(bf)bf.visible=d<(S.quality==='alta'?8:4);if(ud.bi)ud.bi.visible=d<12;if(ud.bk)ud.bk.castShadow=sh;if(ch.leaf)ch.leaf.castShadow=sh;ch.nutFar=d>=6;if(ch.nuts){const nv=S.doy>=252&&S.doy<352&&!ch.nutFar;if(ch.nuts.visible!==nv)ch.nuts.visible=nv;}if(ch.lg){ch.lgFar=d>=14;const v=U.uLG.value>0.01&&d<14;if(ch.lg.visible!==v)ch.lg.visible=v;}}if(ch.leaf&&ch.leaf.userData.g2){const g=fk>=1?ch.leaf.userData.g8:ch.leaf.userData.g2;if(ch.leaf.geometry!==g)ch.leaf.geometry=g;}if(ch.fk!==fk){ch.fk=fk;if(ch.fruit&&ch.fruit.length)applyChunkDate(ch);}else if(fk>=1&&ch.fruit&&ch.fruit.length&&ch.cm&&(ch.cm.fruit.visible||ch.cm.fruitB&&ch.cm.fruitB.visible)&&ch.splitF&&ch.splitF.distanceTo(_f)>4)applyChunkDate(ch);}}
   {const cr=q.coverR;for(const [d,c] of need){const ch=CH.active.get(c.key);if(!ch||!ch.cover)continue;const on=d<=cr;if(on!==ch.cvOn){ch.cvOn=on;ch.cover.visible=on&&U.uCovH.value>0.1;}}}
   if(changed){CH.dirtyRings=true;refreshNear();trimCache();updLineMask();tgenTrim();}
   {let pend=!!CH.ab;if(!pend)for(const [d,c] of need){const cur=CH.active.get(c.key);if(!cur||cur.sig.split('|x')[0]!==sig){pend=true;break;}}const now=performance.now();
