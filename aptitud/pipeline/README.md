@@ -26,3 +26,8 @@ Int16, 11 filas × `nd` días desde `meta.d0`: tmin×10, tmax×10, porciones de 
 - `obs/`: observaciones de floración, cosecha y heladas recopiladas para calibrar (`obs_cal.json` son los objetivos usados).
 - `comprobaciones/`: scripts de comprobación usados al calibrar (Node, cargan `config.js` y `motor.js`): Ciudad Real 2001/2004/2011 (`cr2.js`), datos de 2026 (`c26.js`), heladas del almendro documentadas (`alm.js`), tope de frío en Caravaca (`cap.js`), ventanas de helada del pistacho (`stg.js`), validación cruzada de la corrección por estaciones (`qmtest.py`). Las rutas dentro de los scripts apuntan a la carpeta de trabajo original y hay que ajustarlas.
 - Las descargas en bruto del SIAR (unos 100 MB) y los NetCDF de Copernicus (unos 850 MB) no se guardan aquí: se vuelven a bajar con los pasos anteriores.
+
+## Estaciones lejanas y campaña en curso (13 nov 2026)
+
+- Humedad, lluvia y viento se interpolan con las 3 estaciones SIAR más cercanas que tengan dato ese día (`station_daily` en `proceso.py`), sin tope de distancia. En 425 de las 1.645 celdas la más cercana está a más de 40 km. El tope se aplica al calcular, no aquí: con la más cercana a más de `CONFIG.verdict.farKm` (40 km), esos criterios pueden condicionar pero no excluir. Así no hace falta rehacer las celdas.
+- La última campaña de los datos (hasta septiembre) no tiene la cosecha completa: el simulador no le pone fecha hasta la actualización siguiente. Los veranos a los que les falta el último día (30 de septiembre) se cuentan igual.

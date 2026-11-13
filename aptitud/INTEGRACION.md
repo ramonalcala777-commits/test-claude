@@ -37,12 +37,13 @@ Un simulador que, para cualquier recinto SIGPAC de Castilla-La Mancha (y bordes)
    //   .rows: año a año {y, fb, loss, fz: peor helada {doy, t, st, d}, harv (pistacho)}; .ov: coincidencia con cada macho
    // R.relieve: {clase, delta, deltaLow, par, low}; R.campañas: {desde, hasta, ultimos10: [desde, hasta]}
    // R.etiquetas: {ok: 'Apta', warn: 'Apta con condiciones', bad: 'No apta'}; R.estados: nombres de los estados fenológicos
-   // AptitudCore.PARAMS_KEY: clave de localStorage donde la web guarda sus «Parámetros» (para calcular con los mismos)
+   // AptitudCore.PARAMS_KEY: clave de localStorage donde la web guarda solo los «Parámetros» cambiados ({ruta: valor})
+   // AptitudCore.config(): la configuración con la que calcular (la de fábrica más los cambiados válidos)
    ```
    Probado desde otra página del mismo dominio: un recinto completo, relieve incluido, tarda unos 2,4 s. Así, cuando se recalibre el simulador, la app se actualiza sola. Mapa de Fincas solo tiene que hacer la parte visual. Para copiar el aspecto, la referencia es `app.js` (funciones `render` y `detail`) y los estilos de `index.html`.
 3. **CSP de la app** (entrega 60). Hay que permitir:
    - `connect-src`: `https://servicios.idee.es` (MDT de 25 m y 200 m por WCS, para el relieve) y `https://sigpac-hubcloud.es`. Esto último solo si se usa la geometría por código; la app ya tiene la del recinto.
-   - `script-src`: `https://cdn.jsdelivr.net` (geotiff.js 2.1.3), o servir geotiff desde el propio repo.
+   - geotiff.js 2.1.3: Mapa de Fincas lo sirve desde su repositorio (`window.GeoTIFF`); si una página no lo trae, `aptitud-core.js` lo baja de `cdn.jsdelivr.net` y entonces hay que permitirlo en `script-src`.
 4. **Entrada natural en la app:** desde la ficha de un recinto (o de una finca) se pulsa un botón «Aptitud climática». La app ya tiene la geometría del recinto, así que se calcula con ella: celda, relieve (MDT) y modelo.
 5. **Qué enseñar** (lo que Ramón ha ido aprobando en la web del simulador):
    - Veredicto por variedad y motivos.
@@ -56,7 +57,8 @@ Un simulador que, para cualquier recinto SIGPAC de Castilla-La Mancha (y bordes)
      - ficha al tocar un año.
    - Comparación de variedades con barras rojo / ámbar / gris y «x de cada 10 con daño · y de cada 10 graves».
    - En pistacho, coincidencia con los machos.
-6. **Rendimiento:** el cálculo de un recinto tarda menos de 1 s en el móvil. Lo que más tarda es la descarga del MDT para el relieve (2 peticiones WCS). Conviene guardar en la ficha del recinto el resultado y la fecha de cálculo.
+6. **Simulador dentro de la app:** `/test-claude/aptitud/?r=<código>&riego=secano|regadio&tema=light|dark`. Su botón «Informe PDF» usa el generador y la letra de Mapa de Fincas (`#pdflib`, `#pdffontr`… o `/mapa-fincas/pdf.json`) y la hoja de descarga de la app (`showDl`).
+7. **Rendimiento:** el cálculo de un recinto tarda menos de 1 s en el móvil. Lo que más tarda es la descarga del MDT para el relieve (2 peticiones WCS). Conviene guardar en la ficha del recinto el resultado y la fecha de cálculo.
 
 ## Decisiones del modelo que no hay que cambiar sin hablarlo
 
@@ -75,7 +77,10 @@ Un simulador que, para cualquier recinto SIGPAC de Castilla-La Mancha (y bordes)
 
 - **Heladas en almendro:** igual, con la ventana del fruto hasta 40 días después de la flor y diferencias por variedad tomadas del IRTA (Calle et al. 2025).
 - **Corrección por relieve:** en noches frías, ±1,8 °C según la posición del recinto (fondo de vega o alto despejado).
-- **Veredicto:** se calcula con toda la serie. Los últimos 10 años se muestran aparte.
+- **Veredicto:** se calcula con los criterios de las 10 últimas campañas. Heladas en floración, helada antes de la cosecha y frío extremo de invierno miran también toda la serie: si en ella salen peor, el criterio queda como mínimo en «condiciona». Con menos de 8 campañas recientes se usa toda la serie.
+- **Umbrales que cuentan años** (13 nov 2026): van en fracción de los años y se subieron un año por cada 10 (heladas: 2 años graves de 10 condicionan, 3 excluyen).
+- **Estaciones lejanas:** si la estación SIAR más cercana está a más de 40 km (`CONFIG.verdict.farKm`), humedad, lluvia y viento pueden condicionar pero no excluir (`crit[].lejos`).
+- **Cosecha del pistacho:** dos ajustes, regadío (Caravaca 2021–2023, `gdd`/`days`) y secano (El Chaparrillo 2000–2004, `gddS`/`daysS`). `evaluar(..., { secano: true })` para secano. La campaña en curso no tiene fecha (`harv: null`, `pend: true`).
 
 ## Cómo se actualizan los datos
 

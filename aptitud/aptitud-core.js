@@ -4,14 +4,33 @@
 //
 // Uso desde otra aplicación:
 //   <script src="/test-claude/aptitud/aptitud-core.js"></script>
-//   const res = await AptitudCore.evaluar(featureGeoJSON, { onStatus: t => console.log(t) });
+//   const res = await AptitudCore.evaluar(featureGeoJSON, { onStatus: t => console.log(t), config: AptitudCore.config(), secano: false });
 // Carga solo, desde su misma carpeta, config.js, motor.js, criterios.js y relieve.js si no están cargados.
-// Necesita acceso a servicios.idee.es (MDT del IGN, para el relieve) y a cdn.jsdelivr.net (geotiff.js).
+// Necesita acceso a servicios.idee.es (MDT del IGN, para el relieve). geotiff.js: usa window.GeoTIFF si la página ya lo trae
+// (Mapa de Fincas lo sirve desde su repositorio); si no, lo baja de cdn.jsdelivr.net.
 (function (G) {
   const SRC = (document.currentScript && document.currentScript.src) || location.href;
   const BASE = new URL('.', SRC).href;          // carpeta aptitud/
   const DATA_V = '20260929';                     // cambiar al actualizar los datos (evita la caché)
-  const PARAMS_KEY = 'aptitud-params-v11';       // dónde guarda la web sus «Parámetros»: cambiarla cuando cambie la forma de config.js (la usan app.js y Mapa de Fincas)
+  const PARAMS_KEY = 'aptitud-params-v12';       // dónde guarda la web sus «Parámetros» (solo los cambiados, {ruta: valor}); la usan app.js y Mapa de Fincas
+
+  // ---------- parámetros editables: solo estos, con su rango; lo guardado fuera de rango o vacío no se usa ----------
+  const PARAMS = [
+    ['pist.ref.cp', 'Kerman: frío (porciones)', 40, 120], ['pist.ref.gdh', 'Kerman: calor hasta flor (GDH)', 3000, 12000],
+    ['pist.stages.2.2', 'Pistacho: flor, T 10 % daño (°C)', -6, 0], ['pist.stages.2.3', 'Pistacho: flor, T 90 % daño (°C)', -10, -1], ['pist.stages.3.2', 'Pistacho: fruto cuajado, T 10 % (°C)', -6, 0],
+    ['alm.ref.cu', 'Guara: frío (unidades Utah)', 300, 1500], ['alm.ref.gdh', 'Guara: calor hasta flor (GDH)', 2000, 10000],
+    ['alm.stages.2.2', 'Almendro: flor abierta, T 10 % (°C)', -6, 0], ['alm.stages.2.3', 'Almendro: flor abierta, T 90 % (°C)', -10, -1], ['alm.stages.4.2', 'Almendro: fruto cuajado, T 10 % (°C)', -6, 0]];
+  const getp = (o, p) => p.split('.').reduce((a, k) => a == null ? a : a[k], o);
+  const setp = (o, p, v) => { const ks = p.split('.'), last = ks.pop(); ks.reduce((a, k) => a[k], o)[last] = v; };
+  // comprueba un valor: devuelve el número o un texto con el problema
+  function checkParam(p, v) { const d = PARAMS.find(x => x[0] === p); if (!d) return 'parámetro desconocido'; const n = typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.'));
+    if (v === '' || v == null || !isFinite(n)) return `${d[1]}: falta el valor`; if (n < d[2] || n > d[3]) return `${d[1]}: tiene que estar entre ${String(d[2]).replace('.', ',')} y ${String(d[3]).replace('.', ',')}`; return n; }
+  // los cambiados que se pueden usar ({ruta: valor}); lo demás se descarta
+  function loadParams() { let o = {}; try { o = JSON.parse(localStorage.getItem(PARAMS_KEY) || '{}') || {}; } catch (e) { o = {}; }
+    const out = {}; if (o && typeof o === 'object' && !Array.isArray(o)) for (const [p, v] of Object.entries(o)) { const n = checkParam(p, v); if (typeof n === 'number') out[p] = n; } return out; }
+  function saveParams(ch) { try { if (ch && Object.keys(ch).length) localStorage.setItem(PARAMS_KEY, JSON.stringify(ch)); else localStorage.removeItem(PARAMS_KEY); } catch (e) {} }
+  // los parámetros con los que se calcula: los de fábrica y encima los cambiados en «Parámetros»
+  function config(ch) { const C = JSON.parse(JSON.stringify(G.CONFIG)); for (const [p, v] of Object.entries(ch || loadParams())) setp(C, p, v); return C; }
   const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   const fdate = doy => { if (doy == null || doy < 0) return '—'; const d = new Date(Date.UTC(2021, 0, 1) + (Math.round(doy) - 1) * 864e5); return d.getUTCDate() + ' ' + MES[d.getUTCMonth()]; };
   const mean = a => { const v = a.filter(x => x != null && x >= 0); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
@@ -31,6 +50,9 @@
   // ---------- datos de clima ----------
   let META = null;
   async function loadMeta() { if (!META) META = await (await fetch(BASE + 'grid/meta.json?d=' + DATA_V)).json(); return META; }
+  // fuera de la rejilla: a más de media celda de su borde (antes se cogía la celda del borde sin avisar)
+  function outside(M, lat, lon) { const la = [Math.min(...M.lat), Math.max(...M.lat)], lo = [Math.min(...M.lon), Math.max(...M.lon)], h = 0.051;
+    return lat < la[0] - h || lat > la[1] + h || lon < lo[0] - h || lon > lo[1] + h; }
   function cellIndex(M, lat, lon) {
     const i = M.lat.reduce((b, v, k) => Math.abs(v - lat) < Math.abs(M.lat[b] - lat) ? k : b, 0);
     const j = M.lon.reduce((b, v, k) => Math.abs(v - lon) < Math.abs(M.lon[b] - lon) ? k : b, 0);
@@ -45,6 +67,8 @@
 
   // ---------- geometría ----------
   function rings(feature) { const g = feature.geometry || feature; return g.type === 'Polygon' ? [g.coordinates[0]] : g.coordinates.map(p => p[0]); }
+  // todos los anillos: contornos de cada trozo y sus huecos (para saber qué píxeles caen dentro, regla par-impar)
+  function allRings(feature) { const g = feature.geometry || feature; return g.type === 'Polygon' ? g.coordinates : g.coordinates.flat(); }
   function center(feature) { // centro del rectángulo envolvente (igual que Leaflet getBounds().getCenter())
     let a = 90, b = -90, c = 180, d = -180; for (const r of rings(feature)) for (const [lo, la] of r) { a = Math.min(a, la); b = Math.max(b, la); c = Math.min(c, lo); d = Math.max(d, lo); }
     return { lat: (a + b) / 2, lng: (c + d) / 2 };
@@ -73,8 +97,8 @@
     const boxMean = (i, j, r) => { const x0 = Math.max(0, i - r), x1 = Math.min(w, i + r + 1), y0 = Math.max(0, j - r), y1 = Math.min(h, j + r + 1); const S = (A, a, b) => A[b * (w + 1) + a]; const s = S(I, x1, y1) - S(I, x0, y1) - S(I, x1, y0) + S(I, x0, y0), n = S(Nn, x1, y1) - S(Nn, x0, y1) - S(Nn, x1, y0) + S(Nn, x0, y0); return s / n; };
     const r5 = Math.round(500 / res), r20 = Math.round(2000 / res);
     const at = (i, j) => { const v = z[j * w + i]; return { z: v, t5: v - boxMean(i, j, r5), t20: v - boxMean(i, j, r20) }; };
-    const ring = rings(feature)[0].map(([lo, la]) => { const [x, y] = toUTM30(la, lo); return [(x - (cx - H)) / res, ((cy + H) - y) / res]; });
-    const inside = (px, py) => { let cc = false; for (let a = 0, b = ring.length - 1; a < ring.length; b = a++) { const [xa, ya] = ring[a], [xb, yb] = ring[b]; if ((ya > py) !== (yb > py) && px < (xb - xa) * (py - ya) / (yb - ya) + xa) cc = !cc; } return cc; };
+    const RG = allRings(feature).map(rg => rg.map(([lo, la]) => { const [x, y] = toUTM30(la, lo); return [(x - (cx - H)) / res, ((cy + H) - y) / res]; }));
+    const inside = (px, py) => { let cc = false; for (const ring of RG) for (let a = 0, b = ring.length - 1; a < ring.length; b = a++) { const [xa, ya] = ring[a], [xb, yb] = ring[b]; if ((ya > py) !== (yb > py) && px < (xb - xa) * (py - ya) / (yb - ya) + xa) cc = !cc; } return cc; };
     let n = 0, s5 = 0, s20 = 0, sz = 0, low = null;
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { if (!inside(i + .5, j + .5)) continue; const p = at(i, j); if (!(p.z > -100)) continue; n++; s5 += p.t5; s20 += p.t20; sz += p.z; if (!low || p.z < low.z) low = p; }
     const mid = at(Math.floor(w / 2), Math.floor(h / 2));
@@ -100,6 +124,8 @@
     for (let i = 0; i < t.length; i++) { const v = cell.tmin[i] / 10; const k = v <= 5 ? 1 : v >= 12 ? 0 : (12 - v) / 7; t[i] = Math.round((v + d * k) * 10); }
     return Object.assign({}, cell, { tmin: t });
   }
+  // lo que importa del relieve: cómo quedan las noches de helada respecto a la zona (la forma del terreno es un detalle)
+  const reliefEffect = d => d == null ? '' : d <= -1 ? 'más frío que la zona' : d <= -0.3 ? 'algo más frío que la zona' : d < 0.3 ? 'como la zona' : d < 1 ? 'algo más templado que la zona' : 'más templado que la zona';
   const reliefClass = q => (q.pct != null && q.pct <= 0.15 && Math.abs(q.t5) < 3 && Math.abs(q.t20) < 10) ? 'fondo de vega o valle ancho' : q.t5 <= -5 ? 'fondo de vaguada' : q.t5 <= -2 ? 'zona baja' : q.t5 < 2 ? (q.pct != null && q.pct >= 0.85 ? 'llano alto (páramo)' : 'llano') : q.t5 < 5 ? 'zona alta' : 'loma o cerro';
 
   // ---------- preparar: celda + relieve ----------
@@ -107,57 +133,56 @@
     const st = opts.onStatus || (() => {});
     await ready();
     const c = center(feature), M = await loadMeta(), idx = cellIndex(M, c.lat, c.lng);
-    if (!M.cells[idx]) { const e = new Error('Ese recinto queda fuera de la zona calculada (Castilla-La Mancha y bordes).'); e.code = 'fuera'; throw e; }
+    if (outside(M, c.lat, c.lng) || !M.cells[idx]) { const e = new Error('Ese recinto queda fuera de la zona calculada (Castilla-La Mancha y bordes).'); e.code = 'fuera'; throw e; }
     st('Cargando 31 campañas de clima de la celda…');
     let cell = await loadCell(M, idx);
     let rel = null;
     if (opts.relieve !== false) { try { st('Leyendo el relieve de la parcela (IGN)…'); rel = await relief(feature, c); } catch (e) { rel = null; } }
     const elevCell = M.elev ? M.elev[idx] : null;
-    if (rel && elevCell != null) { rel.delta = reliefDelta(rel.par, elevCell, M.cells[idx]); rel.deltaLow = reliefDelta(rel.low, elevCell, M.cells[idx]); rel.clase = reliefClass(rel.par); cell = adjustTmin(cell, rel.delta); }
+    if (rel && elevCell != null) { rel.delta = reliefDelta(rel.par, elevCell, M.cells[idx]); rel.deltaLow = reliefDelta(rel.low, elevCell, M.cells[idx]); rel.forma = reliefClass(rel.par); rel.clase = reliefEffect(rel.delta); cell = adjustTmin(cell, rel.delta); }
     return { rel, c, idx, cell, info: M.cells[idx], elev: elevCell, d0: Date.parse(M.d0 + 'T00:00:00Z') };
   }
 
   // ---------- calcular: variedades, criterios, últimos 10 años ----------
   function overlap(fb, mb) { let t = 0, n = 0; for (let k = 0; k < fb.length; k++) { if (fb[k] == null || mb[k] == null) continue; const a = Math.max(fb[k] - 5, mb[k] - 6), b = Math.min(fb[k] + 5, mb[k] + 6); t += Math.max(0, b - a + 1) / 11; n++; } return n ? t / n : 0; }
-  function compute(prep, CFG) {
+  // mediana de la cosecha contando los años que no completan el calor como «más tarde que cualquier fecha»:
+  // si no madura la mitad de los años o más, la mediana es −1 («no madura») en vez de una fecha sacada de los pocos años que sí
+  const fmtN = x => Math.round(x).toLocaleString('es-ES');
+  const medH = h => { const v = h.filter(x => x != null).map(x => x < 0 ? Infinity : x).sort((x, y) => x - y); if (!v.length) return null; const m = v[Math.floor((v.length - 1) / 2)]; return m === Infinity ? -1 : m; };
+  const mhText = d => d == null ? '—' : d < 0 ? 'no madura (la mitad de los años o más no completa el calor)' : fdate(d);
+  function compute(prep, CFG, opts = {}) {
     CFG = CFG || G.CONFIG;
     const { Motor, Criterios } = G; const { cell, d0 } = prep;
-    const classify = (ml, bad) => { const V = CFG.verdict; return ml <= V.okLoss && bad <= V.okBad ? 'ok' : ml <= V.warnLoss && bad <= V.warnBad ? 'warn' : 'bad'; };
-    const P = Motor.pistachio(cell, d0, CFG.pist), A = Motor.almond(cell, d0, CFG.alm);
-    const shift = (cfgP, days) => { const c = JSON.parse(JSON.stringify(cfgP)); c.ref.gdh = cfgP.ref.gdh + days * P.gpd; return c; };
-    const Pm = Motor.pistachio(cell, d0, shift(CFG.pist, -5)), Pp = Motor.pistachio(cell, d0, shift(CFG.pist, 5));
-    const ash = d => { const c = JSON.parse(JSON.stringify(CFG.alm)); c.varieties = c.varieties.map(v => Object.assign({}, v, { offset: v.offset + d })); return c; };
-    const Am = Motor.almond(cell, d0, ash(-5)), Ap = Motor.almond(cell, d0, ash(5));
+    const pc = Object.assign({}, CFG.pist, { secano: !!opts.secano });
+    const P = Motor.pistachio(cell, d0, pc), A = Motor.almond(cell, d0, CFG.alm);
     const sumP = R => { const out = []; const males = {}; for (const [n, o] of Object.entries(R.res)) if (o.v.sex === 'M') males[n] = o.rows.map(r => r ? r.fb : null);
       for (const [n, o] of Object.entries(R.res)) { const fb = o.rows.map(r => r ? r.fb : null);
         if (o.v.sex === 'M') { out.push({ nm: n, male: true, fb, mb: mean(fb), p10: pct(fb, .1), p90: pct(fb, .9) }); continue; }
         const l = o.rows.map(r => r ? r.loss : null), h = o.rows.map(r => r ? r.harv : null);
-        const ml = mean(l), bad = l.filter(x => x > 50).length, late = h.filter(x => x != null && (x < 0 || x > CFG.verdict.lateHarvestDoy)).length;
+        const ml = mean(l), bad = l.filter(x => x > 50).length, late = h.filter(x => x != null && (x < 0 || x > CFG.crit.pist.lateDoy)).length;
         const ov = Object.fromEntries(Object.entries(males).map(([m, mb]) => [m, overlap(fb, mb)]));
         const ovY = Object.fromEntries(Object.entries(males).map(([m, mb]) => [m, fb.map((f, k) => f == null || mb[k] == null ? null : overlap([f], [mb[k]]))]));
         const best = (o.v.males || []).map(m => [m, ov[m] || 0]).sort((a, b) => b[1] - a[1])[0] || ['—', 0];
-        let cls = classify(ml, bad); if (cls === 'ok' && (late > CFG.verdict.lateYears || best[1] < CFG.verdict.minOverlap)) cls = 'warn';
-        const chillFail = o.rows.filter(r => r && !r.chillOk).length;
-        out.push({ nm: n, v: o.v, rows: o.rows, fb, l, h, ml, bad, late, ov, ovY, best, cls, chillFail, autN: o.rows.filter(r => r && r.autumn).length, mb: mean(fb), p10: pct(fb, .1), p90: pct(fb, .9), mh: pct(h, .5) }); }
+        const chillFail = o.rows.filter(r => r && !r.chillOk).length, mh = medH(h);
+        out.push({ nm: n, v: o.v, rows: o.rows, fb, l, h, ml, bad, late, ov, ovY, best, chillFail, autN: o.rows.filter(r => r && r.autumn).length, mb: mean(fb), p10: pct(fb, .1), p90: pct(fb, .9), mh, mhTxt: mhText(mh) }); }
       return out; };
     const sumA = R => Object.entries(R.res).map(([n, o]) => { const fb = o.rows.map(r => r ? r.fb : null), l = o.rows.map(r => r ? r.loss : null); const ml = mean(l), bad = l.filter(x => x > 50).length;
-      return { nm: n, v: o.v, rows: o.rows, fb, l, ml, bad, total: l.filter(x => x >= 90).length, cls: classify(ml, bad), mb: mean(fb), p10: pct(fb, .1), p90: pct(fb, .9) }; });
-    const p = sumP(P), pm = sumP(Pm), pp = sumP(Pp), a = sumA(A), am = sumA(Am), ap = sumA(Ap);
-    const robust = (base, m, pl) => base.forEach(r => { if (r.male) return; const c1 = m.find(x => x.nm === r.nm).cls, c2 = pl.find(x => x.nm === r.nm).cls; r.robust = c1 === r.cls && c2 === r.cls; r.alt = [c1, c2]; });
-    robust(p, pm, pp); robust(a, am, ap);
+      return { nm: n, v: o.v, rows: o.rows, fb, l, ml, bad, total: l.filter(x => x >= 90).length, mb: mean(fb), p10: pct(fb, .1), p90: pct(fb, .9) }; });
+    const p = sumP(P), a = sumA(A);
     const ctx = { W: Motor.winterMin(cell, d0), af: CFG.pist.autumnFrost }; ctx.y0 = (P.res.Kerman.rows.find(r => r) || {}).y;
-    for (const r of p) { if (r.male) continue; r.mhTxt = fdate(r.mh); r.crit = Criterios.pist(cell, d0, r, ctx, CFG.crit.pist); const v = Criterios.verdict(r.crit); r.cls = v.cls; r.vd = v; }
+    for (const r of p) { if (r.male) continue; r.crit = Criterios.pist(cell, d0, r, ctx, CFG.crit.pist); const v = Criterios.verdict(r.crit); r.cls = v.cls; r.vd = v; }
     for (const r of a) { r.crit = Criterios.alm(cell, d0, r, ctx, CFG.crit.alm); const v = Criterios.verdict(r.crit); r.cls = v.cls; r.vd = v; }
-    // mismos criterios con las 10 últimas campañas
+    // mismos criterios con las 10 últimas campañas (los umbrales que cuentan años van en fracción de los años, valen igual para 10 que para 31)
     const yMax = Math.max(...ctx.W.map(x => x.y)), yR = yMax - 9;
     const cut = R => { const o = { res: {}, gpd: R.gpd }; for (const [n, v] of Object.entries(R.res)) o.res[n] = { v: v.v, rows: v.rows.map(x => x && x.y >= yR ? x : null) }; return o; };
     const ctxR = { W: ctx.W.filter(x => x.y >= yR), af: ctx.af };
-    const scl = (K, nR, nF) => Object.assign({}, K, { bad: K.bad.map(b => b * nR / nF) });
     const pR = sumP(cut(P)), aR = sumA(cut(A));
-    for (const r of p) { if (r.male) continue; const q = pR.find(x => x.nm === r.nm); q.mhTxt = fdate(q.mh); const nR = q.rows.filter(Boolean).length, nF = r.rows.filter(Boolean).length;
-      if (nR >= 8) { r.critR = Criterios.pist(cell, d0, q, ctxR, scl(CFG.crit.pist, nR, nF)); r.clsR = Criterios.verdict(r.critR).cls; } }
-    for (const r of a) { const q = aR.find(x => x.nm === r.nm); const nR = q.rows.filter(Boolean).length, nF = r.rows.filter(Boolean).length;
-      if (nR >= 8) { r.critR = Criterios.alm(cell, d0, q, ctxR, scl(CFG.crit.alm, nR, nF)); r.clsR = Criterios.verdict(r.critR).cls; } }
+    // lo de los últimos 10 años que enseñan la tabla y las gráficas (mismos años que el veredicto)
+    const keepR = (r, q) => { r.R = { ml: q.ml, mb: q.mb, bad: q.bad, n: q.rows.filter(Boolean).length, mh: q.mh, mhTxt: q.mhTxt, ov: q.ov, best: q.best, p10: q.p10, p90: q.p90 }; };
+    for (const r of p) { const q = pR.find(x => x.nm === r.nm); if (r.male) { r.R = { mb: q.mb, p10: q.p10, p90: q.p90 }; continue; } keepR(r, q); const nR = q.rows.filter(Boolean).length;
+      if (nR >= 8) { r.critR = Criterios.pist(cell, d0, q, ctxR, CFG.crit.pist); r.clsR = Criterios.verdict(r.critR).cls; } }
+    for (const r of a) { const q = aR.find(x => x.nm === r.nm); keepR(r, q); const nR = q.rows.filter(Boolean).length;
+      if (nR >= 8) { r.critR = Criterios.alm(cell, d0, q, ctxR, CFG.crit.alm); r.clsR = Criterios.verdict(r.critR).cls; } }
     // el veredicto sale de las 10 últimas campañas; en los sucesos raros (CFG.verdict.rare) toda la serie lo deja como mínimo en «condiciona»
     const RARE = (CFG.verdict && CFG.verdict.rare) || [];
     for (const r of [...p, ...a]) { if (r.male) continue; r.critTodo = r.crit; r.clsTodo = r.cls;
@@ -165,11 +190,17 @@
       r.crit = r.critTodo.map(t => { const x = r.critR.find(z => z.id === t.id); if (!x) return Object.assign({}, t, { soloTodo: true });
         const o = Object.assign({}, x, { serie: t.serie }); if (RARE.includes(t.id)) { o.nivel = Math.max(x.nivel, Math.min(t.nivel, 1)); if (o.nivel > x.nivel) o.porSerie = true; } return o; });
       const v = Criterios.verdict(r.crit); r.cls = v.cls; r.vd = v; }
+    // humedad, lluvia y viento salen de estaciones SIAR: si la más cercana está lejos (CFG.verdict.farKm), esos criterios pueden condicionar pero no excluir
+    const STN = ['lluviaflor', 'viento', 'hr', 'lluviacosecha', 'boty', 'abejas', 'monilia', 'primavera'];
+    const near = prep.info && prep.info.length ? Math.min(...prep.info.map(s => s[2])) : 0, farKm = (CFG.verdict && CFG.verdict.farKm) || 40;
+    if (near > farKm) for (const r of [...p, ...a]) { if (r.male) continue;
+      r.crit = r.crit.map(x => { if (!STN.includes(x.id)) return x; const o = Object.assign({}, x, { lejos: true, motivo: x.motivo + ` La estación SIAR más cercana está a ${fmtN(near)} km: con un dato tan lejano este criterio no excluye.` }); if (o.nivel > 1) o.nivel = 1; return o; });
+      const v = Criterios.verdict(r.crit); r.cls = v.cls; r.vd = v; }
     // resumen de heladas por variedad (años con daño ≥ 10 % y daño grave > 50 %), toda la serie y últimos 10 años
     const frost = r => { const f = ys => { const v = r.rows.filter(q => q && ys(q.y)); return { n: v.length, dano: v.filter(q => q.loss >= 10).length, grave: v.filter(q => q.loss > 50).length }; };
       return { todo: f(() => true), ultimos10: f(y => y >= yR) }; };
     for (const r of [...p, ...a]) if (!r.male) r.heladas = frost(r);
-    return { P: p, A: a, W: ctx.W, y0: ctx.y0, yR, yMax };
+    return { P: p, A: a, W: ctx.W, y0: ctx.y0, yR, yMax, secano: !!opts.secano, estMin: near, lejos: near > farKm };
   }
 
   // ---------- todo en una llamada ----------
@@ -181,17 +212,17 @@
   //  · machos de pistacho: male: true, mb, p10, p90; cada hembra trae ov {macho: fracción de su floración cubierta}
   async function evaluar(feature, opts = {}) {
     const prep = await prepare(feature, opts);
-    const r = compute(prep, opts.config);
+    const r = compute(prep, opts.config, opts);
     const lbl = { ok: 'Apta', warn: 'Apta con condiciones', bad: 'No apta' };
     return {
       version: 'aptitud-core ' + DATA_V,
       celda: { idx: prep.idx, altitud: prep.elev, estaciones: prep.info, centro: prep.c },
       relieve: prep.rel, pistacho: r.P, almendro: r.A, inviernos: r.W,
-      campañas: { desde: r.W[0].y, hasta: r.W[r.W.length - 1].y, ultimos10: [r.yR, r.yMax] },
+      campañas: { desde: r.W[0].y, hasta: r.W[r.W.length - 1].y, ultimos10: [r.yR, r.yMax] }, secano: r.secano,
       etiquetas: lbl, estados: { pistacho: (G.CONFIG.pist.stageNames || []), almendro: (G.CONFIG.alm.stageNames || []) },
       _prep: prep
     };
   }
 
-  G.AptitudCore = { evaluar, prepare, compute, ready, reliefClass, fdate, center, DATA_V, BASE, PARAMS_KEY };
+  G.AptitudCore = { evaluar, prepare, compute, ready, reliefClass, reliefEffect, fdate, center, config, loadParams, saveParams, checkParam, PARAMS, DATA_V, BASE, PARAMS_KEY };
 })(window);

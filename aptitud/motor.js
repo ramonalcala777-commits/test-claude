@@ -1,5 +1,6 @@
 // Motor de aptitud (v2). Trabaja con los datos diarios precalculados de una celda ERA5-Land corregida con SIAR.
-// Fichero de celda: Int16, 7 filas x nd días: tmin*10, tmax*10, porciones de frío*100, GDH Anderson, GDH Richardson, Utah*2, GDD7,2*10
+// Fichero de celda: Int16, 11 filas x nd días: tmin*10, tmax*10, porciones de frío*100, GDH Anderson, GDH Richardson, Utah*2, GDD7,2*10,
+// horas ≥ 15 °C, HR*10, lluvia*10, viento*10 (−1 = sin dato de estación)
 // Día 0 = META.d0 (día local). Campaña y = del 1 de septiembre de y al 31 de agosto de y+1.
 (function (G) {
   const DAY = 864e5;
@@ -11,10 +12,11 @@
   const dayIndex = (d0, y, m, d) => Math.round((Date.UTC(y, m - 1, d) - d0) / DAY);
   const doyOf = (d0, i) => { const t = new Date(d0 + i * DAY); return Math.round((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / DAY) + 1; };
 
-  // Primer día (desde a) en que el acumulado de 'arr*escala' alcanza 'req'; devuelve [índice, acumulado en ese día]
-  function reach(arr, scale, a, b, req) { let s = 0; for (let i = a; i < b; i++) { s += arr[i] / scale; if (s >= req) return i; } return -1; }
+  // Primer día (desde a) en que el acumulado de 'arr/escala' alcanza 'req'; devuelve su índice (−1 si no llega).
+  // Se suman los enteros de la celda y se compara con un margen: así 2.070,0 justos cuentan (antes la suma con decimales daba 2.069,99…)
+  function reach(arr, scale, a, b, req) { const q = req * scale - 1e-6; let s = 0; b = Math.min(b, arr.length); for (let i = a; i < b; i++) { s += arr[i]; if (s >= q) return i; } return -1; }
   function reachUtah(c, a, b, req) { let s = 0; for (let i = a; i < b; i++) { s = Math.max(0, s + c.utah[i] / 2); if (s >= req) return i; } return -1; }
-  function sumRange(arr, scale, a, b) { let s = 0; for (let i = a; i < b; i++) s += arr[i] / scale; return s; }
+  function sumRange(arr, scale, a, b) { let s = 0; b = Math.min(b, arr.length); for (let i = Math.max(0, a); i < b; i++) s += arr[i]; return s / scale; }
   function minRange(arr, a, b) { let m = 99; for (let i = Math.max(0, a); i < b; i++) { const v = arr[i] / 10; if (v < m) m = v; } return m; }
   function minIdx(arr, a, b) { let m = 99, mi = -1; for (let i = Math.max(0, a); i < b; i++) { const v = arr[i] / 10; if (v < m) { m = v; mi = i; } } return [m, mi]; }
   // helada que más daño hace en el año: estado (índice), mínima, día y % que mata
@@ -55,8 +57,11 @@
         const r = { y: s.y, fb: doyOf(d0, f), cpAtBloom: sumRange(c.cp, 100, s.a, f), cpNF, chillOk: v.chillNF != null ? cpNF >= v.chillNF : sumRange(c.cp, 100, s.a, f) >= v.cp };
         if (v.sex === 'M') return r;
         const fe = frostEval(c, d0, f, P.stages); r.loss = fe.loss; r.tminBloom = fe.tminBloom; r.fz = fe.fz;
-        const h = reach(c.gdd7, 10, f, s.bx, v.gdd);
-        const hc = h < 0 ? -1 : v.days ? Math.round((h + f + v.days) / 2) : h;   // cosecha: media entre los grados-día y los días fijos desde la flor
+        const gd = P.secano && v.gddS ? v.gddS : v.gdd, dd = P.secano && v.daysS ? v.daysS : v.days;   // secano (El Chaparrillo) o regadío (Caravaca)
+        const h = reach(c.gdd7, 10, f, s.bx, gd);
+        // la última campaña, si los datos acaban antes del 31 de diciembre y aún no ha completado el calor: cosecha sin dato (no «no completa el calor»)
+        if (h < 0 && dayIndex(d0, s.y, 12, 31) + 1 > c.nd) { r.harv = null; r.autumn = null; r.pend = true; return r; }
+        const hc = h < 0 ? -1 : dd ? Math.round((h + f + dd) / 2) : h;   // cosecha: media entre los grados-día y los días fijos desde la flor
         r.harv = hc < 0 ? -1 : doyOf(d0, hc);
         let af = 0; if (hc > 0) { const s9 = dayIndex(d0, s.y, 9, 1); for (let i = s9; i <= hc; i++) if (c.tmin[i] / 10 <= P.autumnFrost) { af = 1; break; } }
         r.autumn = af; return r;
@@ -73,7 +78,8 @@
     const res = {};
     for (const v of A.varieties) {
       // calor necesario: mediana del GDH acumulado desde la rotura del letargo hasta (floración Guara + desfase)
-      const req = []; ref.forEach(r => { if (r && r.f + v.offset < c.nd) req.push(sumRange(c.gdhr, 1, r.br + 1, r.f + v.offset + 1)); }); req.sort((x, y) => x - y);
+      const off = Math.round(v.offset);   // desfase en días enteros, al más cercano (2,6 → 3; 4,3 → 4)
+      const req = []; ref.forEach(r => { if (r && r.f + off < c.nd) req.push(sumRange(c.gdhr, 1, r.br + 1, r.f + off + 1)); }); req.sort((x, y) => x - y);
       const gReq = req[req.length >> 1];
       const rows = S.map((s, k) => {
         const r0 = ref[k]; if (!r0) return null;

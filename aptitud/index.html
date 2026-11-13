@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Aptitud Climática de Parcelas</title>
+<title>Aptitud climática de parcelas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,700&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -16,9 +16,13 @@
   --display:"Literata",Georgia,serif; --body:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
   color-scheme:light;
 }
-@media (prefers-color-scheme:dark){:root{
+/* oscuro: el del aparato, salvo que Mapa de Fincas diga claro (?tema=light); o forzado con ?tema=dark */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#141917; --surface:#1C2320; --ink:#E5EAE5; --muted:#9AA59E; --line:#313B36;
   --pist:#A6C46A; --frost:#7DB3E0; --flor:#E39BB3; --ok:#86C27E; --warn:#E2B24E; --bad:#EE8580; --ok-bg:#20331F; --warn-bg:#3A2F14; --bad-bg:#3D2120; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141917; --surface:#1C2320; --ink:#E5EAE5; --muted:#9AA59E; --line:#313B36;
+  --pist:#A6C46A; --frost:#7DB3E0; --flor:#E39BB3; --ok:#86C27E; --warn:#E2B24E; --bad:#EE8580; --ok-bg:#20331F; --warn-bg:#3A2F14; --bad-bg:#3D2120; color-scheme:dark}
 *{box-sizing:border-box}
 html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
@@ -33,13 +37,16 @@ button{font:inherit}
 .btn{font-weight:600;border:0;border-radius:8px;padding:10px 16px;background:var(--ink);color:var(--surface);cursor:pointer}
 .btn:focus-visible,.seg button:focus-visible,.row:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--frost);outline-offset:2px}
 #map{height:360px;border-radius:10px;border:1px solid var(--line);overflow:hidden}
-.hint{font-size:.85rem;color:var(--muted);margin:0}
+.hint{font-size:.85rem;color:var(--muted);margin:0;overflow-wrap:anywhere}
 .status{font-size:.9rem;color:var(--muted);min-height:1.3em}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
-.seg button{border:0;background:transparent;color:var(--ink);padding:8px 14px;cursor:pointer;font-weight:500}
+.seg button{border:0;background:transparent;color:var(--ink);padding:8px 14px;min-height:40px;cursor:pointer;font-weight:500}
+.heads{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn.sec{background:transparent;color:var(--ink);border:1px solid var(--line)} .btn.sm2{padding:8px 12px;min-height:40px;min-width:76px;background:var(--surface);color:var(--ink);border:1px solid var(--line);font-weight:500} .btn:disabled{opacity:.4;cursor:default}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
-.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.fact{background:var(--surface);padding:10px 12px;min-width:0}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.fact{background:var(--surface);padding:10px 12px;min-width:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);margin:0 -1px -1px 0}
+.fact .v b{font-weight:600} .warnline{display:block;color:var(--warn);font-size:.85rem;margin-top:4px}
 .fact .k{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .fact .v{font-size:.95rem;overflow-wrap:anywhere} .fact .v.code{font-family:var(--mono)}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
@@ -56,7 +63,7 @@ td{padding:8px;border-bottom:1px solid var(--line);text-align:right;white-space:
 .chip.rob{background:transparent;border:1px dashed currentColor;font-weight:500}
 .mini{display:inline-block;width:60px;height:8px;background:var(--line);border-radius:4px;vertical-align:middle;margin-left:6px;overflow:hidden} .mini i{display:block;height:100%;background:var(--frost)}
 .detail-grid{display:grid;grid-template-columns:1fr;gap:16px} @media (min-width:860px){.detail-grid{grid-template-columns:1.4fr 1fr}}
-svg text{font-family:var(--body);fill:var(--muted);font-size:11px}
+svg text{font-family:var(--body);fill:var(--muted);font-size:11.5px}
 .chart{width:100%;overflow-x:auto}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;color:var(--muted)}
 .legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;background:var(--c)}
@@ -64,17 +71,39 @@ svg text{font-family:var(--body);fill:var(--muted);font-size:11px}
 .verdict{font-family:var(--display);font-size:1.05rem;margin:0;max-width:75ch}
 .callout{border-left:3px solid var(--warn);background:var(--warn-bg);padding:10px 12px;border-radius:0 8px 8px 0;font-size:.9rem;max-width:82ch}
 details{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
-summary{cursor:pointer;font-family:var(--display);font-size:1.05rem}
+summary{cursor:pointer;font-family:var(--display);font-size:1.05rem;min-height:28px;padding:6px 0}
 details .body{display:flex;flex-direction:column;gap:10px;margin-top:10px;max-width:80ch}
 details p,details li{margin:0;font-size:.92rem} details ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
 .params{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
 .params label{display:flex;flex-direction:column;gap:3px;font-size:.82rem;color:var(--muted)}
-.params input{font:inherit;font-family:var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.params input{font:inherit;font-family:var(--mono);padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)} .params input.bad{border-color:var(--bad);outline:1px solid var(--bad)}
+.params small{font-size:.72rem} .pmsg{font-size:.88rem;min-height:1.2em} .pmsg.bad{color:var(--bad)}
+.detbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;scroll-margin-top:8px}
+.detbar select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-height:40px;max-width:100%}
+@media (max-width:700px){.detbar{position:sticky;top:0;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.08)}}
+/* tabla de variedades: en el móvil, una tarjeta por variedad (veredicto y motivo arriba, cifras debajo) */
+@media (max-width:700px){
+  #rank{min-width:0} #rank thead{display:none} #rank,#rank tbody{display:block}
+  #rank tr{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;padding:10px 4px;border-bottom:1px solid var(--line)}
+  #rank td{display:block;border:0;padding:2px 0;text-align:left;white-space:normal}
+  #rank td.vname{grid-column:1;font-size:1.05rem} #rank td:nth-child(2){grid-column:2;justify-self:end}
+  #rank td.why{grid-column:1/-1;max-width:none;min-width:0;color:var(--ink)}
+  #rank td[data-l]:not(.vname):not(:nth-child(2)):not(.why)::before{content:attr(data-l);display:block;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  #rank tr.male td.why,#rank td.mt{display:none} .tablewrap{overflow:visible;margin:0;padding:0}
+}
+/* informe PDF */
+.pdfdlg{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(10,14,12,.55);padding:16px}
+.pdfbox{width:min(460px,100%);max-height:92vh;overflow:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.pdfbox h2{font-size:1.25rem} .pdfbox label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted)}
+.pdfbox select{font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-height:44px}
+.pdfbox .acts{display:flex;gap:8px;flex-wrap:wrap} .pdfbox .btn{min-height:44px}
+.pdfst{font-size:.9rem;color:var(--muted);min-height:1.3em}
 [hidden]{display:none!important}
 .why{white-space:normal;min-width:220px;max-width:340px;font-size:.85rem;color:var(--muted)}
 .critlist{display:flex;flex-direction:column;gap:8px}
 .ysum{font-size:.9rem;margin-bottom:8px}
-.ywrap{position:relative;min-width:480px} .ywrap svg{display:block}
+.ywrap{position:relative;min-width:0} .ywrap svg{display:block}
+.ynav{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}
 .yscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .yleg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.74rem;color:var(--muted);margin:4px 0 2px}
 .yleg span{display:inline-flex;align-items:center;gap:4px} .yleg svg{flex:none}
@@ -105,7 +134,7 @@ details p,details li{margin:0;font-size:.92rem} details ul{margin:0;padding-left
 .crit>div{min-width:0}
 .cper{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-top:2px}
 .ctodo{font-size:.8rem;color:var(--muted);margin-top:4px}
-.yylink{border:0;background:transparent;color:var(--frost);font:inherit;font-size:.85rem;padding:2px 0;margin-top:4px;cursor:pointer}
+.yylink{border:0;background:transparent;color:var(--frost);font:inherit;font-size:.9rem;padding:10px 0;min-height:44px;min-width:120px;text-align:left;cursor:pointer}
 .yylink:hover{text-decoration:underline}
 .yylist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 details.yyd{background:var(--bg);padding:10px 14px;scroll-margin-top:12px}
@@ -141,15 +170,23 @@ details.yyd summary{list-style:none} details.yyd summary::-webkit-details-marker
       <section class="panel">
         <div class="panel-head">
           <h2 id="rankTitle">Variedades</h2>
-          <div class="seg" role="group" aria-label="Especie">
-            <button id="sp-p" data-sp="p" aria-pressed="true">Pistacho</button>
-            <button id="sp-a" data-sp="a" aria-pressed="false">Almendro</button>
+          <div class="heads">
+            <div class="seg" role="group" aria-label="Especie">
+              <button id="sp-p" data-sp="p" aria-pressed="true">Pistacho</button>
+              <button id="sp-a" data-sp="a" aria-pressed="false">Almendro</button>
+            </div>
+            <div class="seg" role="group" aria-label="Riego (cosecha del pistacho)" id="rgBox">
+              <button id="rg-r" data-rg="r" aria-pressed="true">Regadío</button>
+              <button id="rg-s" data-rg="s" aria-pressed="false">Secano</button>
+            </div>
+            <button class="btn" id="pdfBtn" type="button">Informe PDF</button>
           </div>
         </div>
         <p class="verdict" id="verdict"></p>
         <div class="tablewrap"><table id="rank"></table></div>
         <p class="note" id="rankNote"></p>
       </section>
+      <div class="detbar" id="detBar"><label for="varPick" class="eyebrow">Variedad</label><select id="varPick" aria-label="Variedad que se ve en el detalle"></select></div>
       <section class="panel" id="crit" aria-live="polite"></section>
       <section class="panel">
         <div class="panel-head"><h2 id="detTitle">Detalle</h2><div class="legend" id="detLegend"></div></div>
@@ -161,12 +198,14 @@ details.yyd summary{list-style:none} details.yyd summary::-webkit-details-marker
   </div>
 
   <div class="callout" id="calib"></div>
+  <div class="pdfdlg" id="pdfDlg" hidden></div>
 
   <details id="paramsBox">
     <summary>Parámetros (editables)</summary>
     <div class="body">
-      <p>Cambia un valor y pulsa Recalcular. Los cambios se guardan solo en este navegador.</p>
+      <p>Cambia un valor y pulsa Recalcular. Cada casilla tiene su margen; si un valor falta o se sale, no se recalcula. Se guardan solo los valores cambiados, en este aparato, y Mapa de Fincas calcula con ellos. Los umbrales de los criterios no se cambian aquí: están en «Cómo se calcula».</p>
       <div class="params" id="params"></div>
+      <div class="pmsg" id="pmsg" aria-live="polite"></div>
       <div><button class="btn" id="recalc" type="button">Recalcular</button> <button class="btn" id="reset" type="button" style="background:var(--muted)">Valores por defecto</button></div>
     </div>
   </details>
@@ -178,12 +217,13 @@ details.yyd summary{list-style:none} details.yyd summary::-webkit-details-marker
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="config.js?v=20261030d"></script>
-<script src="calib.js?v=20261030d"></script>
-<script src="relieve.js?v=20261030d"></script>
-<script src="motor.js?v=20261030d"></script>
-<script src="criterios.js?v=20261030d"></script>
-<script src="aptitud-core.js?v=20261030d"></script>
-<script src="app.js?v=20261030d"></script>
+<script src="config.js?v=20261113a"></script>
+<script src="calib.js?v=20261113a"></script>
+<script src="relieve.js?v=20261113a"></script>
+<script src="motor.js?v=20261113a"></script>
+<script src="criterios.js?v=20261113a"></script>
+<script src="aptitud-core.js?v=20261113a"></script>
+<script src="app.js?v=20261113a"></script>
+<script src="informe.js?v=20261113a"></script>
 </body>
 </html>
