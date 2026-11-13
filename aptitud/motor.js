@@ -75,6 +75,8 @@
   function almond(c, d0, A) {
     const S = seasons(c, d0);
     const ref = S.map(s => { const br = reachUtah(c, s.a, s.b, A.ref.cu); if (br < 0) return null; const f = reach(c.gdhr, 1, br + 1, s.b, A.ref.gdh); return f < 0 ? null : { br, f }; });
+    // frío de cada invierno: el máximo de unidades Utah acumuladas (con suelo en 0) del 1 de septiembre al 31 de agosto; sin llegar a A.ref.cu no hay floración
+    const chill = S.map(s => { let v = 0, mx = 0; for (let i = s.a; i < s.b; i++) { v = Math.max(0, v + c.utah[i] / 2); if (v > mx) mx = v; } return { y: s.y, cu: Math.round(mx), ok: mx >= A.ref.cu }; });
     const res = {};
     for (const v of A.varieties) {
       // calor necesario: mediana del GDH acumulado desde la rotura del letargo hasta (floración Guara + desfase)
@@ -88,9 +90,9 @@
         const fe = frostEval(c, d0, f, A.stages, k => k >= 1 && k <= 3 ? fd : [0, 0]);
         return { y: s.y, fb: doyOf(d0, f), loss: fe.loss, tminBloom: fe.tminBloom, fz: fe.fz };
       });
-      res[v.name] = { v, rows };
+      res[v.name] = { v, rows, chill };
     }
-    return { res };
+    return { res, chill, cuReq: A.ref.cu };
   }
 
   function winterMin(c, d0) { return seasons(c, d0).map(s => ({ y: s.y, t: minRange(c.tmin, dayIndex(d0, s.y - 1, 11, 1), dayIndex(d0, s.y, 3, 31) + 1) })); }

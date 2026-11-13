@@ -70,7 +70,7 @@
     $('facts').innerHTML = [['Recinto SIGPAC', C.code, 1], ['Superficie', fmt(pr.superficie, 2) + ' ha'], ['Altitud', (pr.altitud != null ? fmt(pr.altitud) + ' m' : '—') + (C.elev != null ? ` · celda ${fmt(C.elev)} m` : '')],
       ['Pendiente', fmt(pr.pendiente_media, 1) + ' %'],
       ['Relieve', rl ? `<b>${AC.reliefEffect(rl.delta)}</b>: noches de helada ${sg(rl.delta)} °C${rl.deltaLow < rl.delta - 0.3 ? ` (zona más baja del recinto ${sg(rl.deltaLow)} °C)` : ''} · terreno: ${rl.forma || reliefClass(rl.par)}${rl.par.pct != null ? `, el ${Math.round((1 - rl.par.pct) * 100)} % del terreno en 5 km está más alto` : ''}` : 'no disponible: el IGN no ha contestado y se calcula sin corregir por el relieve'],
-      ['Uso SIGPAC', pr.uso_sigpac || '—'], ['Estaciones SIAR (temperatura, humedad, lluvia y viento)', st], ['Campañas', `${C.W[0].y}–${C.W[n - 1].y} (${n}) · veredicto con ${C.yR}–${C.yMax}`],
+      ['Uso SIGPAC', pr.uso_sigpac || '—'], ['Estaciones SIAR (temperatura, humedad, lluvia y viento)', st], ['Campañas', `${C.W[0].y}–${C.W[n - 1].y} (${n}) · veredicto con los últimos 10 años (${C.yR}–${C.yMax})`],
       [`Inviernos ≤ ${fmt(wl)} °C`, `${w.filter(x => x <= wl).length} de ${n} · mín. ${fmt(Math.min(...w), 1)} °C`]]
       .map(([k, v, code]) => `<div class="fact"><div class="k">${k}</div><div class="v${code ? ' code' : ''}">${v}</div></div>`).join('');
     document.querySelectorAll('[data-sp]').forEach(b => { b.setAttribute('aria-pressed', state.sp === b.dataset.sp); b.onclick = () => { state.sp = b.dataset.sp; state.sel = null; render(); }; });
@@ -120,7 +120,7 @@
     const hit = (v, l, k) => { const d = s.dir === 0 ? (k === 0 ? -1 : 1) : s.dir, ge = l[3] != null ? l[3] : s.ge; return d > 0 ? (ge ? v >= l[0] : v > l[0]) : (ge ? v <= l[0] : v < l[0]); };
     const kind = p => { if (neg(p)) return 'bad'; if (p.x) return ''; if (p.v == null) return null; let w = ''; lims.forEach((l, k) => { if (hit(p.v, l, k)) w = l[1] === 'bad' || w === 'bad' ? 'bad' : 'warn'; }); return w; };
     const bad = p => { if (neg(p)) return Infinity; if (p.v == null) return -Infinity; if (s.dir === 0 && lims.length > 1) return Math.max(lims[0][0] - p.v, p.v - lims[1][0]); return (s.dir || 1) * p.v; };
-    const su = (s.u.match(/\((°C|%|mm|m\/s)\)/) || [])[1] || (/^Días/.test(s.u) ? 'días' : /^Horas/.test(s.u) ? 'h' : /^Porciones/.test(s.u) ? 'porciones' : '');
+    const su = (s.u.match(/\((°C|%|mm|m\/s)\)/) || [])[1] || (/^Días/.test(s.u) ? 'días' : /^Horas/.test(s.u) ? 'h' : /^Porciones/.test(s.u) ? 'porciones' : /^Unidades/.test(s.u) ? 'unidades' : '');
     const fv = (v, y) => { if (s.fmt === 'doy') return fdate(v, y); let d = s.fmt === 'pct' ? 0 : su === '°C' || (Math.abs(v) < 10 && v % 1) ? 1 : 0;
       if (lims.some(l => +v.toFixed(d) === l[0] && v !== l[0])) d++; // 57,9 junto a la raya de 58 no se enseña como 58
       return fmt(v, d).replace(/^-/, '−') + (su ? (su === '%' ? ' %' : ' ' + su) : s.fmt === 'pct' ? ' %' : ''); };
@@ -156,7 +156,7 @@
     const step = (() => { const q = (hi - lo) / 5, p = Math.pow(10, Math.floor(Math.log10(q))), m = q / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; })();
     let g = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${x.nombre} de ${r.nm}, año a año">`;
     g += `<rect x="${xR}" y="${t - 24}" width="${W - mr - xR}" height="${h + 24}" fill="var(--frost)" opacity=".07"/><text x="${xR + 4}" y="${t - 12}">últimos 10 años</text>`;
-    g += `<text x="2" y="${t - 18}">${s.fmt === 'doy' ? 'Fecha' : (s.u.match(/\(([^)]*)\)\s*$/) || [, ''])[1] || (/^Días/.test(s.u) ? 'días' : /^Horas/.test(s.u) ? 'horas' : /^Porciones/.test(s.u) ? 'porciones' : '')}</text>`;
+    g += `<text x="2" y="${t - 18}">${s.fmt === 'doy' ? 'Fecha' : (s.u.match(/\(([^)]*)\)\s*$/) || [, ''])[1] || (/^Días/.test(s.u) ? 'días' : /^Horas/.test(s.u) ? 'horas' : /^Porciones/.test(s.u) ? 'porciones' : /^Unidades/.test(s.u) ? 'unidades Utah' : '')}</text>`;
     for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) g += `<line x1="${ml}" x2="${W - mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${ml - 6}" y="${Y(v) + 4}" text-anchor="end">${s.fmt === 'doy' ? fdate(v) : fmt(Math.abs(v) < 1e-9 ? 0 : v, step < 1 ? 1 : 0).replace(/^-/, '−')}</text>`;
     const z = Y(Math.min(Math.max(0, lo), hi));
     ok.forEach(p => { const k = S.kind(p), c = col(k);
@@ -237,14 +237,18 @@
       const c10 = k => n ? (k / n * 10).toLocaleString('es-ES', { maximumFractionDigits: 1 }) : '—';
       return { n, d, g, c10d: c10(d), c10g: c10(g), y0: v.length ? v[0].y : '', y1: v.length ? v[v.length - 1].y : '' }; };
     const A = fr(() => true), R = fr(y => y >= current.yR);
+    // almendro: inviernos sin el frío para florecer (esos años no hay flor y no se pueden mirar las heladas)
+    const chl = state.sp === 'a' && r.chill ? r.chill : null, nx = chl ? chl.map((c, i) => ({ c, i, y: c.y })).filter(o => !r.rows[o.i] && !o.c.ok) : [], nxR = nx.filter(o => o.y >= current.yR).length;
+    const cTxt = (o, k) => o.n < 8 ? 'pocos años para sacar una proporción' : `${k} de cada 10 años`;
     const frost = `<div class="frostbox"><div class="eyebrow">Heladas de primavera · ${r.nm}</div><table class="ft"><thead><tr><th>Periodo</th><th>Años con daño<br><small>pérdida ≥ 10 %</small></th><th>Años con daño grave<br><small>pérdida &gt; 50 %</small></th></tr></thead><tbody>`
-      + [[`Todo el registro (${A.y0}–${A.y1})`, A], [`Últimos 10 años (${R.y0}–${R.y1})`, R]].map(([t, o]) => `<tr><td>${t}</td><td><b>${o.d}</b> de ${o.n}<br><small>${o.c10d} de cada 10 años</small></td><td><b>${o.g}</b> de ${o.n}<br><small>${o.c10g} de cada 10 años</small></td></tr>`).join('')
+      + [[`Todo el registro (${y0}–${current.yMax})`, A], [`Últimos 10 años (${current.yR}–${current.yMax})`, R]].map(([t, o]) => `<tr><td>${t}${o.n < 10 && chl ? `<br><small>${o.n} años con flor</small>` : ''}</td><td><b>${o.d}</b> de ${o.n}<br><small>${cTxt(o, o.c10d)}</small></td><td><b>${o.g}</b> de ${o.n}<br><small>${cTxt(o, o.c10g)}</small></td></tr>`).join('')
       + `</tbody></table></div>`;
     // el resultado que manda (últimos 10 años; sucesos raros con toda la serie) y, debajo, el de toda la serie si cambia el nivel
     const yA = `${y0}–${current.yMax}`, comb = r.critTodo && r.crit !== r.critTodo;
     const per = x => comb && !x.soloTodo ? `Últimos 10 años (${yr})` : `Toda la serie (${yA})`;
     const todo = x => { if (!comb || x.soloTodo) return ''; const t = r.critTodo.find(z => z.id === x.id); return t && (t.nivel !== x.nivel || x.porSerie) ? `<div class="ctodo">Toda la serie (${yA}): <b>${NV[t.nivel].toLowerCase()}</b> · ${t.valor}</div>` : ''; };
-    const head = comb ? `<p class="note">El veredicto se basa en los últimos 10 años; heladas, frío extremo y helada antes de la cosecha tienen en cuenta toda la serie.${r.clsTodo && r.clsTodo !== r.cls ? ` Con toda la serie (${yA}) saldría <b>${LBL[r.clsTodo].toLowerCase()}</b>.` : ''}</p>` : `<p class="note">No hay suficientes campañas recientes: el veredicto usa toda la serie (${yA}).</p>`;
+    const pocos = r.pocosR != null ? `${r.pocosR ? `Solo ${r.pocosR} de los últimos 10 años (${yr}) tienen floración` : `Ninguno de los últimos 10 años (${yr}) tiene floración`}: los demás inviernos no dan el frío que necesita para florecer. El frío invernal y el frío extremo se miran con los últimos 10 años; las heladas, las abejas y la lluvia, con toda la serie (${yA}).` : '';
+    const head = pocos ? `<p class="note">${pocos}${r.clsTodo && r.clsTodo !== r.cls ? ` Con toda la serie saldría <b>${LBL[r.clsTodo].toLowerCase()}</b>.` : ''}</p>` : comb ? `<p class="note">El veredicto se basa en los últimos 10 años; heladas, frío extremo y helada antes de la cosecha tienen en cuenta toda la serie.${r.clsTodo && r.clsTodo !== r.cls ? ` Con toda la serie (${yA}) saldría <b>${LBL[r.clsTodo].toLowerCase()}</b>.` : ''}</p>` : `<p class="note">No hay suficientes campañas recientes: el veredicto usa toda la serie (${yA}).</p>`;
     const yy = x => x.serie ? `<button class="yylink" type="button" data-id="${x.id}">Año a año ↓</button>` : '';
     $('crit').innerHTML = `<h2>${r.nm}: ${LBL[r.cls].toLowerCase()}</h2>${head}${frost}<div class="critlist">` + r.crit.slice().sort((a, b) => b.nivel - a.nivel).map(x => `<div class="crit l${x.nivel}"><span class="chip ${['ok', 'warn', 'bad'][x.nivel]}">${NV[x.nivel]}</span><div><b>${x.nombre}</b><div class="cper">${per(x)}</div><div class="cv">${x.valor}</div>${x.nivel ? `<div class="cm">${x.motivo}</div>` : ''}${x.porSerie ? '<div class="recent warn">Se mantiene en condiciona por lo ocurrido en la serie completa</div>' : ''}${todo(x)}${yy(x)}</div></div>`).join('') + '</div>';
     yyBox(r, rows);
@@ -263,9 +267,11 @@
     for (const v of [0, 50, 100]) s += `<line x1="${ml}" x2="${W - mr}" y1="${y1(v)}" y2="${y1(v)}" stroke="var(--line)"/><text x="${ml - 6}" y="${y1(v) + 4}" text-anchor="end">${v} %</text>`;
     s += `<line x1="${ml}" x2="${W - mr}" y1="${y1(10)}" y2="${y1(10)}" stroke="var(--warn)" stroke-dasharray="3 3" opacity=".7"/><line x1="${ml}" x2="${W - mr}" y1="${y1(50)}" y2="${y1(50)}" stroke="var(--bad)" stroke-dasharray="3 3" opacity=".7"/>`;
     yrs.forEach(({ q, i }) => { const v = q.loss, h = Math.max(1.5, v / 100 * h1); s += `<rect x="${ml + i * bw + 2}" y="${t1 + h1 - h}" width="${bw - 4}" height="${h}" rx="2" fill="${col(v)}"/>`; });
+    nx.forEach(({ i }) => { s += `<text x="${cx(i)}" y="${t1 + h1 - 1}" text-anchor="middle" style="fill:var(--frost);font-size:15px;font-weight:700">×</text>`; });
     s += `<text x="2" y="${t1 - 6}">Pérdida</text></svg>`;
     // --- panel 2: calendario (flor, helada, cosecha) ---
     const ds = []; yrs.forEach(({ q }) => { ds.push(q.fb); if (q.fz && q.fz.kill > 0) ds.push(q.fz.doy); });
+    if (!ds.length) ds.push(45, 75);
     const dlo = Math.min(...ds) - 4, dhi = Math.max(...ds) + 4, H2 = 164, t2 = 8, h2 = 130, y2 = d => t2 + (d - dlo) / (dhi - dlo) * h2;
     s += `<svg viewBox="0 0 ${W} ${H2}" width="100%" role="img" aria-label="Fecha de plena flor y de la helada dañina de ${r.nm} por año">`;
     s += `<rect x="${xR}" y="${t2}" width="${W - mr - xR}" height="${h2}" fill="var(--frost)" opacity=".07"/>`;
@@ -274,10 +280,11 @@
       if (q.fz && q.fz.kill > 0) { s += `<line x1="${x}" x2="${x}" y1="${y2(q.fb)}" y2="${y2(q.fz.doy)}" stroke="${col(q.loss)}" stroke-width="1.5" opacity=".6"/>`;
         const yy = y2(q.fz.doy); s += `<path d="M${x - 4},${yy}L${x + 4},${yy}M${x},${yy - 4}L${x},${yy + 4}M${x - 3},${yy - 3}L${x + 3},${yy + 3}M${x - 3},${yy + 3}L${x + 3},${yy - 3}" stroke="${col(q.loss)}" stroke-width="1.6"/>`; }
       s += `<circle cx="${x}" cy="${y2(q.fb)}" r="3.2" fill="var(--flor)"/>`; });
-    yrs.forEach(({ y, i }) => { if ((i % 5 === 0 && n - 1 - i >= 3) || i === n - 1) s += `<text x="${cx(i)}" y="${H2 - 8}" text-anchor="middle">${y}</text>`; });
+    nx.forEach(({ i }) => { s += `<text x="${cx(i)}" y="${t2 + h2 - 2}" text-anchor="middle" style="fill:var(--frost);font-size:15px;font-weight:700">×</text>`; });
+    for (let i = 0; i < n; i++) if ((i % 5 === 0 && n - 1 - i >= 3) || i === n - 1) s += `<text x="${cx(i)}" y="${H2 - 8}" text-anchor="middle">${y0 + i}</text>`;
     s += `</svg>`;
     const ast = c => `<path d="M0,6L12,6M6,0L6,12M2,2L10,10M2,10L10,2" stroke="${c}" stroke-width="1.6"/>`;
-    s += `<div class="yleg"><span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="3.2" fill="var(--flor)"/></svg>plena flor</span><span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">${ast('var(--bad)')}</svg>helada que hizo el daño (su color, la gravedad)</span></div>`;
+    s += `<div class="yleg"><span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="3.2" fill="var(--flor)"/></svg>plena flor</span><span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">${ast('var(--bad)')}</svg>helada que hizo el daño (su color, la gravedad)</span>${nx.length ? `<span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><text x="6" y="10" text-anchor="middle" style="fill:var(--frost);font-size:12px">×</text></svg>aspa: no completa el frío (ese año no florece)</span>` : ''}</div>`;
     // --- panel 3 (pistacho): cosecha ---
     if (state.sp === 'p') { const hv = yrs.map(o => o.q.harv).filter(h => h > 0); if (hv.length) { const hlo = Math.min(...hv, 236) - 3, hhi = Math.max(...hv, 288) + 3, H3 = 112, t3 = 8, h3 = 92, y3 = d => t3 + (d - hlo) / (hhi - hlo) * h3;
       const K = CFG.crit.pist, L1 = K.lateDoy, L2 = K.veryLateDoy, hhi2 = Math.max(hhi, hv.some(h => h > L1) ? L2 + 3 : hhi);
@@ -287,28 +294,33 @@
       yrs.forEach(({ q, i }) => { if (q.harv > 0) s += `<circle cx="${cx(i)}" cy="${y3b(q.harv)}" r="3" fill="${q.harv > L2 ? 'var(--bad)' : q.harv > L1 ? 'var(--warn)' : 'var(--pist)'}"/>`; else if (q.harv != null) s += `<text x="${cx(i)}" y="${t3 + h3}" text-anchor="middle" style="fill:var(--bad)">×</text>`; });
       s += `</svg><div class="yleg"><span>Cosecha prevista (${state.secano ? 'secano' : 'regadío'}): raya ámbar 15 de octubre, roja 1 de noviembre · aspa: no completa el calor${yrs.some(o => o.q.harv == null) ? ' · la campaña en curso, sin dato hasta que acabe' : ''}</span></div>`; } }
     // zonas táctiles por año (sobre todo el bloque)
-    const pick = i => { state.yr = i; const o = yrs.find(z => z.i === i); if (!o) return; const q = o.q, f = q.fz;
+    const yAll = [...yrs, ...nx.map(o => ({ q: null, y: o.y, i: o.i, c: o.c }))].sort((a, b) => a.i - b.i);
+    const pick = i => { state.yr = i; const o = yAll.find(z => z.i === i); if (!o) return;
+      const nav = () => { document.querySelectorAll('#yearChart .yhit').forEach(e => e.classList.toggle('on', +e.dataset.i === i));
+        document.querySelectorAll('#yearCard .ynav button').forEach(b => b.onclick = () => { const z = yAll.find(k => k.y === +b.dataset.y); if (z) pick(z.i); }); };
+      if (!o.q) { $('yearCard').innerHTML = ynav(o.y, yAll.map(z => z.y)) + `<div class="yc-h"><b>${o.y}</b><span class="chip warn">sin flor · no completa el frío</span></div><div>El invierno ${o.y - 1}–${String(o.y).slice(-2)} solo llega a <b>${fmt(o.c.cu)}</b> unidades de frío Utah de las <b>${fmt(r.cuReq)}</b> que necesita para salir del letargo. Ese año no florece (o florece muy poco y a destiempo), así que no se pueden mirar sus heladas.</div>`; nav(); return; }
+      const q = o.q, f = q.fz;
       const sev = q.loss > 50 ? 'daño grave' : q.loss >= 10 ? 'daño' : 'sin daño apreciable';
       const rel = f ? (f.d === 0 ? 'el mismo día de la plena flor' : f.d < 0 ? `${-f.d} días antes de la plena flor` : `${f.d} días después de la plena flor`) : '';
       const fr = f && f.kill > 0 ? `<b>Peor helada:</b> ${fdate(f.doy, o.y)}, ${fmt(f.t, 1)} °C, con el árbol en <b>${SN[f.st] || 'estado ' + f.st}</b> (${rel}).` : f ? `Ninguna helada dañina alrededor de la floración. La mínima más baja fue ${fmt(f.t, 1)} °C el ${fdate(f.doy)}, en ${SN[f.st] || ''}.` : '';
       const hv = state.sp === 'p' ? ` · <b>Cosecha prevista:</b> ${q.harv == null ? 'campaña sin terminar (los datos llegan hasta el ' + lastDay() + ')' : q.harv > 0 ? fdate(q.harv, o.y) : 'no completa el calor que necesita: cosecha muy tardía y llenado incompleto'}` : '';
-      $('yearCard').innerHTML = ynav(o.y, yrs.map(z => z.y)) + `<div class="yc-h"><b>${o.y}</b><span class="chip ${q.loss > 50 ? 'bad' : q.loss >= 10 ? 'warn' : 'ok'}">${q.loss} % · ${sev}</span></div><div><b>Plena flor:</b> ${fdate(q.fb, o.y)}${hv}</div><div>${fr}</div>`;
-      document.querySelectorAll('#yearChart .yhit').forEach(e => e.classList.toggle('on', +e.dataset.i === i));
-      document.querySelectorAll('#yearCard .ynav button').forEach(b => b.onclick = () => { const z = yrs.find(k => k.y === +b.dataset.y); if (z) pick(z.i); }); };
+      $('yearCard').innerHTML = ynav(o.y, yAll.map(z => z.y)) + `<div class="yc-h"><b>${o.y}</b><span class="chip ${q.loss > 50 ? 'bad' : q.loss >= 10 ? 'warn' : 'ok'}">${q.loss} % · ${sev}</span></div><div><b>Plena flor:</b> ${fdate(q.fb, o.y)}${hv}</div><div>${fr}</div>`;
+      nav(); };
     const blocks = s;
-    $('yearChart').innerHTML = `<div class="ysum">Daño en <b>${A.d} de ${A.n}</b> años (${A.c10d} de cada 10) · grave en <b>${A.g}</b> (${A.c10g} de cada 10). Últimos 10 años: daño en ${R.d}, grave en ${R.g}.</div>`
-      + `<div class="ywrap">${blocks}<div class="yhits">${yrs.map(({ i, y }) => `<button class="yhit" data-i="${i}" style="left:${(ml + i * bw) / W * 100}%;width:${bw / W * 100}%" aria-label="Ver ${y}"></button>`).join('')}</div></div>`
+    const c10s = (o, k) => o.n < 8 ? '' : ` (${k} de cada 10)`;
+    $('yearChart').innerHTML = `<div class="ysum">Daño en <b>${A.d} de ${A.n}</b> años con flor${c10s(A, A.c10d)} · grave en <b>${A.g}</b>${c10s(A, A.c10g)}. Últimos 10 años: daño en ${R.d}, grave en ${R.g}${R.n < 10 ? ` (de ${R.n} con flor)` : ''}.${nx.length ? ` <b>${nx.length} años sin flor por falta de frío</b> (${nxR} de los últimos 10): en esos años no se pueden mirar las heladas.` : ''}</div>`
+      + `<div class="ywrap">${blocks}<div class="yhits">${yAll.map(({ i, y }) => `<button class="yhit" data-i="${i}" style="left:${(ml + i * bw) / W * 100}%;width:${bw / W * 100}%" aria-label="Ver ${y}"></button>`).join('')}</div></div>`
       + `<div id="yearCard" class="ycard" aria-live="polite"></div>`;
     document.querySelectorAll('#yearChart .yhit').forEach(b => b.onclick = () => pick(+b.dataset.i));
-    pick(state.yr != null && yrs.find(z => z.i === state.yr) ? state.yr : yrs[yrs.length - 1].i);
+    pick(state.yr != null && yAll.find(z => z.i === state.yr) ? state.yr : yAll[yAll.length - 1].i);
     // --- comparación de variedades ---
     const fem = rows.filter(x => !x.male).slice().sort((a, b) => a.mb - b.mb);
     // comparación con los últimos 10 años, como el veredicto
-    const pc = q => { const v = q.rows.filter(z => z && z.y >= current.yR); return v.length ? [v.filter(z => z.loss >= 10).length / v.length * 100, v.filter(z => z.loss > 50).length / v.length * 100] : [0, 0]; };
+    const pc = q => { const v = q.rows.filter(z => z && z.y >= current.yR); return v.length ? [v.filter(z => z.loss >= 10).length / v.length * 100, v.filter(z => z.loss > 50).length / v.length * 100, v.length, v.filter(z => z.loss >= 10).length, v.filter(z => z.loss > 50).length] : [0, 0, 0, 0, 0]; };
     const c10v = x => (Math.round(x / 10 * 10) / 10).toLocaleString('es-ES', { maximumFractionDigits: 1 });
     const cmp = `<div class="eyebrow" style="margin:4px 0 6px">Años con helada dañina en los últimos 10 años (${current.yR}–${current.yMax}), de la variedad más temprana a la más tardía</div>`
-      + `<div class="vleg"><span><i style="background:var(--bad)"></i>Daño grave (&gt; 50 %)</span><span><i style="background:var(--warn)"></i>Daño moderado (10–50 %)</span><span><i style="background:var(--line)"></i>Sin daño</span></div><div class="vcmp">` + fem.map(it => { const [d, g] = pc(it);
-      return `<button class="vrow${it.nm === r.nm ? ' on' : ''}" data-nm="${it.nm}"><span class="vn">${it.nm}<small>flor ${fdate(it.mb)}</small></span><span class="vb"><i class="g" style="width:${g}%"></i><i class="d" style="left:${g}%;width:${d - g}%"></i></span><span class="vv"><b class="vd">${c10v(d)}</b> de cada 10 con daño<br><b>${c10v(g)}</b> de cada 10 graves</span></button>`; }).join('')
+      + `<div class="vleg"><span><i style="background:var(--bad)"></i>Daño grave (&gt; 50 %)</span><span><i style="background:var(--warn)"></i>Daño moderado (10–50 %)</span><span><i style="background:var(--line)"></i>Sin daño</span></div><div class="vcmp">` + fem.map(it => { const [d, g, nv, nd, ng] = pc(it);
+      return `<button class="vrow${it.nm === r.nm ? ' on' : ''}" data-nm="${it.nm}"><span class="vn">${it.nm}<small>flor ${fdate(it.mb)}</small></span><span class="vb"><i class="g" style="width:${g}%"></i><i class="d" style="left:${g}%;width:${d - g}%"></i></span><span class="vv">${!nv ? 'sin flor en estos 10 años<br>(no completa el frío)' : nv < 8 ? `solo ${nv} años con flor<br><b class="vd">${nd}</b> con daño · <b>${ng}</b> graves` : `<b class="vd">${c10v(d)}</b> de cada 10 con daño<br><b>${c10v(g)}</b> de cada 10 graves`}</span></button>`; }).join('')
       + `</div><p class="note" style="margin-top:6px">Toca una variedad para ver su gráfico.</p>`;
     if (state.sp === 'p') {
       // floración y coincidencia con los machos en los últimos 10 años (los mismos que el criterio)

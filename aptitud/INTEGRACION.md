@@ -4,7 +4,7 @@
 
 Un simulador que, para cualquier recinto SIGPAC de Castilla-La Mancha (y bordes), dice si es **apto, apto con condiciones o no apto** para **pistacho** (Kerman, Sirora, Golden Hills, Lost Hills, Larnaka; machos Peter, Ruso (02-18), Randy, C-Especial) y **almendro autofértil** (Belona, Soleta, Guara, Vairo, Constantí, Lauranne, Marinada, Makako, Penta, Mardía, Tardona), con los motivos.
 
-- Solo clima: 13 criterios en pistacho y 6 en almendro.
+- Solo clima: 13 criterios en pistacho y 7 en almendro (con «Frío invernal» desde el 13 nov 2026).
 - Usa 31 campañas (1996–2026) y el relieve del propio recinto.
 - Ya funciona como web independiente: https://ramonalcala777-commits.github.io/test-claude/aptitud/ (para abrir un recinto concreto se añade `?r=02:012:0:0:10:467:38`).
 

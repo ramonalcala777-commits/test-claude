@@ -170,14 +170,14 @@
         out.push({ nm: n, v: o.v, rows: o.rows, fb, l, h, ml, bad, late, ov, ovY, best, chillFail, autN: o.rows.filter(r => r && r.autumn).length, mb: mean(fb), p10: pct(fb, .1), p90: pct(fb, .9), mh, mhTxt: mhText(mh) }); }
       return out; };
     const sumA = R => Object.entries(R.res).map(([n, o]) => { const fb = o.rows.map(r => r ? r.fb : null), l = o.rows.map(r => r ? r.loss : null); const ml = mean(l), bad = l.filter(x => x > 50).length;
-      return { nm: n, v: o.v, rows: o.rows, fb, l, ml, bad, total: l.filter(x => x >= 90).length, mb: mean(fb), p10: pct(fb, .1), p90: pct(fb, .9) }; });
+      return { nm: n, v: o.v, rows: o.rows, chill: o.chill, cuReq: CFG.alm.ref.cu, fb, l, ml, bad, total: l.filter(x => x >= 90).length, mb: mean(fb), p10: pct(fb, .1), p90: pct(fb, .9) }; });
     const p = sumP(P), a = sumA(A);
     const ctx = { W: Motor.winterMin(cell, d0), af: CFG.pist.autumnFrost }; ctx.y0 = (P.res.Kerman.rows.find(r => r) || {}).y;
     for (const r of p) { if (r.male) continue; r.crit = Criterios.pist(cell, d0, r, ctx, CFG.crit.pist); const v = Criterios.verdict(r.crit); r.cls = v.cls; r.vd = v; }
     for (const r of a) { r.crit = Criterios.alm(cell, d0, r, ctx, CFG.crit.alm); const v = Criterios.verdict(r.crit); r.cls = v.cls; r.vd = v; }
     // mismos criterios con las 10 últimas campañas (los umbrales que cuentan años van en fracción de los años, valen igual para 10 que para 31)
     const yMax = Math.max(...ctx.W.map(x => x.y)), yR = yMax - 9;
-    const cut = R => { const o = { res: {}, gpd: R.gpd }; for (const [n, v] of Object.entries(R.res)) o.res[n] = { v: v.v, rows: v.rows.map(x => x && x.y >= yR ? x : null) }; return o; };
+    const cut = R => { const o = { res: {}, gpd: R.gpd }; for (const [n, v] of Object.entries(R.res)) o.res[n] = { v: v.v, rows: v.rows.map(x => x && x.y >= yR ? x : null), chill: v.chill && v.chill.filter(x => x.y >= yR) }; return o; };
     const ctxR = { W: ctx.W.filter(x => x.y >= yR), af: ctx.af };
     const pR = sumP(cut(P)), aR = sumA(cut(A));
     // lo de los últimos 10 años que enseñan la tabla y las gráficas (mismos años que el veredicto)
@@ -185,7 +185,9 @@
     for (const r of p) { const q = pR.find(x => x.nm === r.nm); if (r.male) { r.R = { mb: q.mb, p10: q.p10, p90: q.p90 }; continue; } keepR(r, q); const nR = q.rows.filter(Boolean).length;
       if (nR >= 8) { r.critR = Criterios.pist(cell, d0, q, ctxR, CFG.crit.pist); r.clsR = Criterios.verdict(r.critR).cls; } }
     for (const r of a) { const q = aR.find(x => x.nm === r.nm); keepR(r, q); const nR = q.rows.filter(Boolean).length;
-      if (nR >= 8) { r.critR = Criterios.alm(cell, d0, q, ctxR, CFG.crit.alm); r.clsR = Criterios.verdict(r.critR).cls; } }
+      if (nR >= 8) { r.critR = Criterios.alm(cell, d0, q, ctxR, CFG.crit.alm); r.clsR = Criterios.verdict(r.critR).cls; }
+      // pocos años recientes con flor (inviernos sin frío): el frío y el frío extremo se miran igual con los últimos 10; lo demás, con toda la serie
+      else { r.critR = Criterios.alm(cell, d0, q, ctxR, CFG.crit.alm).filter(x => x.id === 'frio' || x.id === 'invierno'); r.clsR = Criterios.verdict(r.critR).cls; r.pocosR = nR; } }
     // el veredicto sale de las 10 últimas campañas; en los sucesos raros (CFG.verdict.rare) toda la serie lo deja como mínimo en «condiciona»
     const RARE = (CFG.verdict && CFG.verdict.rare) || [];
     for (const r of [...p, ...a]) { if (r.male) continue; r.critTodo = r.crit; r.clsTodo = r.cls;

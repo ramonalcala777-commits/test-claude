@@ -38,7 +38,7 @@ window.CONFIG = {
     pist: { loss: [10, 25], bad: [0.2, 0.3], chill: [0.2, 0.4], veryLate: [0.2, 0.4], veryLateDoy: 305, lateDoy: 288, autumn: [0.25], overlap: [0.7, 0.4],
       rainBloomDays: 3, rainBloom: [0.5, 9], windLow: 1.0, windHigh: 6.0, hr: [58, 65], preRainMm: 50, preRain: [0.4, 0.8],
       boty: [12, 25], hot: [3], w12: 0.35, w20: 0.15, bloomHotT: 30, bloomHotDays: 2, bloomHot: [0.25, 0.5] },
-    alm: { loss: [10, 25], bad: [0.2, 0.3], bee: [25, 10], beeWind: 4.5, moniliaDays: 4, monilia: [0.5, 9], spring: [18, 30],
+    alm: { loss: [10, 25], bad: [0.2, 0.3], chill: [0.2, 0.4], bee: [25, 10], beeWind: 4.5, moniliaDays: 4, monilia: [0.5, 9], spring: [18, 30],
       harvRainMm: 50, harvRain: [0.5, 9], w15alm: 0.2 }
   },
   // el veredicto sale de los últimos 10 años; en los sucesos raros, toda la serie lo deja como mínimo en «condiciona»
