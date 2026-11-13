@@ -124,6 +124,16 @@
       st.sp = lists[0].sp; st.sel = null; A.render(); await wait();
       o.h2('El recinto');
       o.table(null, [...$('facts').querySelectorAll('.fact')].map(f => [txt(f.querySelector('.k')), txt(f.querySelector('.v')).replace(/\n/g, ' ')]), [1, 3], { sz: 8.8 });
+      // el terreno: escena 3D y plano con curvas (relieve3d.js)
+      const TR = window.AptitudRelieve;
+      if (TR && TR.has(C)) { onProg('Dibujando el terreno del recinto…'); await wait();
+        try { const im = await TR.images(C);
+          if (im && (im.d3 || im.plano)) { o.need(60); o.h2('El terreno del recinto');
+            if (im.d3) { const w = o.CW, h = w * im.d3.h / im.d3.w; o.need(h + 8); doc.addImage(im.d3.url, 'JPEG', o.M, o.y, w, h, undefined, 'FAST'); o.y += h + 1.5;
+              o.p(`Escena 3D vista desde el suroeste, con la altura ×${im.ex} para que se note${im.ortho ? ' y la ortofoto PNOA (IGN) encima' : ' (sin ortofoto: colores por altitud)'}.`, { sz: 8.2, c: LIGHT.muted, gap: 2.5 }); }
+            if (im.plano) { const w = Math.min(o.CW, 128), h = w * im.plano.h / im.plano.w; o.need(h + 14); doc.addImage(im.plano.url, 'JPEG', o.M + (o.CW - w) / 2, o.y, w, h, undefined, 'FAST'); o.y += h + 1.5; }
+            const g = im.g, fN = v => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            o.p(`Amarillo: el recinto. Curvas de nivel cada ${im.step} m (gruesas cada ${5 * im.step} m). Azul: terreno más bajo que el recinto, hacia donde baja el aire frío en las noches de helada. El recinto está a ${fN(g.zPar)} m de media; en la vista, el terreno va de ${fN(g.zmin)} a ${fN(g.zmax)} m. Modelo digital del terreno de 25 m del IGN.`, { sz: 8.2, c: LIGHT.muted, gap: 3 }); } } catch (e) { /* sin terreno: el informe sigue */ } }
       o.p('Cómo leer el informe: el veredicto de cada variedad sale de las 10 últimas campañas; las heladas, el frío extremo y la helada antes de la cosecha miran también toda la serie, y por ellas una variedad puede quedarse en «con condiciones». Cada criterio trae su gráfica año a año, con sus rayas de aviso (ámbar) y de exclusión (roja).', { sz: 8.6, c: LIGHT.muted, gap: 2 });
       for (const li of lists) {
         st.sp = li.sp; st.sel = null; A.render(); await wait();

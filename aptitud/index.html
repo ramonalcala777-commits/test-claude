@@ -93,6 +93,16 @@ details p,details li{margin:0;font-size:.92rem} details ul{margin:0;padding-left
 }
 /* informe PDF */
 .pdfdlg{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(10,14,12,.55);padding:16px}
+/* el terreno del recinto (relieve3d.js) */
+.terview{position:relative;min-height:200px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#DCE6EC;display:flex;justify-content:center}
+.terview canvas{display:block;max-width:100%}
+.tbox{position:relative;width:100%} .tbox canvas{width:100%!important;height:auto;cursor:grab} .tbox canvas:active{cursor:grabbing}
+.tcomp{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.88);pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.25)} .tcomp svg{display:block}
+.tload{align-self:center;color:#3c4a42;font-size:.9rem;padding:40px 12px}
+.tertools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tog[aria-pressed="true"]{background:var(--ink)!important;color:var(--surface)!important;border-color:var(--ink)!important}
+.seg button:disabled{opacity:.4;cursor:default}
+.tsw{display:inline-block;width:18px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px} .tsw.tl{height:0;border-top:2px solid #46301C;vertical-align:3px}
 .pdfbox{width:min(460px,100%);max-height:92vh;overflow:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
 .pdfbox h2{font-size:1.25rem} .pdfbox label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted)}
 .pdfbox select{font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-height:44px}
@@ -167,6 +177,24 @@ details.yyd summary{list-style:none} details.yyd summary::-webkit-details-marker
   <div id="results" hidden>
     <div class="wrap" style="gap:18px">
       <section class="facts" id="facts"></section>
+      <section class="panel" id="terreno" hidden>
+        <div class="panel-head">
+          <h2>El terreno del recinto</h2>
+          <div class="heads">
+            <div class="seg" role="group" aria-label="Vista"><button data-tv="3d" aria-pressed="true">3D</button><button data-tv="plano" aria-pressed="false">Plano</button></div>
+            <div class="seg" role="group" aria-label="Entorno"><button data-te="cerca" aria-pressed="true">Cerca</button><button data-te="lejos" aria-pressed="false">5 km</button></div>
+          </div>
+        </div>
+        <div class="terview" id="terView"></div>
+        <div class="tertools">
+          <button class="btn sm2 tog" id="terCurvas" type="button" aria-pressed="true">Curvas de nivel</button>
+          <button class="btn sm2 tog" id="terFrio" type="button" aria-pressed="true">Aire frío</button>
+          <div class="seg" role="group" aria-label="Altura en 3D" id="terEx"><button data-tx="1" aria-pressed="false">Altura ×1</button><button data-tx="3" aria-pressed="true">×3</button><button data-tx="5" aria-pressed="false">×5</button></div>
+          <div class="seg" role="group" aria-label="Mover la vista" id="terNav" hidden><button data-tz="l" aria-label="Girar a la izquierda">↺</button><button data-tz="r" aria-label="Girar a la derecha">↻</button><button data-tz="+" aria-label="Acercar">＋</button><button data-tz="-" aria-label="Alejar">−</button><button data-tz="0" aria-label="Vista inicial">⌂</button></div>
+        </div>
+        <div class="legend" id="terLegend"></div>
+        <p class="note" id="terNote"></p>
+      </section>
       <section class="panel">
         <div class="panel-head">
           <h2 id="rankTitle">Variedades</h2>
@@ -218,12 +246,13 @@ details.yyd summary{list-style:none} details.yyd summary::-webkit-details-marker
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="config.js?v=20261113a"></script>
-<script src="calib.js?v=20261113a"></script>
+<script src="calib.js?v=20261113b"></script>
 <script src="relieve.js?v=20261113a"></script>
 <script src="motor.js?v=20261113a"></script>
-<script src="criterios.js?v=20261113a"></script>
-<script src="aptitud-core.js?v=20261113a"></script>
-<script src="app.js?v=20261113a"></script>
-<script src="informe.js?v=20261113a"></script>
+<script src="criterios.js?v=20261113b"></script>
+<script src="aptitud-core.js?v=20261113b"></script>
+<script src="relieve3d.js?v=20261113b"></script>
+<script src="app.js?v=20261113b"></script>
+<script src="informe.js?v=20261113b"></script>
 </body>
 </html>

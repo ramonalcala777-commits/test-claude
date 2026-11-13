@@ -36,7 +36,7 @@
 
   const reliefClass = q => AptitudCore.reliefClass(q);
 
-  const clearRes = () => { $('results').hidden = true; current = null; $('pname').textContent = 'Aptitud climática de parcelas'; };
+  const clearRes = () => { $('results').hidden = true; current = null; if (window.AptitudRelieve) AptitudRelieve.hide(); $('pname').textContent = 'Aptitud climática de parcelas'; };
   async function analyse(code) {
     const p = code.trim().replace(/^[:.,;\-\s\/]+|[:.,;\-\s\/]+$/g, '').split(/[:.,;\-\s\/]+/).map(Number);
     if (p.length !== 7 || p.some(isNaN)) { clearRes(); status('El código debe tener 7 números: provincia, municipio, agregado, zona, polígono, parcela y recinto.'); return; }
@@ -52,6 +52,7 @@
     try { prep = await AptitudCore.prepare(f, { onStatus: status }); } catch (e) { status(e.code === 'fuera' ? e.message : typeof DecompressionStream === 'undefined' ? 'Este navegador no puede leer los datos del clima: hace falta iOS 16.4 o posterior (o un navegador actualizado).' : 'No se pudo cargar el clima de la celda. Inténtalo de nuevo.'); return; }
     current = Object.assign(prep, { code: [String(p[0]).padStart(2, '0'), String(p[1]).padStart(3, '0'), p[2], p[3], p[4], p[5], p[6]].join(':'), pr });
     state.sel = null; status(''); $('results').hidden = false; compute();
+    if (window.AptitudRelieve) try { AptitudRelieve.show(current); } catch (e) { console.warn('terreno', e); }
   }
 
   window.__aptCur = () => current; // para las pruebas

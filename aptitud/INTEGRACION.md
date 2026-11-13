@@ -17,6 +17,7 @@ Un simulador que, para cualquier recinto SIGPAC de Castilla-La Mancha (y bordes)
   - `relieve.js`: coeficientes de la corrección por relieve.
   - `calib.js`: textos de calibración y de «Cómo se calcula».
   - `app.js` + `index.html`: interfaz (mapa, búsqueda SIGPAC, cálculo del relieve con el MDT, tablas y gráficos).
+  - `relieve3d.js`: «El terreno del recinto», escena 3D (three.js r128 de cdnjs, ortofoto PNOA del IGN por WMS) y plano con curvas de nivel y aire frío, con el MDT 25 m que lee el núcleo (`relieve.dem`, no enumerable: no se guarda). También da las imágenes del informe PDF.
 - **Datos:** `aptitud/grid/meta.json` y `aptitud/grid/celdas/{n}.bin.gz`, con 1.645 celdas de 0,1° (unos 185 MB en total; cada recinto descarga solo su celda, unos 110 kB).
   - Formato de cada celda: Int16, 11 filas × `nd` días desde `meta.d0` (1995-07-01). Las filas son: tmin×10, tmax×10, porciones de frío×100, GDH Anderson, GDH Richardson, Utah×2, GDD7,2×10, horas ≥ 15 °C, HR×10, lluvia×10 y viento×10; −1 significa sin dato.
   - Cómo se elige la celda: índice de la latitud más cercana en `meta.lat` × nº de longitudes + índice de la longitud más cercana en `meta.lon`.

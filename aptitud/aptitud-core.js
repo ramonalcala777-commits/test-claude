@@ -111,7 +111,10 @@
       const pctOf = z0 => { let n5 = 0, lo = 0; for (let j = 0; j < h5; j++) for (let i = 0; i < w5; i++) { const dx = i + .5 - w5 / 2, dy = j + .5 - h5 / 2; if (dx * dx + dy * dy > k5 * k5) continue; const v = r5k[j * w5 + i]; if (v < -100) continue; n5++; if (v < z0) lo++; } return lo / n5; };
       par.pct = pctOf(par.z); low.pct = pctOf(low.z);
     } catch (e) { par.pct = low.pct = null; }
-    return { par, low, n };
+    const out = { par, low, n };
+    // el terreno leído (25 m, 5 × 5 km) para dibujar la escena del recinto (relieve3d.js); no enumerable: no se guarda ni se copia
+    Object.defineProperty(out, 'dem', { value: { z: Float32Array.from(z), w, h, res, x0: cx - H, y0: cy + H, rings: RG, zPar: par.z }, enumerable: false });
+    return out;
   }
   function reliefDelta(p, elevCell, info) {
     const RL = G.RELIEVE; const f = q => RL.b5 * q.t5 + RL.b20 * q.t20 + (q.pct != null ? RL.bp * q.pct : RL.bp * 0.4) + RL.c * (q.z - elevCell);
