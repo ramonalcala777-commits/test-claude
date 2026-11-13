@@ -221,8 +221,8 @@
     const C = APP().cur(), sp = { p: 'pistacho', a: 'almendro', b: 'pistacho y almendro' }[opt.sp];
     const name = `Aptitud ${C.code.replace(/:/g, '-')} ${sp}${opt.v && opt.v !== '*' ? ' ' + opt.v : ''}.pdf`;
     // dentro de Mapa de Fincas: su hoja de descarga (Guardar / Enviar…)
-    let P = null; try { if (window.parent !== window && typeof window.parent.showDl === 'function') P = window.parent; } catch (e) { P = null; }
-    if (P) { close(); P.showDl(res.blob, name, 'Informe de aptitud climática', res.pages + (res.pages === 1 ? ' página' : ' páginas')); return; }
+    let P = null; try { if (window.parent !== window && typeof (window.parent.mfShowDl || window.parent.showDl) === 'function') P = window.parent; } catch (e) { P = null; }
+    if (P) { close(); (P.mfShowDl || P.showDl)(res.blob, name, 'Informe de aptitud climática', res.pages + (res.pages === 1 ? ' página' : ' páginas')); return; }
     const url = URL.createObjectURL(res.blob), kb = Math.max(1, Math.round(res.blob.size / 1024));
     const file = typeof File === 'function' ? new File([res.blob], name, { type: 'application/pdf' }) : null;
     const share = file && navigator.canShare && navigator.canShare({ files: [file] });
