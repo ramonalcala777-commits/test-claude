@@ -165,7 +165,7 @@ body.vmode #c{cursor:none}
 #orCred{position:fixed;right:10px;bottom:6px;font:500 10px/1.2 var(--ui);color:rgba(255,255,255,.78);text-shadow:0 1px 3px rgba(0,0,0,.7);pointer-events:none;z-index:5}
 #vcap{position:absolute;left:calc(44px*var(--k,1));bottom:calc(40px*var(--k,1) + env(safe-area-inset-bottom,0px));color:#f4f6f1;text-shadow:0 2px 14px rgba(0,0,0,.45);pointer-events:none}
 #vsub{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));max-width:min(760px,calc(100% - 32px));text-align:center;color:#fff;font:500 calc(19px*var(--k,1))/1.35 var(--ui);background:rgba(10,14,12,.62);padding:6px 12px;border-radius:8px;pointer-events:none;transition:opacity .3s;z-index:3;text-wrap:balance}
-body.vmode #vsub{display:block}body.vmode #vsub:empty{display:none}
+body.vmode #vsub{display:none}body.vmode #vsub:empty{display:none}
 body.vmode #vcap{bottom:calc(160px + env(safe-area-inset-bottom,0px))}
 body.vport #vsub{font-size:15px}
 body.vport #vcap{bottom:calc(176px + env(safe-area-inset-bottom,0px))}
@@ -224,7 +224,7 @@ body.vmode #miniWrap{display:none}
     <h3>Ratón</h3><ul><li><b>Arrastrar</b> con el botón izquierdo: girar alrededor del punto que miras</li><li><b>Botón derecho</b> o <b>Mayús + arrastrar</b>: desplazarse sobre el suelo</li><li><b>Rueda</b>: acercar o alejar hacia donde apunta el ratón</li><li><b>Doble clic</b>: volar a ese punto</li><li><b>Clic en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: andar a la altura de los ojos; arrastrar para mirar</li></ul>
     <h3>Teclado</h3><ul><li><b>W A S D</b> o <b>flechas</b>: andar</li><li><b>Q / E</b>: girar a izquierda / derecha</li><li><b>R / F</b>: subir / bajar</li><li><b>Mayús</b>: más rápido</li><li><b>?</b>: esta ayuda</li></ul>
     <h3>Móvil</h3><ul><li><b>Un dedo</b>: girar alrededor del punto que miras</li><li><b>Dos dedos</b>: moverlos juntos para desplazarse; abrirlos o cerrarlos para acercar o alejar hacia ese punto</li><li><b>Doble toque</b>: volar a ese punto</li><li><b>Toque en un árbol</b>: su ficha</li><li><b>Brújula</b>: mirar al norte</li><li><b>Paseo</b>: el joystick para andar y un dedo para mirar</li></ul>
-    <h3>Vídeo del año</h3><ul><li><b>Toca la pantalla</b> para ver la barra: pausa, 10 s atrás o adelante, avance y salir</li><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v35 · 11 nov 2026</p></div>
+    <h3>Vídeo del año</h3><ul><li><b>Toca la pantalla</b> para ver la barra: pausa, 10 s atrás o adelante, avance y salir</li><li><b>Enter</b>: pausa / seguir</li><li><b>→ / ←</b>: 10 s adelante / atrás</li><li><b>Esc</b>: salir</li></ul><p class="ver">Versión v35.1 (prueba) · 14 nov 2026</p></div>
   <button class="btn" id="toggle" type="button" aria-expanded="true" aria-controls="panel">Ocultar ajustes</button>
 
   <aside id="panel" aria-label="Ajustes de la escena">
@@ -309,7 +309,7 @@ body.vmode #miniWrap{display:none}
       <div class="sl"><span>Campo visión</span><input type="range" id="fov" min="30" max="80" step="1" value="55" aria-label="Campo de visión"><output id="fovOut">55°</output></div>
       <p class="note">Si va a tirones en el móvil, baja la calidad.</p>
     </section>
-    <p class="ver">Versión v35 · 11 nov 2026</p>
+    <p class="ver">Versión v35.1 (prueba) · 14 nov 2026</p>
   </aside>
 
   <div id="miniWrap"><canvas id="mini" aria-label="Minimapa de la finca: toca para ir a ese punto"></canvas></div>
@@ -3097,7 +3097,8 @@ const NSUB={intro:'Finca Casa de Arriba, La Vega, en Balazote (Albacete). 58 hec
  agosta:'El 30 de septiembre se deja de regar. La madera de los brotes del año madura y se endurece, y el árbol guarda reservas en la madera y en las yemas para la próxima primavera.',
  caida:'Entre finales de octubre y noviembre, las hojas amarillean y caen. Con las primeras lluvias, la cubierta de las calles vuelve a verdear.',
  final:'Finca Casa de Arriba, La Vega. Dos años después de plantar.'};
-function vSubTick(t){const el=$('vsub');if(!el)return;let txt='';if(VM&&VM.nar&&NAR.on&&window.NARR){for(const n of VM.nar){if(t>=n.T&&t<n.T+n.d+0.4){const c=NARR[n.i],full=c&&NSUB[c.k];if(full){const fr=full.split(/(?<=[.:])\s+/).map(x=>x.trim()).filter(Boolean),tot=fr.reduce((a,x)=>a+x.length,0);let acc=0;const u=clamp((t-n.T)/n.d,0,0.999)*tot;txt=fr[fr.length-1];for(const x of fr){acc+=x.length;if(u<acc){txt=x;break;}}}break;}}}
+function vSubTick(t){return; // v35.1: sin subtítulos en el vídeo del año (a petición de Ramón)
+  const el=$('vsub');if(!el)return;let txt='';if(VM&&VM.nar&&NAR.on&&window.NARR){for(const n of VM.nar){if(t>=n.T&&t<n.T+n.d+0.4){const c=NARR[n.i],full=c&&NSUB[c.k];if(full){const fr=full.split(/(?<=[.:])\s+/).map(x=>x.trim()).filter(Boolean),tot=fr.reduce((a,x)=>a+x.length,0);let acc=0;const u=clamp((t-n.T)/n.d,0,0.999)*tot;txt=fr[fr.length-1];for(const x of fr){acc+=x.length;if(u<acc){txt=x;break;}}}break;}}}
   if(el.textContent!==txt){el.textContent=txt;el.style.opacity=txt?1:0;}}
 function narStop(){if(NAR.src){try{NAR.src.stop();}catch(e){}NAR.src=null;}NAR.k=-1;}
 function narTick(t){if(!VM||!VM.nar||!VM.nar.length||!AUD.ctx)return;const ctx=AUD.ctx;let k=-1;for(let j=0;j<VM.nar.length;j++){const n=VM.nar[j];if(t>=n.T&&t<n.T+n.d){k=j;break;}}
