@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="apple-touch-icon" href="icono.png">
 <link rel="icon" type="image/png" href="favicon.png">
 <meta name="apple-mobile-web-app-title" content="La Vega 3D">
@@ -49,7 +49,7 @@ body.simple .sec[data-adv]{display:none}
   .btn,.seg button,.segm button,.labr{min-height:44px}
   .seg button,.segm button{padding-left:12px;padding-right:12px}
   input[type=range]{height:34px}
-  #helpBtn{width:44px;height:44px}
+  #helpBtn{width:40px!important;height:40px!important;min-height:0!important;padding:0!important;border-radius:50%}
   .note,.labs{font-size:13px}
 }
 
@@ -163,7 +163,7 @@ body.vmode #c{cursor:none}
 #vPause{position:fixed;top:calc(22px*var(--k,1));left:50%;transform:translateX(-50%);padding:7px 16px;border-radius:99px;background:rgba(18,22,20,.72);color:#fbf6ea;font:600 15px/1 var(--ui);letter-spacing:.08em;z-index:80;pointer-events:none}
 #vPause[hidden]{display:none}
 #orCred{position:fixed;right:10px;bottom:6px;font:500 10px/1.2 var(--ui);color:rgba(255,255,255,.78);text-shadow:0 1px 3px rgba(0,0,0,.7);pointer-events:none;z-index:5}
-#vcap{position:absolute;left:calc(44px*var(--k,1));bottom:calc(40px*var(--k,1) + env(safe-area-inset-bottom,0px));color:#f4f6f1;text-shadow:0 2px 14px rgba(0,0,0,.45);pointer-events:none}
+#vcap{position:absolute;left:calc(44px*var(--k,1) + env(safe-area-inset-left,0px));bottom:calc(40px*var(--k,1) + env(safe-area-inset-bottom,0px));color:#f4f6f1;text-shadow:0 2px 14px rgba(0,0,0,.45);pointer-events:none}
 #vsub{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));max-width:min(760px,calc(100% - 32px));text-align:center;color:#fff;font:500 calc(19px*var(--k,1))/1.35 var(--ui);background:rgba(10,14,12,.62);padding:6px 12px;border-radius:8px;pointer-events:none;transition:opacity .3s;z-index:3;text-wrap:balance}
 body.vmode #vsub{display:none}body.vmode #vsub:empty{display:none}
 body.vmode #vcap{bottom:calc(160px + env(safe-area-inset-bottom,0px))}
@@ -171,7 +171,7 @@ body.vport #vsub{font-size:15px}
 body.vport #vcap{bottom:calc(176px + env(safe-area-inset-bottom,0px))}
 #vcap .d{font:500 calc(15px*var(--k,1))/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;opacity:.92}
 #vcap .p{font:600 calc(34px*var(--k,1))/1.1 var(--ui);margin-top:calc(8px*var(--k,1));letter-spacing:-.01em}
-#vbrand{position:absolute;right:calc(44px*var(--k,1));bottom:calc(44px*var(--k,1) + env(safe-area-inset-bottom,0px));font:500 calc(12px*var(--k,1))/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#f4f6f1;opacity:.8;text-align:right;text-shadow:0 2px 10px rgba(0,0,0,.45);pointer-events:none}
+#vbrand{position:absolute;right:calc(44px*var(--k,1) + env(safe-area-inset-right,0px));bottom:calc(44px*var(--k,1) + env(safe-area-inset-bottom,0px));font:500 calc(12px*var(--k,1))/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#f4f6f1;opacity:.8;text-align:right;text-shadow:0 2px 10px rgba(0,0,0,.45);pointer-events:none}
 #vtitle{position:absolute;inset:0;flex-direction:column;justify-content:center;padding-left:calc(90px*var(--k,1));padding-right:16px;color:#f6f8f3;background:linear-gradient(90deg,rgba(14,20,16,.62),rgba(14,20,16,0) 70%);pointer-events:none}
 #vtitle .k{font:500 calc(16px*var(--k,1))/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;opacity:.85}
 #vtitle .t{font:700 calc(64px*var(--k,1))/1.02 var(--ui);letter-spacing:-.02em;margin-top:calc(14px*var(--k,1));text-wrap:balance}
@@ -196,7 +196,10 @@ body.vmode #miniWrap{display:none}
   body.pOpen #miniWrap,body.pOpen .compass,body.pOpen #orCred{display:none}
   /* v35: hoja de ajustes más baja, título sin pisar, ficha arriba para no tapar minimapa ni brújula, crédito pequeño en la esquina */
   #panel{max-height:42%}
-  .hud{max-width:calc(100% - 150px)}
+  .hud{max-width:calc(100% - 100px)}
+  body.pOpen .hud{max-width:calc(100% - 150px)}
+  .hud .sub{font-size:11px}
+  #vexit{font-size:12px;padding:6px 10px}
   body.pOpen .hud .kick{display:none}
   #toggle{font-size:12px;padding:6px 10px}
   #card{top:calc(96px + env(safe-area-inset-top,0px));bottom:auto;max-height:calc(100% - 260px);overflow:auto}
@@ -1675,11 +1678,11 @@ function buildField(){
   setPR();
 }
 // v35: resolución que se ajusta sola: si la gráfica no llega, se dibuja con algo menos de detalle de píxel; si va sobrada, se recupera
-const DR={s:1,a:[],t:0};
-function drTick(now,dms){if(VM||document.hidden||dms>400||!CH.warm){DR.a.length=0;DR.t=now;return;}DR.a.push(dms);if(now-DR.t<1500)return;DR.t=now;
-  if(DR.a.length>=8){const a=DR.a.slice().sort((x,y)=>x-y),m=a[a.length>>1];let ns=DR.s;if(m>36)ns=Math.max(S.quality==='alta'?0.8:S.quality==='media'?0.62:0.55,DR.s-(m>60?0.15:0.08));else if(m<21)ns=Math.min(1,DR.s+0.05);if(Math.abs(ns-DR.s)>0.001){DR.s=ns;setPR();}}DR.a.length=0;}
+const DR={s:1,a:[],t:0},TOUCHDEV=(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches)||(navigator.maxTouchPoints>0&&!(window.matchMedia&&window.matchMedia('(pointer:fine)').matches));
+function drTick(now,dms){if(TOUCHDEV){if(DR.s!==1){DR.s=1;setPR();}return;}if(VM||document.hidden||dms>400||!CH.warm){DR.a.length=0;DR.t=now;return;}DR.a.push(dms);if(now-DR.t<1500)return;DR.t=now;
+  if(DR.a.length>=8){const a=DR.a.slice().sort((x,y)=>x-y),m=a[a.length>>1];let ns=DR.s;if(m>36)ns=Math.max(S.quality==='alta'?0.82:S.quality==='media'?0.72:0.65,DR.s-(m>60?0.15:0.08));else if(m<21)ns=Math.min(1,DR.s+0.05);if(Math.abs(ns-DR.s)>0.001){DR.s=ns;setPR();}}DR.a.length=0;}
 function setPR(){const q=Q[S.quality],w=canvas.clientWidth||window.innerWidth,h=canvas.clientHeight||window.innerHeight,cap={baja:2.1e6,media:4.2e6,alta:8.3e6}[S.quality];
-  const pr=Math.max(0.5,Math.max(0.75,Math.min(window.devicePixelRatio||1,q.pr,Math.sqrt(cap/Math.max(1,w*h))))*DR.s);if(Math.abs(renderer.getPixelRatio()-pr)>0.01)renderer.setPixelRatio(pr);}
+  const pr=Math.max(0.6,Math.max(0.75,Math.min(window.devicePixelRatio||1,q.pr,Math.sqrt(cap/Math.max(1,w*h))))*DR.s);if(Math.abs(renderer.getPixelRatio()-pr)>0.01)renderer.setPixelRatio(pr);}
 
 /* ---------- Trozos cercanos con todo el detalle; anillos medio y lejano ---------- */
 const CH={W:33,H:19.5,cells:new Map(),active:new Map(),cache:new Map(),ringFocus:new THREE.Vector3(1e9,0,1e9),dirtyRings:true,assets:new Map(),cur:null,limit:70};
@@ -1707,7 +1710,7 @@ function treeReady(t,A){return TGEN.m.has(tgKey(t,A));}
 function pregen(cell,A,until){const sg=sigOf(A);if(TGEN.sig!==sg){TGEN.m.clear();TGEN.sig=sg;}const o=treeOpt();for(const t of cell.trees){const k=tgKey(t,A);if(TGEN.m.has(k))continue;if(performance.now()>until)return false;TGEN.m.set(k,genTree(seedOf(t),A,t.t>0?Object.assign({},o,{male:1}):o));}return true;}
 function buildChunk(cell,A){const g=buildChunkGen(cell,A);let r;do{r=g.next();}while(!r.done);return r.value;}
 function* buildChunkGen(cell,A){
-  const q=Q[S.quality],G=growth(A),prod=prodOf(S.year),tutor=S.year<=2029,two=S.year>=2027,grp=new THREE.Group();
+  const q=Q[S.quality],G=growth(A),prod=prodOf(S.year),tutor=S.year<=2029,two=S.year>=2027,grp=new THREE.Group();grp.userData.adult=A>=3.6;
   const M=new THREE.Matrix4(),Sc=new THREE.Vector3(),P=new THREE.Vector3(),X=new THREE.Vector3(),Y=new THREE.Vector3(),Z=new THREE.Vector3(),B=new THREE.Matrix4(),W=new THREE.Matrix4(),Qt=new THREE.Quaternion();
   const bark=new GB(),barkF=new GB(),barkI=new GB();const volList=[],leafList=[],budList=[],litterList=[],fruit=[],male=[],nutList=[],cutList=[];const lab26=S.year===LAB_YEAR;const sidesBy=[8,5,4,3,3];
   for(const t of cell.trees){
@@ -1968,7 +1971,7 @@ function updateStreaming(){
       else ch=buildChunk(xs?{key:c.key,gx:c.gx,gz:c.gz,trees:c.trees.filter(t=>t!==XR.t)}:c,A);ch.sig=sg;CH.cache.set(ck,ch);built++;}
     applyChunkDate(ch);applyChunkRiego(ch);ch.used=performance.now();
     if(cur){world.remove(cur.group);fadeEnd(cur);}world.add(ch.group);(ch.sph||(ch.sph=(()=>{const tr=ch.trees||[];if(!tr.length)return null;let cx=0,cz=0;tr.forEach(t=>{cx+=t.u;cz+=t.v;});cx/=tr.length;cz/=tr.length;let r=0;tr.forEach(t=>{r=Math.max(r,(t.u-cx)**2+(t.v-cz)**2);});return new THREE.Sphere(new THREE.Vector3(cx,2,cz),Math.sqrt(r)+6);})()),CH.active.set(c.key,ch));changed=true;if(!cur&&FADE.ok)fadeStart(ch);}
-  {let rk=0;for(const [d,c] of need){const ch=CH.active.get(c.key);if(!ch)continue;const fk=d<1.5&&rk++<2?1:d<3?0.85:d<12?0.7:d<24?0.4:0.2;{const ud=ch.group.userData,bf=ud.bf,sh=d<14;const bfOn=S.quality==='alta'||VM?d<4:fk>=1;if(bf)bf.visible=bfOn;if(ch.bud){const bv=!!(P_&&P_.bud>0.01)&&(bfOn||!ch.group.userData.bf);if(ch.bud.visible!==bv)ch.bud.visible=bv;}if(ud.bi)ud.bi.visible=d<12;if(ud.bk)ud.bk.castShadow=sh;if(ch.leaf)ch.leaf.castShadow=sh;ch.nutFar=d>=6;if(ch.nuts){const nv=S.doy>=252&&S.doy<352&&!ch.nutFar;if(ch.nuts.visible!==nv)ch.nuts.visible=nv;}if(ch.lg){ch.lgFar=d>=14;const v=U.uLG.value>0.01&&d<14;if(ch.lg.visible!==v)ch.lg.visible=v;}}if(ch.leaf&&ch.leaf.userData.g2){const g=fk>=1?ch.leaf.userData.g8:ch.leaf.userData.g2;if(ch.leaf.geometry!==g)ch.leaf.geometry=g;}if(ch.fk!==fk){ch.fk=fk;if(ch.fruit&&ch.fruit.length)applyChunkDate(ch);}else if(fk>=1&&ch.fruit&&ch.fruit.length&&ch.cm&&(ch.cm.fruit.visible||ch.cm.fruitB&&ch.cm.fruitB.visible)&&ch.splitF&&(ch.splitF.distanceTo(_f)>4||ch.splitC&&ch.splitC.distanceTo(camera.position)>1.5))applyChunkDate(ch);}}
+  {let rk=0;for(const [d,c] of need){const ch=CH.active.get(c.key);if(!ch)continue;const fk=d<1.5&&rk++<2?1:d<3?0.85:d<12?0.7:d<24?0.4:0.2;{const ud=ch.group.userData,bf=ud.bf,sh=d<14;const bfOn=!ud.adult||(S.quality==='alta'||VM?d<4:fk>=1);if(bf)bf.visible=bfOn;if(ch.bud){const bv=!!(P_&&P_.bud>0.01)&&(bfOn||!ch.group.userData.bf);if(ch.bud.visible!==bv)ch.bud.visible=bv;}if(ud.bi)ud.bi.visible=d<12;if(ud.bk)ud.bk.castShadow=sh;if(ch.leaf)ch.leaf.castShadow=sh;ch.nutFar=d>=6;if(ch.nuts){const nv=S.doy>=252&&S.doy<352&&!ch.nutFar;if(ch.nuts.visible!==nv)ch.nuts.visible=nv;}if(ch.lg){ch.lgFar=d>=14;const v=U.uLG.value>0.01&&d<14;if(ch.lg.visible!==v)ch.lg.visible=v;}}if(ch.leaf&&ch.leaf.userData.g2){const g=fk>=1?ch.leaf.userData.g8:ch.leaf.userData.g2;if(ch.leaf.geometry!==g)ch.leaf.geometry=g;}if(ch.fk!==fk){ch.fk=fk;if(ch.fruit&&ch.fruit.length)applyChunkDate(ch);}else if(fk>=1&&ch.fruit&&ch.fruit.length&&ch.cm&&(ch.cm.fruit.visible||ch.cm.fruitB&&ch.cm.fruitB.visible)&&ch.splitF&&(ch.splitF.distanceTo(_f)>4||ch.splitC&&ch.splitC.distanceTo(camera.position)>1.5))applyChunkDate(ch);}}
   {const cr=q.coverR;for(const [d,c] of need){const ch=CH.active.get(c.key);if(!ch||!ch.cover)continue;const on=d<=cr;if(on!==ch.cvOn){ch.cvOn=on;ch.cover.visible=on&&U.uCovH.value>0.1;}}}
   if(changed){CH.dirtyRings=true;refreshNear();trimCache();updLineMask();tgenTrim();}
   {let pend=!!CH.ab;if(!pend)for(const [d,c] of need){const cur=CH.active.get(c.key);if(!cur||cur.sig.split('|x')[0]!==sig){pend=true;break;}}const now=performance.now();
@@ -3041,8 +3044,8 @@ function startVideo(){
     if(VM.nar.length){if(!AUD.ctx){try{const AC=window.AudioContext||window.webkitAudioContext;AUD.ctx=new AC();}catch(e){}}if(AUD.ctx&&AUD.ctx.state!=='running')AUD.ctx.resume();narPrepare();}
     audStart(VM.tot);
     document.body.classList.add('vmode');controls.enabled=false;S.labels='on';placeLabels();
-    const port=window.innerHeight>window.innerWidth*1.1,k=port?Math.min(1,Math.max(0.66,window.innerWidth/560)):Math.max(0.42,Math.min(window.innerWidth/1280,window.innerHeight/720));$('app').style.setProperty('--k',k.toFixed(3));document.body.classList.toggle('vport',port);
-    camera.fov=45;camera.updateProjectionMatrix();
+    const port=window.innerHeight>window.innerWidth*1.1,k=port?Math.min(0.8,Math.max(0.5,window.innerWidth/720)):Math.max(0.42,Math.min(window.innerWidth/1280,window.innerHeight/720));$('app').style.setProperty('--k',k.toFixed(3));document.body.classList.toggle('vport',port);
+    camera.fov=vidFov();camera.updateProjectionMatrix();
     $('vtitle').classList.remove('end');$('vk').textContent=VM.texts.k;$('vt').textContent=VM.texts.t;$('vs').textContent=VM.texts.s;
     $('vexit').style.opacity=1;$('vbar').style.opacity=1;$('vbPlay').textContent='❚❚';VM.shown=performance.now();
     $('loading').classList.add('done');
@@ -3123,7 +3126,7 @@ function videoTick(now){
   {const tk=H&&LAB_TRACTOR.has(H.lab.k),env=H?smooth(0,0.08,H.p)*(1-smooth(0.9,1,H.p)):0;audTick(doy,tt,tk?env:0,tk&&H.lab.k==='trat'?env:0);}
   $('vd').textContent=dateLong(Math.round(doy))+(H?' · labor':'');$('vp').textContent=H?H.lab.t:(VM.y===LAB_YEAR&&doy>=132&&doy<212?'':$('phName').textContent);
   {const pb=$('vprogB');if(pb)pb.style.width=(clamp(t/VM.tot,0,1)*100).toFixed(2)+'%';}
-  if(now-VM.shown>3500&&!VM.paused){$('vexit').style.opacity=window.innerWidth<=760||window.matchMedia('(pointer:coarse)').matches?0.8:0;$('vbar').style.opacity=0;}
+  if(now-VM.shown>3500&&!VM.paused){$('vexit').style.opacity=window.innerWidth<=760||window.matchMedia('(pointer:coarse)').matches?0.55:0;$('vbar').style.opacity=0;}
   vSubTick(t);
 }
 $('vNarr').addEventListener('click',()=>{NAR.on=!NAR.on;$('vNarr').setAttribute('aria-pressed',String(NAR.on));$('vNarr').textContent='Narración (2026): '+(NAR.on?'sí':'no');});
@@ -4489,7 +4492,9 @@ $('d_schemaBtn').addEventListener('click',()=>{const s=$('d_schema'),open=s.hidd
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&XR.on)closeXray();});
 
 /* ---------- Tamaño y bucle ---------- */
-function resize(){const w=canvas.clientWidth||window.innerWidth,h=canvas.clientHeight||window.innerHeight;setPR();renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+// v35.1: en vertical el vídeo abre el ángulo (con 45° el móvil en vertical solo veía ~22° de ancho, como con zoom)
+function vidFov(){const a=(canvas.clientWidth||window.innerWidth)/Math.max(1,canvas.clientHeight||window.innerHeight);return a>=1?45:Math.min(80,2*Math.atan(Math.tan(22.5*Math.PI/180)*0.85/a)*180/Math.PI);}
+function resize(){const w=canvas.clientWidth||window.innerWidth,h=canvas.clientHeight||window.innerHeight;setPR();renderer.setSize(w,h,false);camera.aspect=w/h;if(VM)camera.fov=vidFov();camera.updateProjectionMatrix();}
 window.addEventListener('resize',resize);
 const needle=$('needle'),fwd=new THREE.Vector3(),right=new THREE.Vector3();
 let last=performance.now(),started=false,yAcc=0;
