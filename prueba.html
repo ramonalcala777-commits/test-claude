@@ -2209,7 +2209,7 @@ $('fogI').addEventListener('input',e=>{S.fogI=parseFloat(e.target.value);$('fogI
 $('clouds').addEventListener('input',e=>{S.clouds=parseFloat(e.target.value);$('cloudsOut').textContent=Math.round(S.clouds*100)+' %';applyTime();});
 $('wind').addEventListener('input',e=>{S.wind=parseFloat(e.target.value);$('windOut').textContent=fmt(S.wind,S.wind%1?1:0)+' m/s';});
 $('expo').addEventListener('input',e=>{S.expo=parseFloat(e.target.value);$('expoOut').textContent=(S.expo>=0?'+':'')+fmt(S.expo,1);applyTime();});
-$('fov').addEventListener('input',e=>{S.fov=parseFloat(e.target.value);$('fovOut').textContent=S.fov+'°';camera.fov=S.fov;camera.updateProjectionMatrix();});
+$('fov').addEventListener('input',e=>{S.fov=parseFloat(e.target.value);$('fovOut').textContent=S.fov+'°';camera.fov=camFov();camera.updateProjectionMatrix();});
 function rebuildSoon(){$('loading').classList.remove('done');$('loading').textContent='Recalculando…';setTimeout(()=>{clearChunks();for(const v of CH.assets.values()){v.variants.forEach(g=>g.dispose());v.lite.forEach(g=>g.dispose());(v.vfr||[]).concat(v.lfr||[]).forEach(g=>g&&g.dispose());v.farGeo.dispose();}CH.assets.clear();CH.cur=null;CH.ab=null;buildField();setDoy(S.doy,{force:true});$('loading').classList.add('done');},30);}
 const panel=$('panel'),toggle=$('toggle');
 function setPanel(open){panel.hidden=!open;document.body.classList.toggle('pOpen',!!open);toggle.textContent=open?'Ocultar ajustes':'Ajustes';toggle.setAttribute('aria-expanded',String(open));}
@@ -3056,7 +3056,7 @@ function endVideo(){
   document.body.classList.remove('vmode');controls.enabled=!PS.on;$('vsub').textContent='';
   S.hour=prev.hour;S.clouds=prev.clouds;S.riego=prev.riego;S.labels=prev.labels;syncSeg('riego');syncSeg('labels');placeLabels();
   $('clouds').value=S.clouds;$('cloudsOut').textContent=Math.round(S.clouds*100)+' %';$('hour').value=S.hour;
-  camera.fov=prev.fov;camera.updateProjectionMatrix();camera.position.copy(prev.cam);controls.target.copy(prev.tgt);
+  camera.fov=camFov();camera.updateProjectionMatrix();camera.position.copy(prev.cam);controls.target.copy(prev.tgt);
   $('vbrand').style.opacity='';$('vtitle').classList.remove('end');
   if(VM.cut&&CUT.on)setCut(false);if(VM.paused&&AUD.ctx)AUD.ctx.resume();$('vPause').hidden=true;
   VM=null;TRK.on=null;narStop();audStop();applyTime();trimCache();setDoy(prev.doy,{force:true});
@@ -4493,8 +4493,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&XR.on)closeXray();}
 
 /* ---------- Tamaño y bucle ---------- */
 // v35.1: en vertical el vídeo abre el ángulo (con 45° el móvil en vertical solo veía ~22° de ancho, como con zoom)
+function camFov(){const a=(canvas.clientWidth||window.innerWidth)/Math.max(1,canvas.clientHeight||window.innerHeight),f=S.fov||55;return a>=1?f:Math.min(85,2*Math.atan(Math.tan(f*Math.PI/360)*0.8/a)*180/Math.PI);}
 function vidFov(){const a=(canvas.clientWidth||window.innerWidth)/Math.max(1,canvas.clientHeight||window.innerHeight);return a>=1?45:Math.min(80,2*Math.atan(Math.tan(22.5*Math.PI/180)*0.85/a)*180/Math.PI);}
-function resize(){const w=canvas.clientWidth||window.innerWidth,h=canvas.clientHeight||window.innerHeight;setPR();renderer.setSize(w,h,false);camera.aspect=w/h;if(VM)camera.fov=vidFov();camera.updateProjectionMatrix();}
+function resize(){const w=canvas.clientWidth||window.innerWidth,h=canvas.clientHeight||window.innerHeight;setPR();renderer.setSize(w,h,false);camera.aspect=w/h;if(VM)camera.fov=vidFov();else if(!CUT.on)camera.fov=camFov();camera.updateProjectionMatrix();}
 window.addEventListener('resize',resize);
 const needle=$('needle'),fwd=new THREE.Vector3(),right=new THREE.Vector3();
 let last=performance.now(),started=false,yAcc=0;
