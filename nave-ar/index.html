@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nave 5.000 m² · Maqueta en tu mesa</title>
+<script src="model-viewer-umd.min.js"></script>
+<style>
+  :root { --verde:#2e5c34; --crema:#f3f1ec; --tinta:#1d2a20; --gris:#6b756d; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; background:var(--crema); color:var(--tinta);
+    font-family:Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif; }
+  .wrap { display:flex; flex-direction:column; height:100%; }
+  header { padding:14px 18px 8px; }
+  header .kicker { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--verde); font-weight:700; }
+  header h1 { margin:2px 0 2px; font-size:22px; letter-spacing:-.01em; }
+  header p { margin:0; font-size:13px; color:var(--gris); }
+  .stage { position:relative; flex:1; min-height:320px; margin:6px 12px; border-radius:18px; overflow:hidden;
+    background:radial-gradient(ellipse at 50% 40%, #ffffff 0%, #e9e6dd 70%, #dcd8cc 100%); box-shadow:inset 0 0 0 1px #e1ddd2; }
+  model-viewer { width:100%; height:100%; --poster-color:transparent; }
+  .ar-btn { position:absolute; left:50%; bottom:18px; transform:translateX(-50%); border:0; border-radius:999px;
+    background:var(--verde); color:#fff; font-size:16px; font-weight:650; padding:14px 22px; display:flex; gap:10px; align-items:center;
+    box-shadow:0 8px 24px rgba(46,92,52,.35); cursor:pointer; white-space:nowrap; }
+  .ar-btn svg { width:22px; height:22px; }
+  .chips { position:absolute; top:12px; left:12px; display:flex; gap:6px; }
+  .chip { background:rgba(255,255,255,.92); border:1px solid #d8d4c8; border-radius:999px; padding:7px 12px; font-size:13px;
+    cursor:pointer; color:var(--tinta); font-weight:600; }
+  .chip.on { background:var(--verde); color:#fff; border-color:var(--verde); }
+  .size { position:absolute; top:14px; right:14px; background:rgba(255,255,255,.92); border-radius:10px; padding:7px 10px;
+    font-size:12px; color:var(--gris); text-align:right; line-height:1.35; }
+  .size b { color:var(--tinta); font-size:14px; }
+  .panel { padding:10px 18px 18px; display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; }
+  .card { background:#fff; border-radius:14px; padding:12px 14px; box-shadow:0 1px 0 #e1ddd2; }
+  .card h2 { margin:0 0 6px; font-size:13px; color:var(--verde); text-transform:uppercase; letter-spacing:.08em; }
+  .card ol { margin:0; padding-left:20px; font-size:13.5px; line-height:1.55; }
+  .card dl { margin:0; display:grid; grid-template-columns:auto 1fr; gap:3px 12px; font-size:13px; }
+  .card dt { color:var(--gris); } .card dd { margin:0; font-weight:600; text-align:right; }
+  .note { font-size:12.5px; color:var(--gris); line-height:1.45; margin-top:6px; }
+  .note a { color:var(--verde); font-weight:600; }
+  #noar { display:none; }
+  @media (max-width:600px) { header h1 { font-size:19px; } .card dd { white-space:nowrap; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Realidad aumentada · maqueta a escala</div>
+    <h1>Nave almacén agrícola de 5.000 m²</h1>
+    <p>Finca Casa de Arriba «La Vega» · Balazote (Albacete) · recinto SIGPAC 02:012:0:0:10:467:38</p>
+  </header>
+
+  <div class="stage">
+    <model-viewer id="mv" src="nave_1-200.glb" ios-src="nave_1-200.usdz" alt="Maqueta 3D de la nave"
+      ar ar-modes="quick-look scene-viewer webxr" ar-scale="fixed" ar-placement="floor"
+      camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="1500" rotation-per-second="12deg"
+      camera-orbit="-35deg 62deg auto" field-of-view="21deg" shadow-intensity="1" shadow-softness="0.8"
+      exposure="1.05" environment-image="neutral" interaction-prompt="none">
+      <button slot="ar-button" class="ar-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg>
+        Ver en mi mesa
+      </button>
+    </model-viewer>
+    <div class="chips">
+      <button class="chip on" data-s="200">1:200</button>
+      <button class="chip" data-s="100">1:100</button>
+    </div>
+    <div class="size" id="size"></div>
+  </div>
+
+  <div class="panel">
+    <div class="card">
+      <h2>Cómo verla en la mesa</h2>
+      <ol>
+        <li>Abre este enlace en el móvil (en iPhone, en <b>Safari</b>).</li>
+        <li>Elige la escala: <b>1:200</b> para una mesa normal, <b>1:100</b> para una mesa grande.</li>
+        <li>Pulsa <b>Ver en mi mesa</b> y mueve el móvil despacio sobre la mesa hasta que la detecte.</li>
+        <li>La maqueta se apoya sola. Arrástrala para moverla, gírala con dos dedos y rodéala andando.</li>
+      </ol>
+      <div class="note" id="noar">Este dispositivo no abre la cámara desde aquí. En iPhone, abre el enlace en Safari o pulsa
+        <a id="qlink" rel="ar" href="nave_1-200.usdz"><img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" width="1" height="1">abrir la maqueta en AR</a>.</div>
+    </div>
+    <div class="card">
+      <h2>La nave</h2>
+      <dl>
+        <dt>Dimensiones entre ejes</dt><dd>100,00 × 50,00 m</dd>
+        <dt>Superficie construida</dt><dd>5.128 m²</dd>
+        <dt>Alero / cumbrera</dt><dd>5,90 / 8,40 m</dd>
+        <dt>Estructura</dt><dd>17 pórticos · 2 × 25 m</dd>
+        <dt>Cubierta</dt><dd>Sándwich + FV 40 kWp</dd>
+        <dt>Presupuesto (PEM)</dt><dd>1.165.637,39 €</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <h2>La maqueta</h2>
+      <dl>
+        <dt>Terreno representado</dt><dd>132 × 93 m</dd>
+        <dt>Escala 1:200</dt><dd>66 × 47 cm · 6 cm de alto</dd>
+        <dt>Escala 1:100</dt><dd>1,32 × 0,93 m · 12 cm de alto</dd>
+        <dt>Base</dt><dd>Ortofoto PNOA real</dd>
+      </dl>
+      <div class="note">La escala queda fija para que la maqueta mida exactamente lo indicado sobre la mesa.</div>
+    </div>
+  </div>
+</div>
+<script>
+  const mv = document.getElementById('mv');
+  const SIZES = { 200: ['66 × 47 cm', 'maqueta 1:200'], 100: ['1,32 × 0,93 m', 'maqueta 1:100'] };
+  function setScale(s) {
+    mv.src = `nave_1-${s}.glb`;
+    mv.iosSrc = `nave_1-${s}.usdz`;
+    document.getElementById('qlink').href = `nave_1-${s}.usdz`;
+    document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.s == s));
+    document.getElementById('size').innerHTML = `<b>${SIZES[s][0]}</b><br>${SIZES[s][1]}`;
+  }
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => setScale(c.dataset.s)));
+  setScale(200);
+  mv.addEventListener('load', () => {
+    setTimeout(() => { if (!mv.canActivateAR) document.getElementById('noar').style.display = 'block'; }, 400);
+  });
+  mv.addEventListener('ar-status', e => {
+    if (e.detail.status === 'failed') document.getElementById('noar').style.display = 'block';
+  });
+</script>
+</body>
+</html>
