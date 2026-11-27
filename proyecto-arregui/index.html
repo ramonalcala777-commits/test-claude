@@ -494,7 +494,7 @@ table.fases td.num { font-weight: 600; white-space: nowrap; }
     </button>
     <div class="kpibar busy" id="kb" aria-live="polite">
       <a class="est" href="#semaforo" id="kb_go" title="Ver el estado de cumplimiento"><i class="dot" aria-hidden="true"></i><span id="kb_est">Calculando…</span></a>
-      <span class="v"><small>Nave </small><span id="kb_pem">—</span><em id="kb_nv" hidden> no válido</em></span>
+      <span class="v"><small>Nave 2026 </small><span id="kb_pem">—</span><em id="kb_nv" hidden> no válido</em></span>
       <span class="v"><small>Acero </small><span id="kb_t">—</span></span>
     </div>
     <header class="brand">
@@ -520,7 +520,7 @@ table.fases td.num { font-weight: 600; white-space: nowrap; }
     </section>
     <section id="secPresu">
       <h2>Presupuesto</h2>
-      <p class="presu-grp">Nave (obra civil e instalaciones)</p>
+      <p class="presu-grp">Nave (obra civil e instalaciones) · precios de 2026</p>
       <div id="caps"></div>
       <table class="tot-nave"><tbody id="totales"></tbody></table>
       <p class="presu-nota">Pulsa un capítulo para ver sus partidas.</p>
@@ -4664,7 +4664,7 @@ three/build/three.module.js:
 
 <!-- ===== Datos de la línea de procesado ===== -->
 <script id="datosLinea" type="application/json">{
- "fuente": "Línea de procesado: presupuestos Agrometal Carrión 2026/467 y 2026/472, actualizados un 3 % anual hasta el año de compra.",
+ "fuente": "Línea: presupuestos Agrometal Carrión 2026/467 y 2026/472, actualizados un 3 % anual hasta el año de compra.",
  "subida": 0.03,
  "fases": [
   [
@@ -4672,7 +4672,7 @@ three/build/three.module.js:
    "inicial"
   ],
   [
-   "Silo exterior, estructura y primeros 5 cajones",
+   "Estructura, 5 cajones y silo de enfriamiento",
    2029
   ],
   [
@@ -4921,7 +4921,7 @@ three/build/three.module.js:
     const d = window.__presuDatos(D);
     d.sup.forEach(x => {
       s("", "", "", "", "", ""); s("", "", "INVERSIÓN TOTAL · " + x.s.titulo.toUpperCase(), "", "", "");
-      x.años.forEach(a => s(String(a.a), "", a.tot || a.a >= x.s.planta ? `Nave ${a.nave ? a.nave : 0} · línea ${a.linea}` : "Cosecha procesada en SABA", "", "", a.tot));
+      x.años.forEach(a => s(String(a.a), "", a.tot ? (a.nave ? `Nave ${a.nave} · línea ${a.linea}` : `Línea ${a.linea}`) : (a.a < x.s.planta ? "Cosecha procesada en SABA" : "Sin inversión"), "", "", a.tot));
       s("", "", "Total", "", "", x.tot);
     });
     s("", "", "", "", "", ""); s("", "", LINEA.fuente || "", "", "", ""); s("", "", NO_INCL, "", "", "");
