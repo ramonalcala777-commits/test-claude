@@ -465,6 +465,12 @@ ul.maq small { color: var(--muted); margin-left: auto; white-space: nowrap; }
   .pv-page section { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .norte { width: 46px; height: 46px; } .norte svg { width: 40px; height: 40px; }
 }
+/* v3: presupuesto desglosado */
+#secPresu .presu-grp { margin: 2px 0 4px; font-weight: 700; color: var(--green); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+#secPresu table.tot-nave { margin-top: 4px; }
+#secPresu table.tot-nave tr.tot th, #secPresu table.tot-nave tr.tot td { font-size: 14px; }
+#secPresu table.presu { margin-top: 8px; }
+#secPresu .presu-nota { margin: 4px 0 0; }
 </style>
 </head>
 <body>
@@ -504,6 +510,10 @@ ul.maq small { color: var(--muted); margin-left: auto; white-space: nowrap; }
     </section>
     <section id="secPresu">
       <h2>Presupuesto</h2>
+      <p class="presu-grp">Nave (obra civil e instalaciones)</p>
+      <div id="caps"></div>
+      <table class="tot-nave"><tbody id="totales"></tbody></table>
+      <p class="presu-nota">Pulsa un capítulo para ver sus partidas.</p>
       <table class="presu"><tbody id="presuTab"><tr><td>Calculando…</td></tr></tbody></table>
       <p class="presu-nota" id="presuEst"></p>
       <div class="btns" style="margin-top:10px"><button type="button" class="primary" id="btnPrint2">Resumen para imprimir</button><button type="button" id="btnCsv2">Presupuesto de la nave (CSV)</button></div>
@@ -671,11 +681,6 @@ ul.maq small { color: var(--muted); margin-left: auto; white-space: nowrap; }
     <section>
       <h2>Acero</h2>
       <table><tbody id="acero"></tbody></table>
-    </section>
-    <section>
-      <h2>Presupuesto de la nave por capítulos</h2>
-      <div id="caps"></div>
-      <table style="margin-top:10px"><tbody id="totales"></tbody></table>
     </section>
     <section>
       <h2>Cómo se calcula</h2>
@@ -4829,14 +4834,16 @@ three/build/three.module.js:
     const nave = D.PEC, lin = lineaPend() ? 0 : lineaTot();
     return { PEM: D.PEM, GGBI: D.GG + D.BI, nave, lin, tot: nave + lin, pend: lineaPend() };
   };
-  const filasPresu = D => {
+  const filasPresu = (D, soloLinea) => {
     const d = window.__presuDatos(D);
     const r = (a, b, cls = "") => `<tr${cls ? ` class="${cls}"` : ""}><th scope="row">${a}</th><td class="num">${b}</td></tr>`;
     let h = "";
-    h += `<tr class="grp"><th colspan="2">Nave (obra civil e instalaciones)</th></tr>`;
-    h += r("Presupuesto de ejecución material", eur(d.PEM), "ind");
-    h += r("Gastos generales 13 % y beneficio industrial 6 %", eur(d.GGBI), "ind");
-    h += r("Total nave", eur(d.nave), "sub");
+    if (!soloLinea) {
+      h += `<tr class="grp"><th colspan="2">Nave (obra civil e instalaciones)</th></tr>`;
+      h += r("Presupuesto de ejecución material", eur(d.PEM), "ind");
+      h += r("Gastos generales 13 % y beneficio industrial 6 %", eur(d.GGBI), "ind");
+      h += r("Total nave", eur(d.nave), "sub");
+    }
     h += `<tr class="grp"><th colspan="2">Línea de procesado</th></tr>`;
     if (d.pend) h += `<tr class="sub"><th scope="row">Total línea</th><td class="pend">pendiente</td></tr>`;
     else {
@@ -4872,7 +4879,7 @@ three/build/three.module.js:
       (pf ? kv("Perfiles del pórtico", `dintel ${pf.dintel} · pilares ${pf.pilar}`) : "") +
       kv("Acero estructural", `${fmt(D.acero.total / 1000, 1)} t (S275JR)`) +
       kv("Cargas (CTE)", `nieve zona ${D.P.zona} a ${fmt(D.P.alt)} m · viento zona ${D.P.viento}`);
-    $("presuTab").innerHTML = filasPresu(D);
+    $("presuTab").innerHTML = filasPresu(D, true);
     const est = D.cumpl ? D.cumpl.estado : "";
     $("presuEst").textContent = window.__calculado ? (est === "bad" ? "Atención: el cálculo de la nave no cumple." : "") : "Calculando la estructura…";
   }
