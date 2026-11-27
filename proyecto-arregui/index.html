@@ -526,7 +526,7 @@ table.fases td.num { font-weight: 600; white-space: nowrap; }
       <p class="presu-nota">Pulsa un capítulo para ver sus partidas.</p>
       <table class="presu"><tbody id="presuTab"><tr><td>Calculando…</td></tr></tbody></table>
       <p class="presu-nota" id="presuEst"></p>
-      <div class="btns" style="margin-top:10px"><button type="button" class="primary" id="btnPrint2">Resumen para imprimir</button><button type="button" id="btnCsv2">Presupuesto de la nave (CSV)</button></div>
+      <div class="btns" style="margin-top:10px"><button type="button" class="primary" id="btnPrint2">Resumen para imprimir</button><button type="button" id="btnCsv2">Presupuesto (CSV)</button></div>
     </section>
     <section id="secLinea">
       <h2>Línea de procesado</h2>
@@ -4686,27 +4686,15 @@ three/build/three.module.js:
  ],
  "supuestos": [
   {
-   "id": "s2",
-   "titulo": "Planta en 2027",
-   "planta": 2027,
-   "linea": {
-    "2027": 782491,
-    "2029": 106088,
-    "2030": 160160,
-    "2033": 23263
-   }
-  },
-  {
    "id": "s1",
-   "titulo": "Planta en 2028 (2027 procesado en SABA)",
+   "titulo": "Nave y línea en 2028 (la cosecha de 2027 se procesa en SABA)",
    "planta": 2028,
    "linea": {
     "2028": 805966,
     "2029": 106088,
     "2030": 160160,
     "2033": 23263
-   },
-   "nota": "La línea de 2028 se ha actualizado con el mismo 3 % anual."
+   }
   }
  ]
 }</script>
@@ -4925,7 +4913,7 @@ three/build/three.module.js:
   };
   window.__presuPV = D => {
     const d = window.__presuDatos(D);
-    const tabla = x => `<table class="presu pv-tab"><thead><tr><th>Año</th><th class="num">Nave</th><th class="num">Línea</th><th class="num">Total año</th></tr></thead><tbody>${x.años.map(a => `<tr><th scope="row">${a.a}</th><td class="num">${a.nave ? eur(a.nave) : "—"}</td><td class="num">${a.linea ? eur(a.linea) : "—"}</td><td class="num">${eur(a.tot)}</td></tr>`).join("")}</tbody><tfoot><tr class="b t"><th>Total</th><td class="num">${eur(x.nave)}</td><td class="num">${eur(x.lin)}</td><td class="num">${eur(x.tot)}</td></tr></tfoot></table>`;
+    const tabla = x => `<table class="presu pv-tab"><thead><tr><th>Año</th><th class="num">Nave</th><th class="num">Línea</th><th class="num">Total año</th></tr></thead><tbody>${x.años.map(a => `<tr><th scope="row">${a.a}</th><td class="num">${a.nave ? eur(a.nave) : "—"}</td><td class="num">${a.linea ? eur(a.linea) : "—"}</td><td class="num">${a.tot ? eur(a.tot) : (a.a < x.s.planta ? "procesado en SABA" : "—")}</td></tr>`).join("")}</tbody><tfoot><tr class="b t"><th>Total</th><td class="num">${eur(x.nave)}</td><td class="num">${eur(x.lin)}</td><td class="num">${eur(x.tot)}</td></tr></tfoot></table>`;
     return `<section class="pv-total"><h3>Inversión total · nave + línea de procesado</h3>${d.sup.map(x => `<p class="pv-n"><b>${x.s.titulo}</b>${x.s.nota ? " · " + x.s.nota : ""}</p>${tabla(x)}`).join("")}
     <p class="pv-n">${LINEA.fuente || ""} La nave se actualiza con el mismo 3 % anual desde los precios de 2026.</p><p class="pv-n">${NO_INCL}</p></section>`;
   };
@@ -4933,7 +4921,7 @@ three/build/three.module.js:
     const d = window.__presuDatos(D);
     d.sup.forEach(x => {
       s("", "", "", "", "", ""); s("", "", "INVERSIÓN TOTAL · " + x.s.titulo.toUpperCase(), "", "", "");
-      x.años.forEach(a => s(String(a.a), "", `Nave ${a.nave ? a.nave : 0} · línea ${a.linea}`, "", "", a.tot));
+      x.años.forEach(a => s(String(a.a), "", a.tot || a.a >= x.s.planta ? `Nave ${a.nave ? a.nave : 0} · línea ${a.linea}` : "Cosecha procesada en SABA", "", "", a.tot));
       s("", "", "Total", "", "", x.tot);
     });
     s("", "", "", "", "", ""); s("", "", LINEA.fuente || "", "", "", ""); s("", "", NO_INCL, "", "", "");
@@ -4962,13 +4950,13 @@ three/build/three.module.js:
   }
   function pintaLinea() {
     const D = window.__ultimo;
-    const s2 = SUP.find(s => s.planta === 2027) || SUP[0];
+    const s2 = SUP[0];
     const filas = (LINEA.fases || []).map(([t, a]) => {
-      const año = a === "inicial" ? "2027 o 2028" : a;
+      const año = a === "inicial" ? (s2 ? s2.planta : "") : a;
       const imp = s2 ? (a === "inicial" ? s2.linea[s2.planta] : s2.linea[a]) : null;
       return `<tr><th scope="row">${año}</th><td>${t}</td><td class="num">${imp ? eur(imp) : ""}</td></tr>`;
     }).join("");
-    $("lineaInfo").innerHTML = `<table class="fases"><tbody>${filas}</tbody></table><p class="nota">Importes del supuesto de planta en 2027. Planta diáfana de 70 × 27 m preparada para la línea de procesado; usa la vista «Interior» para verla por dentro.</p>` +
+    $("lineaInfo").innerHTML = `<table class="fases"><tbody>${filas}</tbody></table><p class="nota">La nave y la línea se hacen en 2028; la cosecha de 2027 se procesa en SABA. Planta diáfana de 70 × 27 m preparada para la línea de procesado; usa la vista «Interior» para verla por dentro.</p>` +
       (MAQ.length ? '<ul class="maq">' + MAQ.map((m, k) => `<li><i style="background:${m.color || COLORES[k % COLORES.length]}"></i>${m.nombre}</li>`).join("") + "</ul>" : "");
   }
 
